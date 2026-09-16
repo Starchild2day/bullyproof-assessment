@@ -53,6 +53,7 @@ function renderLanding() {
   progressTrack.style.display = "none";
   appEl.innerHTML = `
     <div class="card">
+      ${iconBadge(LANDING_ICON, "landing-badge")}
       <h1>Get clarity on what's happening.</h1>
       <p class="body-text">Twelve quick questions. About 3 minutes. At the end you'll get a personalized action plan you can start using tonight — sent straight to your inbox.</p>
       <p class="privacy-note">Your responses are saved securely and only used to generate your action plan. We never share your data.</p>
@@ -84,6 +85,7 @@ function renderQuestion() {
   appEl.innerHTML = `
     ${safetyHTML}
     <div class="card">
+      ${q.icon ? iconBadge(q.icon) : ""}
       <h2 class="question">${q.title}</h2>
       ${q.sub ? `<p class="sub">${q.sub}</p>` : ""}
       ${bodyHTML}
@@ -127,6 +129,10 @@ function renderText(q) {
 
 function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
 
+function iconBadge(svgInner, extraClass) {
+  return `<div class="icon-badge ${extraClass || ""}"><svg viewBox="0 0 24 24" fill="none" stroke="#4299E1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg></div>`;
+}
+
 function wireQuestionEvents(q) {
   document.getElementById("backBtn").addEventListener("click", () => { if (state.qIndex > 0) { state.qIndex--; render(); } });
   document.getElementById("nextBtn").addEventListener("click", () => onNext(q));
@@ -158,6 +164,7 @@ function renderResults() {
   appEl.innerHTML = `
     ${state.safetyFlags.length ? renderSafetyBanner() : ""}
     <div class="card">
+      ${iconBadge(RESULTS_ICON)}
       <div class="results-summary"><h3>Here's what we're seeing</h3><p>${summary}</p></div>
       <h2 class="question">Where should we send your action plan?</h2>
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>

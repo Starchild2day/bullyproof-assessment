@@ -26,17 +26,41 @@
 //     swap in Kris's real wording once confirmed.
 // ============================================================
 
+// Simple line-icon paths (Feather-style, 24x24 viewBox). Rendered inside a
+// soft blue circle badge above each card — kept abstract and calm on
+// purpose, given the subject matter. No literal depictions of kids,
+// bullying, or injury anywhere in the tool.
+const LANDING_ICON = `<path d="M12 2v4"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m16 6-4 4-4-4"/><path d="M16 18a4 4 0 0 0-8 0"/>`;
+const RESULTS_ICON = `<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>`;
+
+const ICONS = {
+  q1: `<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>`,
+  q2: `<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>`,
+  q3: `<path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0L12 5.35l-.77-.77a5.4 5.4 0 0 0-7.65 7.65l.77.77L12 21l7.65-7.65.77-.77a5.4 5.4 0 0 0 0-7.65z"/><path d="M8 12h2l1-2 2 4 1-2h2"/>`,
+  q4: `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`,
+  q5: `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>`,
+  q6: `<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>`,
+  q7: `<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>`,
+  q8: `<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>`,
+  q9: `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>`,
+  q10: `<path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/><path d="M5 10v10a1 1 0 0 0 1 1h3m6 0h3a1 1 0 0 0 1-1V10"/>`,
+  q11: `<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>`,
+  q12: `<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/>`
+};
+
 const QUESTIONS = [
   {
     id: "q1",
     title: "How old is your child?",
     type: "choice",
+    icon: ICONS.q1,
     options: ["Under 5", "5–7", "8–10", "11–14", "15–18"]
   },
   {
     id: "q2",
     title: "What's bringing you here today?",
     type: "choice",
+    icon: ICONS.q2,
     options: [
       "I've noticed something concerning at school",
       "Something happened online or on social media",
@@ -50,6 +74,7 @@ const QUESTIONS = [
     title: "Have you noticed any physical signs that something might be wrong?",
     sub: "Check all that apply.",
     type: "multi",
+    icon: ICONS.q3,
     options: [
       "Unexplained scratches or bruises",
       "Sudden change in wardrobe preferences (long sleeves, long pants, hoodie in warm weather)",
@@ -73,18 +98,21 @@ const QUESTIONS = [
   },
   {
     id: "q4",
+    icon: ICONS.q4,
     title: "In your own words, what's going on with your child right now?",
     sub: "Write whatever feels true to you — there's no wrong answer here.",
     type: "text"
   },
   {
     id: "q5",
+    icon: ICONS.q5,
     title: "How long has this been going on?",
     type: "choice",
     options: ["Just noticed it (less than a week)", "A few weeks", "A month or two", "Several months or longer", "Not sure"]
   },
   {
     id: "q6",
+    icon: ICONS.q6,
     title: "Has your child's behavior changed recently?",
     type: "multi",
     options: [
@@ -97,6 +125,7 @@ const QUESTIONS = [
   },
   {
     id: "q7",
+    icon: ICONS.q7,
     title: "Where is this happening?",
     sub: "Check all that apply.",
     type: "multi",
@@ -113,6 +142,7 @@ const QUESTIONS = [
   },
   {
     id: "q8",
+    icon: ICONS.q8,
     title: "Has your child said anything directly about what's happening?",
     type: "choice",
     options: [
@@ -124,6 +154,7 @@ const QUESTIONS = [
   },
   {
     id: "q9",
+    icon: ICONS.q9,
     title: "What kind of treatment did they describe?",
     sub: "Check all that apply.",
     type: "multi",
@@ -147,6 +178,7 @@ const QUESTIONS = [
   },
   {
     id: "q10",
+    icon: ICONS.q10,
     title: "Have you talked to anyone at school about this yet?",
     sub: "Teachers, counselors, principal — anyone in a school role.",
     type: "choice",
@@ -160,6 +192,7 @@ const QUESTIONS = [
   },
   {
     id: "q11",
+    icon: ICONS.q11,
     title: "Is this happening online or through screens at all?",
     sub: "Even if it's also happening in person.",
     type: "choice",
@@ -171,6 +204,7 @@ const QUESTIONS = [
   },
   {
     id: "q12",
+    icon: ICONS.q12,
     title: "What do you most want help with right now?",
     sub: "What's the one thing that would make you feel less alone in this?",
     type: "text"

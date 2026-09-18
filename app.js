@@ -186,7 +186,7 @@ function renderResults() {
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
       <div class="checkbox-row">
         <input type="checkbox" id="playbookInterest">
-        <label for="playbookInterest">Let me know when the Bullyproof Parent Playbook is ready</label>
+        <label for="playbookInterest">Reserve my spot for the free 3-day trial of the Bullyproof Parent Playbook</label>
       </div>
       <div class="nav-row">
         <button class="ghost" id="backToQ">Back</button>
@@ -493,9 +493,9 @@ function generatePDF() {
   y += 12;
 
   heading("What comes next:");
-  body("This covers steps 1 through 3. In your full situation, steps 4 through 10 usually matter just as much — here's what those look like:");
+  body("What you've read so far is the free part — the same for everyone. Your specific situation usually needs more than 3 steps, though. Here's what comes next:");
   furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
-  body("These deeper, ongoing steps are what we're building into the Bullyproof Parent Playbook — a tool that gives you real scripts made for your child, by name and age, as things change. It's not available yet. If you'd like to know the moment it is, just reply to your action plan email and let us know.", { color: [74, 109, 147] });
+  body("These deeper, ongoing steps — personalized to your child by name and age, and updated as things change — are what the Bullyproof Parent Playbook is built for. It's not live yet, but you can reserve a free 3-day trial the moment it is by checking the box above before you download this plan.", { color: [74, 109, 147] });
 
   ensureRoom(10);
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);

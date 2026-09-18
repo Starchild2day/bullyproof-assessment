@@ -6,7 +6,7 @@
 <title>Bullyproof.Guide — Get Clarity On What's Happening</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
@@ -31,7 +31,11 @@
   body{
     margin:0;
     font-family:'Inter',system-ui,sans-serif;
-    background:var(--bg);
+    background:
+      radial-gradient(1100px 620px at 50% -8%, rgba(27,42,74,0.07), transparent 60%),
+      radial-gradient(900px 500px at 100% 100%, rgba(200,155,60,0.05), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
     color:var(--text);
     font-size:16px;
     line-height:1.55;
@@ -64,10 +68,10 @@
     z-index:20;
   }
   .progress-bar{
-    height:6px;border-radius:4px;background:var(--border);overflow:hidden;
+    height:9px;border-radius:5px;background:var(--border);overflow:hidden;
   }
   .progress-fill{
-    height:100%;background:linear-gradient(90deg,var(--gold),var(--navy));border-radius:4px;
+    height:100%;background:linear-gradient(90deg,var(--gold),var(--navy));border-radius:5px;
     transition:width .4s cubic-bezier(.4,0,.2,1);
   }
   .progress-label{font-size:13px;color:var(--text-muted);margin-top:8px;}
@@ -88,16 +92,17 @@
   .card-body{padding:26px 24px 24px;}
 
   .banner{
-    width:100%;height:148px;
+    width:100%;height:100px;
     background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);
     display:flex;align-items:center;justify-content:center;
     position:relative;overflow:hidden;
   }
-  .banner.landing-banner{height:188px;}
+  .banner.landing-banner{height:180px;}
   .banner svg{width:100%;height:100%;position:relative;z-index:1;}
 
   h1{font-family:'Fraunces',serif;font-weight:600;font-size:28px;line-height:1.2;margin:0 0 14px;color:var(--navy);}
-  h2.question{font-family:'Fraunces',serif;font-weight:600;font-size:23px;line-height:1.28;margin:0 0 8px;color:var(--navy);}
+  h2.question{font-family:'Fraunces',serif;font-weight:600;font-size:23px;line-height:1.28;margin:0 0 14px;color:var(--navy);position:relative;padding-bottom:14px;}
+  h2.question::after{content:"";position:absolute;left:0;bottom:0;width:36px;height:3px;background:var(--gold);border-radius:2px;}
   p.sub{font-size:16px;color:var(--text-muted);margin:0 0 20px;}
   p.body-text{font-size:16px;color:var(--text);}
 

@@ -44,6 +44,7 @@ function addFlag(key) {
 }
 
 function render() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
   if (state.screen === "landing") return renderLanding();
   if (state.screen === "question") return renderQuestion();
   if (state.screen === "results") return renderResults();
@@ -152,9 +153,9 @@ function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
 function banner(svgInner, opts) {
   opts = opts || {};
   const large = !!opts.large;
-  const vbH = large ? 188 : 148;
+  const vbH = large ? 180 : 100;
   const cy = vbH / 2;
-  const size = large ? 76 : 56;
+  const size = large ? 72 : 44;
   const x = 200 - size / 2;
   const y = cy - size / 2;
   return `<div class="banner${large ? " landing-banner" : ""}">

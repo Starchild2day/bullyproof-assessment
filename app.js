@@ -236,8 +236,13 @@ function renderResults() {
   });
 }
 
+function isPreventive() {
+  return (state.answers.q2 || "").includes("prevent");
+}
+
 function deriveSummary() {
   const q2 = state.answers.q2 || "a bullying situation you're working through";
+  if (isPreventive()) return `${q2}.`;
   const statusText = {
     "clear": "Your child has spoken with you directly about it.",
     "hints": "Your child has shared pieces of it, but not the full picture yet.",
@@ -478,7 +483,12 @@ function whyThisMattersNote() {
 }
 
 function furtherStepsTeaser() {
-  const items = [
+  const items = isPreventive() ? [
+    "Age-by-age scripts for talking about kindness and boundaries before anything comes up",
+    "A simple weekly habit that builds your child's confidence over time",
+    "How to tell normal kid conflict apart from something worth stepping in on",
+    "A way to check in on progress even when nothing seems wrong"
+  ] : [
     "The exact words to say if the school pushes back or downplays it",
     "A week-by-week plan to help your child rebuild confidence",
     "What to say — and what not to say — if another family is involved",
@@ -490,7 +500,16 @@ function furtherStepsTeaser() {
   return items;
 }
 
+function preventionSteps() {
+  return [
+    "Build the habit of easy conversation now, before you'd ever need it. Try one low-stakes nightly question, like \"What was the best and worst part of your day?\" The goal isn't spotting a problem — it's making talking to you feel normal, so if something ever does happen, coming to you is already the default.",
+    "Introduce yourself to your child's teacher or school counselor now, before there's anything to report. Something as simple as \"Just wanted to say hello and let you know I'm around if anything ever comes up\" opens a door you might need later, without waiting for a reason to make first contact.",
+    "Practice a simple response together for handling unkindness, before they ever need it — a phrase like \"That's not okay, and I'm going to tell someone\" that they can fall back on automatically, the same way you'd practice a fire drill."
+  ];
+}
+
 function actionSteps() {
+  if (isPreventive()) return preventionSteps();
   return [stepOpening(), stepSchool(), stepContext()];
 }
 

@@ -259,86 +259,87 @@ function needsProfessionalSupport() {
 
 function openingValidation() {
   const q2 = state.answers.q2 || "";
-  if (q2.includes("not sure yet")) return "Trusting an instinct that something's off — even without a clear incident — is valid. Many parents notice subtle shifts long before anything concrete happens.";
-  if (q2.includes("prevent")) return "Getting ahead of a problem before it starts is one of the most effective things you can do.";
-  if (q2.includes("treated badly")) return "It takes courage for a child to say they're being treated badly, and just as much for a parent to take it seriously right away.";
-  if (q2.includes("Something happened online")) return "Online situations can escalate fast — addressing it now, rather than waiting to see if it resolves on its own, is the right call.";
-  if (q2.includes("concerning at school")) return "Trusting what you're noticing at school, even before your child says anything, is exactly the right instinct.";
+  if (q2.includes("not sure yet")) return "It's OK to feel worried even without proof. Many parents notice small changes before anything big happens.";
+  if (q2.includes("prevent")) return "Getting ready before a problem starts is a smart, caring move.";
+  if (q2.includes("treated badly")) return "It takes courage for a child to say they're being treated badly. It takes just as much courage for a parent to believe them right away.";
+  if (q2.includes("Something happened online")) return "Things online can get bad fast. It's good that you're acting now instead of waiting.";
+  if (q2.includes("concerning at school")) return "Trusting what you see at school, even before your child says anything, is the right thing to do.";
   return "";
 }
 
 function focusLine() {
   const q12 = (state.answers.q12 || "").trim();
   if (!q12) return null;
-  return `You told us you most want help with: "${q12}" — the steps below are built to start there.`;
+  return `You told us you want help with: "${q12}" — that's exactly where we start below.`;
 }
 
 function stepOpening() {
   const status = communicationStatus();
   if (status === "clear") {
-    return "Write down exactly what your child told you, in their own words, with the date. This becomes your reference point for every future conversation — with a counselor, the school, or your child.";
+    return "Write down what your child told you. Use their own words. Add the date. Keep this note — you can show it to a counselor or the school later.";
   }
   if (status === "hints") {
-    return `Follow up gently on what they've already shared: "You mentioned something was bothering you — I've been thinking about it, and I'm here whenever you want to say more." Let them set the pace rather than pushing for the full story yet.`;
+    return `Talk about what they already shared. Try saying: "You told me something was bothering you. I've been thinking about it. I'm here if you want to say more." Don't push for the whole story yet — let them go at their own pace.`;
   }
   if (status === "behavior-only") {
     const named = (state.answers.q6 || []).filter(b => b !== "No noticeable changes");
-    const behavior = named.length ? named[0].toLowerCase() : "some changes lately";
-    return `Name what you've noticed without demanding an explanation: "I've noticed you've been ${behavior} — I'm not asking you to explain it right now, I just want you to know I see it, and I'm here." This opens the door without applying pressure.`;
+    const behavior = named.length ? named[0].toLowerCase() : "different lately";
+    return `Say what you see, without asking why. Try: "I've noticed you've been ${behavior}. You don't have to explain it right now. I just want you to know I see it, and I'm here." This opens the door without any pressure.`;
   }
   if (status === "no-signals") {
-    return "Since nothing's been said and you're going on instinct, resist asking directly right away — that can close kids down further. Create low-pressure time together where talking is optional: a car ride, a walk, cooking side by side. Kids often share more when they're not face-to-face.";
+    return "Nothing has been said yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you.";
   }
-  return "Create a low-pressure moment to check in with your child this week — side by side, not face-to-face, tends to open more doors than a direct sit-down.";
+  return "Find an easy, low-pressure time to check in with your child this week. Talking side by side, not face to face, often works better than a direct sit-down.";
 }
 
 function stepSchool() {
   const map = {
-    "helping": "Follow up with the staff member you spoke to this week — ask specifically what they're observing on their end and whether there's a scheduled check-in.",
-    "no-change": `Since nothing's shifted yet, request a second conversation with a specific follow-up plan and date attached — not just "we'll keep an eye on it."`,
-    "dismissed": "If the school dismissed this, you're allowed to disagree. Request a meeting with a counselor or administrator — not just the original contact — and bring dated notes of what you've observed.",
-    "not-reached-out": `Reach out to the school counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm noticing in my child. Nothing urgent, just want to loop you in."`,
-    "child-doesnt-want": "Ask your child directly what they're afraid will happen if you contact the school. Their answer usually reveals the real fear driving the reluctance, and can guide how — or whether — you involve the school without it feeling like a betrayal."
+    "helping": "Check in with the school contact again this week. Ask what they're seeing, and if there's a follow-up plan.",
+    "no-change": `Nothing has changed yet, so ask for a new meeting. Get a clear plan with a real date — not just "we'll keep an eye on it."`,
+    "dismissed": "If the school said this isn't bullying, you can still push back. Ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes.",
+    "not-reached-out": `Contact the school counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in."`,
+    "child-doesnt-want": "Ask your child what they're afraid will happen if you talk to the school. Their answer will help you decide how — or whether — to bring the school in without it feeling like a betrayal."
   };
-  return map[schoolStatus()] || "Consider reaching out to a counselor or trusted staff member at school this week, even just to get another set of eyes on the situation.";
+  return map[schoolStatus()] || "Reach out to a counselor or trusted adult at school this week, just to get another set of eyes on it.";
 }
 
 function stepContext() {
   const weight = onlineWeight();
   if (weight === "online" || weight === "both") {
-    return "Save screenshots and timestamps of anything concerning before it disappears, and sit down with your child to review reporting and privacy settings together — as a team, not as surveillance.";
+    return "Save screenshots and dates before anything gets deleted. Sit down with your child and look at the app's report and block settings together — as a team, not as spying.";
   }
   if (weight === "in-person") {
-    return "Ask your child if there are specific times or places — recess, lunch, the bus — where it feels worse. This helps the school target supervision instead of watching everything generically.";
+    return "Ask your child if certain times or places feel worse — recess, lunch, the bus. This helps the school watch the right spots instead of everywhere.";
   }
-  return "Keep a simple daily note — one line, no pressure — logging your child's mood and any small comments. Patterns often become visible after a week or two that aren't obvious day to day.";
+  return "Keep a short daily note. Just one line, no pressure — write down your child's mood and anything small they say. Patterns often show up after a week or two.";
 }
 
 function professionalSupportNote() {
   if (!needsProfessionalSupport()) return null;
-  return "Given what you've described, it's worth looping in a school counselor or child therapist directly, not just as a backup plan. Multiple ongoing signals like this tend to move faster with a trained professional involved alongside you.";
+  return "Based on what you shared, it may help to bring in a school counselor or child therapist now, not just as a backup plan. A trained professional can help things move faster.";
 }
 
 function chapterRecommendation() {
+  const BOOK = "Bullyproof Kids in 10 Minutes a Day";
   const q9 = state.answers.q9 || [];
   if (q9.some(t => t.includes("pressuring them sexually") || t.includes("using power over them"))) {
-    return "Chapter: When Someone Has Power Over Them — recognizing coercive dynamics and how to respond.";
+    return `In ${BOOK}, look for the section on when someone has power over a child — it covers how to spot this and what to do.`;
   }
   if (q9.some(t => t.includes("hit, pushed, tripped"))) {
-    return "Chapter: When It Turns Physical — documenting incidents and working with the school.";
+    return `In ${BOOK}, look for the section on physical bullying — it covers writing things down and working with the school.`;
   }
   if (q9.some(t => t.includes("left out, ignored, or excluded"))) {
-    return "Chapter: Exclusion & Social Bullying — rebuilding your child's confidence and circle.";
+    return `In ${BOOK}, look for the section on being left out — it covers rebuilding your child's confidence and friend group.`;
   }
   if (q9.some(t => t.includes("called names, teased"))) {
-    return "Chapter: Words That Wound — responding to teasing and name-calling without minimizing it.";
+    return `In ${BOOK}, look for the section on name-calling and teasing — it covers how to respond without brushing it off.`;
   }
   if (onlineWeight() === "online") {
-    return "Chapter: Navigating Cyberbullying — screenshots, reporting, and the conversation to have tonight.";
+    return `In ${BOOK}, look for the section on cyberbullying — it covers screenshots, reporting, and how to talk about it tonight.`;
   }
   const q2 = state.answers.q2 || "";
-  if (q2.includes("prevent")) return "Chapter: Getting Ahead of It — building resilience before problems start.";
-  return "Chapter: Getting Your Bearings — what to watch for and how to open the conversation.";
+  if (q2.includes("prevent")) return `In ${BOOK}, look for the section on building strength early, before problems start.`;
+  return `In ${BOOK}, look for the section on getting your bearings — what to watch for and how to start the conversation.`;
 }
 
 function actionSteps() {

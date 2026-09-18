@@ -57,12 +57,26 @@ function renderLanding() {
       <h1>Get clarity on what's happening.</h1>
       <p class="body-text">Twelve quick questions. About 3 minutes. At the end you'll get a personalized action plan you can start using tonight — sent straight to your inbox.</p>
       <p class="privacy-note">Your responses are saved securely and only used to generate your action plan. We never share your data.</p>
+      <div class="checkbox-row">
+        <input type="checkbox" id="consentCheck">
+        <label for="consentCheck">I understand this tool gives general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. If my child is in immediate danger, I'll call 911 or a crisis line right away instead of relying on this tool. I agree to the <a href="https://www.bullyproof.support/about/terms" target="_blank">Terms of Use</a> and <a href="https://www.bullyproof.support/about/privacy" target="_blank">Privacy Policy</a>.</label>
+      </div>
       <div class="nav-row" style="justify-content:flex-start;">
-        <button class="primary" id="startBtn">Start the Assessment</button>
+        <button class="primary" id="startBtn" disabled>Start the Assessment</button>
       </div>
     </div>
   `;
-  document.getElementById("startBtn").addEventListener("click", () => { track("assessment_started"); state.screen = "question"; state.qIndex = 0; render(); });
+  const consentCheck = document.getElementById("consentCheck");
+  const startBtn = document.getElementById("startBtn");
+  consentCheck.addEventListener("change", () => { startBtn.disabled = !consentCheck.checked; });
+  startBtn.addEventListener("click", () => {
+    if (startBtn.disabled) return;
+    state.consentGiven = true;
+    track("assessment_started");
+    state.screen = "question";
+    state.qIndex = 0;
+    render();
+  });
 }
 
 function renderProgress() {
@@ -208,7 +222,7 @@ function deriveSummary() {
 async function submitToFormspree() {
   if (!CONFIG.FORMSPREE_ENDPOINT) { console.warn("Formspree endpoint not configured."); return; }
   try {
-    await fetch(CONFIG.FORMSPREE_ENDPOINT, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" }, body: JSON.stringify({ email: state.email, answers: state.answers, safetyFlags: state.safetyFlags, playbookInterest: !!state.playbookInterest }) });
+    await fetch(CONFIG.FORMSPREE_ENDPOINT, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" }, body: JSON.stringify({ email: state.email, answers: state.answers, safetyFlags: state.safetyFlags, playbookInterest: !!state.playbookInterest, consentGiven: !!state.consentGiven }) });
     track("email_captured");
   } catch (err) { console.warn("Formspree submission failed (non-blocking):", err); }
 }
@@ -489,6 +503,8 @@ function generatePDF() {
   }
 
   ensureRoom(10);
+  doc.setFontSize(10); doc.setTextColor(100, 100, 100);
+  body("This plan is for general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. Please use your own judgment and talk to a licensed professional about your specific situation. If your child is in immediate danger, call 911.", { color: [130, 130, 130] });
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);
   doc.text("If you need more help finding a vetted professional in your area, visit " + (CONFIG.SITE_URL || "bullyproof.guide") + ".", 15, y);
 

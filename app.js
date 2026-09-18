@@ -166,6 +166,7 @@ function renderResults() {
     <div class="card">
       ${iconBadge(RESULTS_ICON)}
       <div class="results-summary"><h3>Here's what we're seeing</h3><p>${summary}</p>${openingValidation() ? `<p style="margin-top:8px;">${openingValidation()}</p>` : ""}</div>
+      <p class="sub" style="margin-bottom:20px;">Want to talk to someone? <a href="${NETWORK_MATCH_URL}" target="_blank" style="color:#4299E1;font-weight:600;">Get matched with a professional near you</a> through the Bullyproof Support network — this will also be in your emailed plan.</p>
       <h2 class="question">Where should we send your action plan?</h2>
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
@@ -367,8 +368,14 @@ function bookRecommendation() {
   return `"${b.title}" by ${b.author}`;
 }
 
-// TODO once Bullyproof.Support's own directory is populated and confirmed
-// ready: replace this URL with a search into that network instead.
+// Primary: your own network's real "Get Matched" request form — takes name,
+// email, phone, and location, and connects the parent with a matching
+// professional. Members are still mostly claim-account listings with
+// minimal profiles, so this is paired with a backup search below.
+const NETWORK_MATCH_URL = "https://www.bullyproof.support/getmatched";
+
+// Backup only — for areas where the network doesn't yet have a strong local
+// match. Swap or remove once network coverage is dense enough on its own.
 const FIND_SUPPORT_URL = "https://www.psychologytoday.com/us/therapists";
 
 function whyThisMattersNote() {
@@ -460,7 +467,12 @@ function generatePDF() {
   if (proNote) { heading("Worth considering:"); body(proNote); }
 
   heading("Find support near you:");
-  body("Looking for a therapist or counselor in your area? Psychology Today's free directory lets you search by location and specialty (link below).");
+  body("Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:");
+  ensureRoom(8);
+  doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+  doc.textWithLink("bullyproof.support/getmatched", 15, y, { url: NETWORK_MATCH_URL });
+  y += 12;
+  body("If your area doesn't have a strong match yet, Psychology Today's broader directory is a good backup:");
   ensureRoom(8);
   doc.setFontSize(11); doc.setTextColor(66, 153, 225);
   doc.textWithLink("psychologytoday.com/us/therapists", 15, y, { url: FIND_SUPPORT_URL });

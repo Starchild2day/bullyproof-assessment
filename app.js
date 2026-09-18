@@ -216,7 +216,7 @@ function deriveSummary() {
     "behavior-only": "Your child hasn't said anything directly, but their behavior is telling you something.",
     "no-signals": "Nothing concrete yet — you're going on instinct."
   }[communicationStatus()] || "";
-  return `${q2}${statusText ? " " + statusText : ""}`;
+  return `${q2}.${statusText ? " " + statusText : ""}`;
 }
 
 async function submitToFormspree() {
@@ -496,11 +496,6 @@ function generatePDF() {
   body("This covers steps 1 through 3. In your full situation, steps 4 through 10 usually matter just as much — here's what those look like:");
   furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
   body("These deeper, ongoing steps are what we're building into the Bullyproof Parent Playbook — a tool that gives you real scripts made for your child, by name and age, as things change. It's not available yet. If you'd like to know the moment it is, just reply to your action plan email and let us know.", { color: [74, 109, 147] });
-
-  if (state.answers.q12) {
-    heading("You asked for help with:");
-    body(`"${state.answers.q12}"`, { italic: true });
-  }
 
   ensureRoom(10);
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);

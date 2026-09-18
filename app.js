@@ -593,7 +593,15 @@ function generatePDF() {
   heading("What comes next:");
   body("What you've read above is real and complete on its own. As things unfold, though, the most useful next moves usually depend on details that shift over time — how your child responds, what changes, what works for them specifically. That's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. A few examples of what that looks like for a situation like yours:");
   furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
-  body("These deeper, ongoing steps — personalized to your child by name and age, and updated as things change — are what the Bullyproof Parent Playbook is built for. It's not live yet, but you can reserve a free 3-day trial the moment it is by checking the box above before you download this plan.", { color: [74, 109, 147] });
+  body("These deeper, ongoing steps — personalized to your child by name and age, and updated as things change — are what the Bullyproof Parent Playbook is built for. It's not live yet, but you can reserve a free 3-day trial the moment it is:", { color: [74, 109, 147] });
+  ensureRoom(8);
+  {
+    const subject = encodeURIComponent("Reserve my Bullyproof Parent Playbook trial");
+    const mailBody = encodeURIComponent("I'd like to reserve my spot for the free 3-day trial of the Bullyproof Parent Playbook when it's ready.");
+    doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+    doc.textWithLink("→ Click here to reserve your free trial", 15, y, { url: `mailto:${CONFIG.CONTACT_EMAIL || "mark@bullyproof.guide"}?subject=${subject}&body=${mailBody}` });
+    y += 12;
+  }
 
   ensureRoom(10);
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);

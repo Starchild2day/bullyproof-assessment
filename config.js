@@ -31,5 +31,8 @@ const CONFIG = {
   PLAUSIBLE_DOMAIN: "",
 
   // --- 4. WHERE THE FINISHED SITE LIVES (optional, used only for links in the PDF) ---
-  SITE_URL: "https://bullyproof.guide"
+  SITE_URL: "https://bullyproof.guide",
+
+  // --- 5. WHERE "RESERVE MY TRIAL" EMAIL LINKS SHOULD GO ---
+  CONTACT_EMAIL: "mark@bullyproof.guide"
 };

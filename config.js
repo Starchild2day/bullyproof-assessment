@@ -13,7 +13,7 @@ const CONFIG = {
   // Sign up free at https://formspree.io  → create a new form
   // → copy the "Form endpoint" URL it gives you (looks like
   // https://formspree.io/f/abcd1234) and paste it below.
-  FORMSPREE_ENDPOINT: "", // e.g. "https://formspree.io/f/xxxxxxx"
+  FORMSPREE_ENDPOINT: "https://formspree.io/f/mzezzyrz",
 
   // --- 2. FIREBASE (lets a parent resume on another device) ---
   // Sign up free at https://firebase.google.com → create a project

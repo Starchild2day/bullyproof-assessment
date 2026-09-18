@@ -219,10 +219,39 @@ function deriveSummary() {
   return `${q2}.${statusText ? " " + statusText : ""}`;
 }
 
+function buildReadableSummary() {
+  const lines = [];
+  QUESTIONS.forEach(q => {
+    const ans = state.answers[q.id];
+    if (ans === undefined || ans === null || ans === "") return;
+    const formatted = Array.isArray(ans)
+      ? ans.join(", ")
+      : (typeof ans === "object" ? Object.entries(ans).map(([k, v]) => `${k}: ${v}`).join(" | ") : ans);
+    lines.push(`Q: ${q.title}\nA: ${formatted}`);
+  });
+  return lines.join("\n\n");
+}
+
 async function submitToFormspree() {
   if (!CONFIG.FORMSPREE_ENDPOINT) { console.warn("Formspree endpoint not configured."); return; }
+  const flagged = state.safetyFlags.length > 0;
+  const subject = flagged
+    ? "⚠️ Bullyproof Assessment — safety flag triggered"
+    : "New Bullyproof Assessment submission";
   try {
-    await fetch(CONFIG.FORMSPREE_ENDPOINT, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" }, body: JSON.stringify({ email: state.email, answers: state.answers, safetyFlags: state.safetyFlags, playbookInterest: !!state.playbookInterest, consentGiven: !!state.consentGiven }) });
+    await fetch(CONFIG.FORMSPREE_ENDPOINT, {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: state.email,
+        _replyto: state.email,
+        _subject: subject,
+        safety_flags: flagged ? state.safetyFlags.join(", ") : "none",
+        wants_playbook_trial: state.playbookInterest ? "yes" : "no",
+        consent_given: state.consentGiven ? "yes" : "no",
+        summary: buildReadableSummary()
+      })
+    });
     track("email_captured");
   } catch (err) { console.warn("Formspree submission failed (non-blocking):", err); }
 }

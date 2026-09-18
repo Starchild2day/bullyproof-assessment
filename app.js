@@ -205,6 +205,11 @@ function renderResults() {
       <h2 class="question">Where should we send your action plan?</h2>
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
+      <div class="playbook-teaser">
+        <h3>Want more than these 3 steps?</h3>
+        <p>This plan covers what matters most right now. Your full situation usually needs more, though — things like <strong>${furtherStepsTeaser()[0].toLowerCase()}</strong> or <strong>${furtherStepsTeaser()[1].toLowerCase()}</strong>. That's what the <strong>Bullyproof Parent Playbook</strong> is being built for: ongoing help, personalized to your child by name and age, that adapts as things change.</p>
+        <p>It's not live yet. Checking the box costs nothing and commits you to nothing — it just means we'll email you the moment it's ready, with a free 3-day trial waiting.</p>
+      </div>
       <div class="checkbox-row">
         <input type="checkbox" id="playbookInterest">
         <label for="playbookInterest">Reserve my spot for the free 3-day trial of the Bullyproof Parent Playbook</label>

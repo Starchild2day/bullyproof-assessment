@@ -53,7 +53,8 @@ function renderLanding() {
   progressTrack.style.display = "none";
   appEl.innerHTML = `
     <div class="card">
-      ${iconBadge(LANDING_ICON, "landing-badge")}
+      ${banner(LANDING_ICON, { large: true })}
+      <div class="card-body">
       <h1>Get clarity on what's happening.</h1>
       <p class="body-text">Twelve quick questions. About 3 minutes. At the end you'll get a personalized action plan you can start using tonight — sent straight to your inbox.</p>
       <p class="privacy-note">Your responses are saved securely and only used to generate your action plan. We never share your data.</p>
@@ -63,6 +64,7 @@ function renderLanding() {
       </div>
       <div class="nav-row" style="justify-content:flex-start;">
         <button class="primary" id="startBtn" disabled>Start the Assessment</button>
+      </div>
       </div>
     </div>
   `;
@@ -99,13 +101,15 @@ function renderQuestion() {
   appEl.innerHTML = `
     ${safetyHTML}
     <div class="card">
-      ${q.icon ? iconBadge(q.icon) : ""}
+      ${q.icon ? banner(q.icon) : ""}
+      <div class="card-body">
       <h2 class="question">${q.title}</h2>
       ${q.sub ? `<p class="sub">${q.sub}</p>` : ""}
       ${bodyHTML}
       <div class="nav-row">
         <button class="ghost" id="backBtn" ${state.qIndex === 0 ? "disabled style='visibility:hidden'" : ""}>Back</button>
         <button class="primary" id="nextBtn">Next</button>
+      </div>
       </div>
     </div>
   `;
@@ -126,25 +130,41 @@ function renderSafetyBanner() {
   `;
 }
 
+const CHECKMARK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+
 function renderChoice(q) {
   const selected = state.answers[q.id];
-  return `<div class="options">${q.options.map(opt => `<button type="button" class="option-btn ${selected === opt ? "selected" : ""}" data-value="${escapeAttr(opt)}">${opt}</button>`).join("")}</div>`;
+  return `<div class="options" role="radiogroup">${q.options.map(opt => `<button type="button" class="option-btn ${selected === opt ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="radio" aria-checked="${selected === opt}"><span class="check">${CHECKMARK_SVG}</span><span>${opt}</span></button>`).join("")}</div>`;
 }
 
 function renderMulti(q) {
   const selected = state.answers[q.id] || [];
-  return `<div class="options">${q.options.map(opt => `<button type="button" class="option-btn multi-opt ${selected.includes(opt) ? "selected" : ""}" data-value="${escapeAttr(opt)}">${opt}</button>`).join("")}</div>`;
+  return `<div class="options" role="group">${q.options.map(opt => `<button type="button" class="option-btn multi-opt ${selected.includes(opt) ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="checkbox" aria-checked="${selected.includes(opt)}"><span class="check">${CHECKMARK_SVG}</span><span>${opt}</span></button>`).join("")}</div>`;
 }
 
 function renderText(q) {
   const val = state.answers[q.id] || "";
-  return `<textarea id="textInput" rows="5" style="width:100%;padding:13px 14px;border-radius:10px;border:2px solid #CFE6F8;font-size:16px;font-family:inherit;color:#2C5282;" placeholder="Type here...">${val}</textarea>`;
+  return `<textarea id="textInput" rows="5" placeholder="Type here...">${val}</textarea>`;
 }
 
 function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
 
-function iconBadge(svgInner, extraClass) {
-  return `<div class="icon-badge ${extraClass || ""}"><svg viewBox="0 0 24 24" fill="none" stroke="#4299E1" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg></div>`;
+function banner(svgInner, opts) {
+  opts = opts || {};
+  const large = !!opts.large;
+  const vbH = large ? 188 : 148;
+  const cy = vbH / 2;
+  const size = large ? 76 : 56;
+  const x = 200 - size / 2;
+  const y = cy - size / 2;
+  return `<div class="banner${large ? " landing-banner" : ""}">
+    <svg viewBox="0 0 400 ${vbH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="46" cy="${vbH - 28}" r="72" fill="#4F7C82" opacity="0.28"/>
+      <circle cx="366" cy="24" r="94" fill="#C89B3C" opacity="0.16"/>
+      <circle cx="330" cy="${vbH - 18}" r="38" fill="#FFFFFF" opacity="0.05"/>
+      <svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#EFDFB8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg>
+    </svg>
+  </div>`;
 }
 
 function wireQuestionEvents(q) {
@@ -178,9 +198,10 @@ function renderResults() {
   appEl.innerHTML = `
     ${state.safetyFlags.length ? renderSafetyBanner() : ""}
     <div class="card">
-      ${iconBadge(RESULTS_ICON)}
+      ${banner(RESULTS_ICON)}
+      <div class="card-body">
       <div class="results-summary"><h3>Here's what we're seeing</h3><p>${summary}</p>${openingValidation() ? `<p style="margin-top:8px;">${openingValidation()}</p>` : ""}</div>
-      <p class="sub" style="margin-bottom:20px;">Want to talk to someone? <a href="${NETWORK_MATCH_URL}" target="_blank" style="color:#4299E1;font-weight:600;">Get matched with a professional near you</a> through the Bullyproof Support network — this will also be in your emailed plan.</p>
+      <p class="sub" style="margin-bottom:20px;">Want to talk to someone? <a href="${NETWORK_MATCH_URL}" target="_blank" style="color:var(--navy);font-weight:600;">Get matched with a professional near you</a> through the Bullyproof Support network — this will also be in your emailed plan.</p>
       <h2 class="question">Where should we send your action plan?</h2>
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
@@ -193,6 +214,7 @@ function renderResults() {
         <button class="primary" id="getPlanBtn">Get My Action Plan</button>
       </div>
       <p class="privacy-note">Your responses are saved securely and only used to generate your action plan. We never share your data. Every follow-up email includes a "Delete my data" link.</p>
+      </div>
     </div>
   `;
   document.getElementById("backToQ").addEventListener("click", () => { state.screen = "question"; state.qIndex = visibleQuestions().length - 1; render(); });

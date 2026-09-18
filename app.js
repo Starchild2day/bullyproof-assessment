@@ -169,6 +169,10 @@ function renderResults() {
       <h2 class="question">Where should we send your action plan?</h2>
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
+      <div class="checkbox-row">
+        <input type="checkbox" id="playbookInterest">
+        <label for="playbookInterest">Let me know when the Bullyproof Parent Playbook is ready</label>
+      </div>
       <div class="nav-row">
         <button class="ghost" id="backToQ">Back</button>
         <button class="primary" id="getPlanBtn">Get My Action Plan</button>
@@ -182,6 +186,7 @@ function renderResults() {
     const email = emailInput.value.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailInput.style.borderColor = "#C53030"; return; }
     state.email = email;
+    state.playbookInterest = document.getElementById("playbookInterest").checked;
     await submitToFormspree();
     generatePDF();
     track("pdf_downloaded");
@@ -202,7 +207,7 @@ function deriveSummary() {
 async function submitToFormspree() {
   if (!CONFIG.FORMSPREE_ENDPOINT) { console.warn("Formspree endpoint not configured."); return; }
   try {
-    await fetch(CONFIG.FORMSPREE_ENDPOINT, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" }, body: JSON.stringify({ email: state.email, answers: state.answers, safetyFlags: state.safetyFlags }) });
+    await fetch(CONFIG.FORMSPREE_ENDPOINT, { method: "POST", headers: { "Accept": "application/json", "Content-Type": "application/json" }, body: JSON.stringify({ email: state.email, answers: state.answers, safetyFlags: state.safetyFlags, playbookInterest: !!state.playbookInterest }) });
     track("email_captured");
   } catch (err) { console.warn("Formspree submission failed (non-blocking):", err); }
 }
@@ -319,27 +324,71 @@ function professionalSupportNote() {
   return "Based on what you shared, it may help to bring in a school counselor or child therapist now, not just as a backup plan. A trained professional can help things move faster.";
 }
 
+function topicBranch() {
+  const q9 = state.answers.q9 || [];
+  if (q9.some(t => t.includes("pressuring them sexually") || t.includes("using power over them"))) return "power";
+  if (q9.some(t => t.includes("hit, pushed, tripped"))) return "physical";
+  if (q9.some(t => t.includes("left out, ignored, or excluded"))) return "exclusion";
+  if (q9.some(t => t.includes("called names, teased"))) return "namecalling";
+  if (onlineWeight() === "online") return "online";
+  const q2 = state.answers.q2 || "";
+  if (q2.includes("prevent")) return "prevent";
+  return "default";
+}
+
 function chapterRecommendation() {
   const BOOK = "Bullyproof Kids in 10 Minutes a Day";
-  const q9 = state.answers.q9 || [];
-  if (q9.some(t => t.includes("pressuring them sexually") || t.includes("using power over them"))) {
-    return `In ${BOOK}, look for the section on when someone has power over a child — it covers how to spot this and what to do.`;
-  }
-  if (q9.some(t => t.includes("hit, pushed, tripped"))) {
-    return `In ${BOOK}, look for the section on physical bullying — it covers writing things down and working with the school.`;
-  }
-  if (q9.some(t => t.includes("left out, ignored, or excluded"))) {
-    return `In ${BOOK}, look for the section on being left out — it covers rebuilding your child's confidence and friend group.`;
-  }
-  if (q9.some(t => t.includes("called names, teased"))) {
-    return `In ${BOOK}, look for the section on name-calling and teasing — it covers how to respond without brushing it off.`;
+  const map = {
+    power: `In ${BOOK}, look for the section on when someone has power over a child — it covers how to spot this and what to do.`,
+    physical: `In ${BOOK}, look for the section on physical bullying — it covers writing things down and working with the school.`,
+    exclusion: `In ${BOOK}, look for the section on being left out — it covers rebuilding your child's confidence and friend group.`,
+    namecalling: `In ${BOOK}, look for the section on name-calling and teasing — it covers how to respond without brushing it off.`,
+    online: `In ${BOOK}, look for the section on cyberbullying — it covers screenshots, reporting, and how to talk about it tonight.`,
+    prevent: `In ${BOOK}, look for the section on building strength early, before problems start.`,
+    default: `In ${BOOK}, look for the section on getting your bearings — what to watch for and how to start the conversation.`
+  };
+  return map[topicBranch()];
+}
+
+// Real, verifiable books — not invented, and matched to the same branch as
+// the guide recommendation above. Swap or expand this list any time.
+const BOOKS = {
+  power: { title: "Protecting the Gift", author: "Gavin de Becker" },
+  physical: { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso" },
+  exclusion: { title: "Queen Bees and Wannabes", author: "Rosalind Wiseman" },
+  namecalling: { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish" },
+  online: { title: "Cyberbullying: Bullying in the Digital Age", author: "Robin Kowalski, Susan Limber & Patricia Agatston" },
+  prevent: { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish" },
+  default: { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso" }
+};
+
+function bookRecommendation() {
+  const b = BOOKS[topicBranch()];
+  return `"${b.title}" by ${b.author}`;
+}
+
+// TODO once Bullyproof.Support's own directory is populated and confirmed
+// ready: replace this URL with a search into that network instead.
+const FIND_SUPPORT_URL = "https://www.psychologytoday.com/us/therapists";
+
+function whyThisMattersNote() {
+  const status = communicationStatus();
+  if (status === "behavior-only" || status === "no-signals") {
+    return "Here's something worth knowing: kids who feel confident talking to a trusted adult are less likely to be targeted in the first place. That's a skill that can be built at any age. If it feels like a gap right now, that's not a failure on your part — it's simply the next thing to work on together.";
   }
   if (onlineWeight() === "online") {
-    return `In ${BOOK}, look for the section on cyberbullying — it covers screenshots, reporting, and how to talk about it tonight.`;
+    return "One thing that often helps: kids who know how to manage their online presence, and who to tell when something feels wrong, are far more resilient. That's a learned skill, not something they're born knowing.";
   }
-  const q2 = state.answers.q2 || "";
-  if (q2.includes("prevent")) return `In ${BOOK}, look for the section on building strength early, before problems start.`;
-  return `In ${BOOK}, look for the section on getting your bearings — what to watch for and how to start the conversation.`;
+  return "Confidence and social skills can be built at any age. Working on that together is often the biggest thing a parent can do — even more than any single talk with the school.";
+}
+
+function furtherStepsTeaser() {
+  return [
+    "The exact words to say if the school pushes back or downplays it",
+    "A week-by-week plan to help your child rebuild confidence",
+    "What to say — and what not to say — if another family is involved",
+    "A simple way to track whether things are actually getting better"
+  ];
 }
 
 function actionSteps() {
@@ -350,69 +399,84 @@ function generatePDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   let y = 20;
+
+  function ensureRoom(needed) {
+    if (y + needed > 280) { doc.addPage(); y = 20; }
+  }
+  function heading(text) {
+    ensureRoom(14);
+    doc.setFontSize(13); doc.setTextColor(44, 82, 130); doc.text(text, 15, y); y += 7;
+  }
+  function body(text, opts) {
+    opts = opts || {};
+    doc.setFontSize(11);
+    if (opts.italic) doc.setFont(undefined, "italic");
+    if (opts.color) doc.setTextColor(...opts.color); else doc.setTextColor(40, 40, 40);
+    const lines = doc.splitTextToSize(text, 180);
+    ensureRoom(lines.length * 6 + 6);
+    doc.text(lines, 15, y);
+    y += lines.length * 6 + 6;
+    if (opts.italic) doc.setFont(undefined, "normal");
+  }
+
   doc.setFontSize(18); doc.setTextColor(44, 82, 130); doc.text("Bullyproof.Guide — Your Action Plan", 15, y); y += 12;
 
   if (state.safetyFlags.length) {
     const priority = ["sexualOrPower", "physicalSigns"];
     const key = priority.find(k => state.safetyFlags.includes(k));
     const variant = SAFETY_VARIANTS[key];
+    ensureRoom(10 + variant.resources.length * 6);
     doc.setFillColor(253, 237, 237);
     doc.rect(10, y - 6, 190, 10 + variant.resources.length * 6, "F");
     doc.setFontSize(13); doc.setTextColor(197, 48, 48); doc.text("Please reach out to one of these resources first:", 15, y); y += 7;
-    doc.setFontSize(11);
+    doc.setFontSize(11); doc.setTextColor(40, 40, 40);
     variant.resources.forEach(r => { doc.text(`${r.name} — ${r.detail}`, 15, y); y += 6; });
     y += 6;
   }
 
   if (state.answers.q4) {
-    doc.setFontSize(13); doc.setTextColor(44, 82, 130); doc.text("You told us:", 15, y); y += 7;
-    doc.setFontSize(11); doc.setFont(undefined, "italic");
-    doc.text(doc.splitTextToSize(`"${state.answers.q4}"`, 180), 15, y);
-    doc.setFont(undefined, "normal");
-    y += 14;
+    heading("You told us:");
+    body(`"${state.answers.q4}"`, { italic: true });
   }
 
-  const validation = openingValidation();
-  if (validation) {
-    doc.setFontSize(11); doc.setTextColor(74, 109, 147);
-    doc.text(doc.splitTextToSize(validation, 180), 15, y); y += 14;
-  }
+  if (openingValidation()) body(openingValidation(), { color: [74, 109, 147] });
 
-  doc.setFontSize(13); doc.setTextColor(44, 82, 130); doc.text("What's happening:", 15, y); y += 7;
-  doc.setFontSize(11); doc.text(doc.splitTextToSize(deriveSummary(), 180), 15, y); y += 12;
+  heading("What's happening:");
+  body(deriveSummary());
 
-  const focus = focusLine();
-  if (focus) {
-    doc.setFontSize(11); doc.setFont(undefined, "italic");
-    doc.text(doc.splitTextToSize(focus, 180), 15, y);
-    doc.setFont(undefined, "normal");
-    y += 14;
-  }
+  if (focusLine()) body(focusLine(), { italic: true });
 
-  doc.setFontSize(13); doc.setTextColor(44, 82, 130); doc.text("Recommended reading:", 15, y); y += 7;
-  doc.setFontSize(11); doc.text(doc.splitTextToSize(chapterRecommendation(), 180), 15, y); y += 16;
+  heading("Recommended reading:");
+  body(chapterRecommendation());
+  body(`Also worth reading: ${bookRecommendation()}`);
 
-  doc.setFontSize(13); doc.setTextColor(44, 82, 130); doc.text("Your next 3 steps:", 15, y); y += 7;
-  doc.setFontSize(11);
-  actionSteps().forEach((step, i) => { doc.text(doc.splitTextToSize(`${i + 1}. ${step}`, 180), 15, y); y += 14; });
+  heading("Why this matters:");
+  body(whyThisMattersNote());
+
+  heading("Your next 3 steps:");
+  actionSteps().forEach((step, i) => body(`${i + 1}. ${step}`));
 
   const proNote = professionalSupportNote();
-  if (proNote) {
-    y += 2;
-    doc.setFontSize(13); doc.setTextColor(44, 82, 130); doc.text("Worth considering:", 15, y); y += 7;
-    doc.setFontSize(11); doc.text(doc.splitTextToSize(proNote, 180), 15, y); y += 14;
-  }
+  if (proNote) { heading("Worth considering:"); body(proNote); }
+
+  heading("Find support near you:");
+  body("Looking for a therapist or counselor in your area? Psychology Today's free directory lets you search by location and specialty (link below).");
+  ensureRoom(8);
+  doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+  doc.textWithLink("psychologytoday.com/us/therapists", 15, y, { url: FIND_SUPPORT_URL });
+  y += 12;
+
+  heading("What comes next:");
+  body("This covers steps 1 through 3. In your full situation, steps 4 through 10 usually matter just as much — here's what those look like:");
+  furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
+  body("These deeper, ongoing steps are what we're building into the Bullyproof Parent Playbook — a tool that gives you real scripts made for your child, by name and age, as things change. It's not available yet. If you'd like to know the moment it is, just reply to your action plan email and let us know.", { color: [74, 109, 147] });
 
   if (state.answers.q12) {
-    y += 2;
-    doc.setFontSize(13); doc.setTextColor(44, 82, 130); doc.text("You asked for help with:", 15, y); y += 7;
-    doc.setFontSize(11); doc.setFont(undefined, "italic");
-    doc.text(doc.splitTextToSize(`"${state.answers.q12}"`, 180), 15, y);
-    doc.setFont(undefined, "normal");
-    y += 14;
+    heading("You asked for help with:");
+    body(`"${state.answers.q12}"`, { italic: true });
   }
 
-  y += 6;
+  ensureRoom(10);
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);
   doc.text("If you need more help finding a vetted professional in your area, visit " + (CONFIG.SITE_URL || "bullyproof.guide") + ".", 15, y);
 

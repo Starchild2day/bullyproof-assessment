@@ -338,7 +338,7 @@ function topicBranch() {
 }
 
 function chapterRecommendation() {
-  const BOOK = "Bullyproof Kids in 10 Minutes a Day";
+  const BOOK = "The Bullyproof Parent Playbook";
   const map = {
     power: `In ${BOOK}, look for the section on when someone has power over a child — it covers how to spot this and what to do.`,
     physical: `In ${BOOK}, look for the section on physical bullying — it covers writing things down and working with the school.`,

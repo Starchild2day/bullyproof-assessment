@@ -380,16 +380,15 @@ function topicBranch() {
   return "default";
 }
 
-function chapterRecommendation() {
-  const BOOK = "The Bullyproof Parent Playbook";
+function topicLabel() {
   const map = {
-    power: `In ${BOOK}, look for the section on when someone has power over a child — it covers how to spot this and what to do.`,
-    physical: `In ${BOOK}, look for the section on physical bullying — it covers writing things down and working with the school.`,
-    exclusion: `In ${BOOK}, look for the section on being left out — it covers rebuilding your child's confidence and friend group.`,
-    namecalling: `In ${BOOK}, look for the section on name-calling and teasing — it covers how to respond without brushing it off.`,
-    online: `In ${BOOK}, look for the section on cyberbullying — it covers screenshots, reporting, and how to talk about it tonight.`,
-    prevent: `In ${BOOK}, look for the section on building strength early, before problems start.`,
-    default: `In ${BOOK}, look for the section on getting your bearings — what to watch for and how to start the conversation.`
+    power: "This falls into what's often called a power-imbalance situation — someone using power over a child in a way that isn't okay.",
+    physical: "This falls into what's often called physical bullying — situations where writing things down and working with the school make the biggest difference.",
+    exclusion: "This falls into what's often called social exclusion — being deliberately left out or frozen out by other kids.",
+    namecalling: "This falls into what's often called verbal bullying — name-calling and teasing that shouldn't be brushed off.",
+    online: "This falls into what's often called cyberbullying — situations where screenshots, reporting, and a calm conversation matter most.",
+    prevent: "This is about building strength early, before problems start — one of the most effective things a parent can do.",
+    default: "This is about getting your bearings — figuring out what to watch for and how to open the conversation."
   };
   return map[topicBranch()];
 }
@@ -497,8 +496,8 @@ function generatePDF() {
   if (focusLine()) body(focusLine(), { italic: true });
 
   heading("Recommended reading:");
-  body(chapterRecommendation());
-  body(`Also worth reading: ${bookRecommendation()}`);
+  body(topicLabel());
+  body(`A good place to start: ${bookRecommendation()}`);
 
   heading("Why this matters:");
   body(whyThisMattersNote());

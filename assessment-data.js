@@ -199,7 +199,8 @@ const QUESTIONS = [
     options: [
       "Yes — primarily online",
       "Yes — both online and in person",
-      "No — this isn't happening online or through screens"
+      "No — this isn't happening online or through screens",
+      "I'm not sure"
     ]
   },
   {

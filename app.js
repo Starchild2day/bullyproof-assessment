@@ -476,7 +476,10 @@ const NETWORK_MATCH_URL = "https://www.bullyproof.support/getmatched";
 // confirmed general/parent signup URL wasn't available. /join reads as
 // aimed at professionals, so this avoids sending parents to the wrong
 // flow. Swap for a confirmed direct signup link the moment Mark has one.
-const NETWORK_HOME_URL = "https://www.bullyproof.support";
+// Confirmed by Mark: lets a new visitor choose between a "parent or
+// guardian" account and a "professionals" account, so parents land on the
+// right signup flow instead of the professional-oriented /join page.
+const NETWORK_HOME_URL = "https://www.bullyproof.support/movement";
 
 // Backup only — for areas where the network doesn't yet have a strong local
 // match. Swap or remove once network coverage is dense enough on its own.

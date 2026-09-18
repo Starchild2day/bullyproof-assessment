@@ -591,7 +591,7 @@ function generatePDF() {
   y += 12;
 
   heading("What comes next:");
-  body("What you've read so far is the free part — the same for everyone. Your specific situation usually needs more than 3 steps, though. Here's what comes next:");
+  body("What you've read above is real and complete on its own. As things unfold, though, the most useful next moves usually depend on details that shift over time — how your child responds, what changes, what works for them specifically. That's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. A few examples of what that looks like for a situation like yours:");
   furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
   body("These deeper, ongoing steps — personalized to your child by name and age, and updated as things change — are what the Bullyproof Parent Playbook is built for. It's not live yet, but you can reserve a free 3-day trial the moment it is by checking the box above before you download this plan.", { color: [74, 109, 147] });
 

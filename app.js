@@ -322,6 +322,24 @@ function focusLine() {
   return `You told us you want help with: "${q12}" — that's exactly where we start below.`;
 }
 
+// Detects when a parent has asked, in their own words, whether they
+// contributed to the situation. This never attempts to answer that — no
+// static plan should try to diagnose a parent's role from one free-text
+// answer. It only acknowledges the question honestly and points at where
+// it actually gets worked through: an ongoing relationship, not a report.
+function selfReflectionNote() {
+  const text = `${state.answers.q4 || ""} ${state.answers.q12 || ""}`.toLowerCase();
+  const signals = [
+    "something i've done", "something i have done", "something i did",
+    "what i'm doing wrong", "what i am doing wrong", "did i cause",
+    "have i caused", "am i the reason", "my fault", "contribute to this",
+    "contributed to this", "what i did wrong", "how i can change",
+    "something i'm doing", "something i am doing"
+  ];
+  if (!signals.some(s => text.includes(s))) return null;
+  return "You also asked whether you might have played a role in this. Wondering that is a sign of self-awareness, not evidence you did something wrong — most of the time there's no single cause to find. The most useful thing to do with that instinct right now isn't searching for a mistake, it's showing your child, through how you respond today, that this is safe to keep bringing to you. Looking at specific patterns worth adjusting — without blame — is exactly the kind of ongoing, personalized work the Bullyproof Parent Playbook is built for.";
+}
+
 function stepOpening() {
   const status = communicationStatus();
   if (status === "clear") {
@@ -432,12 +450,16 @@ function whyThisMattersNote() {
 }
 
 function furtherStepsTeaser() {
-  return [
+  const items = [
     "The exact words to say if the school pushes back or downplays it",
     "A week-by-week plan to help your child rebuild confidence",
     "What to say — and what not to say — if another family is involved",
     "A simple way to track whether things are actually getting better"
   ];
+  if (selfReflectionNote()) {
+    items.push("A gentle way to look at any patterns worth adjusting — without blame");
+  }
+  return items;
 }
 
 function actionSteps() {
@@ -494,6 +516,7 @@ function generatePDF() {
   body(deriveSummary());
 
   if (focusLine()) body(focusLine(), { italic: true });
+  if (selfReflectionNote()) body(selfReflectionNote(), { color: [74, 109, 147] });
 
   heading("Recommended reading:");
   body(topicLabel());

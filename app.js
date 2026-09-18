@@ -215,6 +215,11 @@ function renderResults() {
         <input type="checkbox" id="playbookInterest">
         <label for="playbookInterest">Reserve my spot for the free 3-day trial of the Bullyproof Parent Playbook</label>
       </div>
+      <div class="network-invite">
+        <h3>Also worth knowing about — free, live today</h3>
+        <p>Bullyproof Support is a free community for parents in situations like yours: other parents' stories, articles and a podcast on exactly this kind of thing, and the professional directory you just saw — searchable anytime once you have an account, not just this once. It's still growing, so joining now makes you a Founding Member.</p>
+        <a href="${NETWORK_HOME_URL}" target="_blank" class="network-invite-link">Create your free account →</a>
+      </div>
       <div class="nav-row">
         <button class="ghost" id="backToQ">Back</button>
         <button class="primary" id="getPlanBtn">Get My Action Plan</button>
@@ -467,6 +472,12 @@ function bookRecommendation() {
 // minimal profiles, so this is paired with a backup search below.
 const NETWORK_MATCH_URL = "https://www.bullyproof.support/getmatched";
 
+// Safe default for "create a free account" — the homepage, since a
+// confirmed general/parent signup URL wasn't available. /join reads as
+// aimed at professionals, so this avoids sending parents to the wrong
+// flow. Swap for a confirmed direct signup link the moment Mark has one.
+const NETWORK_HOME_URL = "https://www.bullyproof.support";
+
 // Backup only — for areas where the network doesn't yet have a strong local
 // match. Swap or remove once network coverage is dense enough on its own.
 const FIND_SUPPORT_URL = "https://www.psychologytoday.com/us/therapists";
@@ -602,6 +613,13 @@ function generatePDF() {
     doc.textWithLink("→ Click here to reserve your free trial", 15, y, { url: `mailto:${CONFIG.CONTACT_EMAIL || "mark@bullyproof.guide"}?subject=${subject}&body=${mailBody}` });
     y += 12;
   }
+
+  heading("Also worth knowing about — free, live today:");
+  body("Bullyproof Support is a free community for parents in situations like yours: other parents' stories, articles and a podcast on exactly this kind of thing, and a professional directory you can search anytime once you have an account. It's still growing, so joining now makes you a Founding Member.");
+  ensureRoom(8);
+  doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+  doc.textWithLink("→ Create your free account at bullyproof.support", 15, y, { url: NETWORK_HOME_URL });
+  y += 12;
 
   ensureRoom(10);
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);

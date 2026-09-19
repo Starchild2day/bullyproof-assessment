@@ -44,6 +44,7 @@ function addFlag(key) {
 }
 
 function render() {
+  document.body.classList.toggle("question-mode", state.screen === "question");
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (state.screen === "landing") return renderLanding();
   if (state.screen === "question") return renderQuestion();
@@ -104,9 +105,13 @@ function renderQuestion() {
     <div class="card">
       ${q.icon ? banner(q.icon) : ""}
       <div class="card-body">
-      <h2 class="question">${q.title}</h2>
-      ${q.sub ? `<p class="sub">${q.sub}</p>` : ""}
-      ${bodyHTML}
+      <div class="card-fixed">
+        <h2 class="question">${q.title}</h2>
+        ${q.sub ? `<p class="sub">${q.sub}</p>` : ""}
+      </div>
+      <div class="options-scroll">
+        ${bodyHTML}
+      </div>
       <div class="nav-row">
         <button class="ghost" id="backBtn" ${state.qIndex === 0 ? "disabled style='visibility:hidden'" : ""}>Back</button>
         <button class="primary" id="nextBtn">Next</button>

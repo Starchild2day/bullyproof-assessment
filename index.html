@@ -213,6 +213,24 @@
     text-align:center;font-size:12px;color:#9098A6;margin-top:40px;line-height:1.6;
   }
   footer.foot a{color:#9098A6;}
+
+  /* Fixed-shell layout: header, banner, progress bar, and the question
+     itself all stay in place; only the answer options scroll. Active only
+     while a question is showing — landing and results keep normal page
+     scroll, since they don't have this back/forth-per-question pattern. */
+  body.question-mode{overflow:hidden;height:100vh;}
+  body.question-mode .wrap{height:100vh;overflow:hidden;display:flex;flex-direction:column;padding-bottom:16px;}
+  body.question-mode footer.foot{display:none;}
+  body.question-mode header.brand{flex-shrink:0;}
+  body.question-mode .progress-track{position:static;flex-shrink:0;}
+  body.question-mode #app{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;}
+  body.question-mode .safety-banner{flex-shrink:0;}
+  body.question-mode .card{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;}
+  body.question-mode .banner{flex-shrink:0;}
+  body.question-mode .card-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding-bottom:18px;}
+  .card-fixed{flex-shrink:0;}
+  body.question-mode .options-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:2px;}
+  body.question-mode .nav-row{flex-shrink:0;}
 </style>
 </head>
 <body>

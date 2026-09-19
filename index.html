@@ -35,7 +35,6 @@
       radial-gradient(1100px 620px at 50% -8%, rgba(27,42,74,0.07), transparent 60%),
       radial-gradient(900px 500px at 100% 100%, rgba(200,155,60,0.05), transparent 55%),
       var(--bg);
-    background-attachment:fixed;
     color:var(--text);
     font-size:16px;
     line-height:1.55;
@@ -62,6 +61,7 @@
   header.brand .name{font-weight:600;font-size:17px;color:var(--navy);letter-spacing:-0.01em;}
 
   .progress-track{
+    position:-webkit-sticky;
     position:sticky;top:0;
     background:var(--bg);
     padding:10px 0 16px;

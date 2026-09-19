@@ -263,6 +263,7 @@ function renderResults() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailInput.style.borderColor = "#C53030"; return; }
     state.email = email;
     await submitToFormspree();
+    await sendPlanByEmail();
     generatePDF();
     track("pdf_downloaded");
   });
@@ -295,6 +296,98 @@ function buildReadableSummary() {
     lines.push(`Q: ${q.title}\nA: ${formatted}`);
   });
   return lines.join("\n\n");
+}
+
+function buildEmailHtml() {
+  const navy = "#1B2A4A", navyDeep = "#101B33", text = "#1F2430", muted = "#5B6472";
+  const sections = [];
+
+  if (state.safetyFlags.length) {
+    const priority = ["sexualOrPower", "physicalSigns"];
+    const key = priority.find(k => state.safetyFlags.includes(k));
+    const variant = SAFETY_VARIANTS[key];
+    sections.push(`
+      <div style="background:#FDEDED;border-left:4px solid #B23A48;border-radius:8px;padding:16px 18px;margin-bottom:20px;">
+        <p style="margin:0 0 8px;font-weight:700;color:#B23A48;font-size:16px;">Please reach out to one of these resources first:</p>
+        <ul style="margin:0;padding-left:20px;color:#7A2E31;font-size:14px;">
+          ${variant.resources.map(r => `<li><strong>${r.name}</strong> — ${r.detail}</li>`).join("")}
+        </ul>
+      </div>
+    `);
+  }
+
+  if (state.answers.q4) {
+    sections.push(`<p style="color:${text};font-size:15px;"><strong>You told us:</strong><br><em>"${state.answers.q4}"</em></p>`);
+  }
+  if (openingValidation()) {
+    sections.push(`<p style="color:${muted};font-size:14.5px;">${openingValidation()}</p>`);
+  }
+  sections.push(`<p style="color:${text};font-size:15px;"><strong>What's happening:</strong><br>${deriveSummary()}</p>`);
+  if (focusLine()) {
+    sections.push(`<p style="color:${text};font-size:14.5px;font-style:italic;">${focusLine()}</p>`);
+  }
+  if (selfReflectionNote()) {
+    sections.push(`<p style="color:${muted};font-size:14.5px;">${selfReflectionNote()}</p>`);
+  }
+  sections.push(`
+    <p style="color:${text};font-size:15px;"><strong>Recommended reading:</strong><br>${topicLabel()}<br>A good place to start: ${bookRecommendation()}</p>
+    <p style="color:${text};font-size:15px;"><strong>Why this matters:</strong><br>${whyThisMattersNote()}</p>
+    <p style="color:${text};font-size:15px;"><strong>Your next 3 steps:</strong></p>
+    <ol style="color:${text};font-size:14.5px;padding-left:20px;">
+      ${actionSteps().map(s => `<li style="margin-bottom:10px;">${s}</li>`).join("")}
+    </ol>
+  `);
+  const proNote = professionalSupportNote();
+  if (proNote) {
+    sections.push(`<p style="color:${text};font-size:15px;"><strong>Worth considering:</strong><br>${proNote}</p>`);
+  }
+  sections.push(`
+    <p style="color:${text};font-size:15px;"><strong>Find support near you:</strong><br>
+      <a href="${NETWORK_MATCH_URL}" style="color:${navy};">Get matched with a professional near you</a> through the Bullyproof Support network.<br>
+      If your area doesn't have a strong match yet, <a href="${FIND_SUPPORT_URL}" style="color:${navy};">Psychology Today's directory</a> is a good backup.
+    </p>
+  `);
+  sections.push(`
+    <p style="color:${text};font-size:15px;"><strong>What comes next:</strong><br>
+    What you've read above is real and complete on its own. As things unfold, the most useful next moves usually depend on details that shift over time. A few examples of what that looks like for a situation like yours:</p>
+    <ul style="color:${text};font-size:14.5px;padding-left:20px;">
+      ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
+    </ul>
+    <p style="color:${muted};font-size:14px;">These deeper, ongoing steps are what the Bullyproof Parent Playbook is built for. It's not live yet — reply to this email if you'd like to know the moment it is.</p>
+  `);
+  sections.push(`
+    <p style="color:${text};font-size:15px;"><strong>Also worth knowing about — free, live today:</strong><br>
+    Bullyproof Support is a free community for parents in situations like yours. It's still growing, so joining now makes you a Founding Member.<br>
+    <a href="${NETWORK_HOME_URL}" style="color:${navy};font-weight:600;">Create your free account →</a></p>
+  `);
+  sections.push(`
+    <p style="color:#8896B8;font-size:12px;margin-top:24px;border-top:1px solid #E1E4EA;padding-top:14px;">
+    This plan is for general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. Please use your own judgment and talk to a licensed professional about your specific situation. If your child is in immediate danger, call 911.
+    </p>
+  `);
+
+  return `
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+      <h1 style="color:${navy};font-size:22px;margin:0 0 20px;">Bullyproof.Guide — Your Action Plan</h1>
+      ${sections.join("\n")}
+    </div>
+  `;
+}
+
+async function sendPlanByEmail() {
+  try {
+    await fetch("/.netlify/functions/send-plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: state.email,
+        subject: state.safetyFlags.length ? "Your Bullyproof.Guide Action Plan (please read)" : "Your Bullyproof.Guide Action Plan",
+        html: buildEmailHtml()
+      })
+    });
+  } catch (err) {
+    console.warn("Email delivery failed (non-blocking, PDF download still works):", err);
+  }
 }
 
 async function submitToFormspree() {

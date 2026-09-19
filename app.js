@@ -195,11 +195,25 @@ function banner(svgInner, opts) {
   </div>`;
 }
 
+function rerenderCurrentQuestion() {
+  const scrollEl = document.querySelector(".options-scroll");
+  const savedOptionsScroll = scrollEl ? scrollEl.scrollTop : 0;
+  const savedWindowScroll = window.scrollY;
+
+  const useFixedShell = state.safetyFlags.length === 0;
+  document.body.classList.toggle("question-mode", useFixedShell);
+  renderQuestion();
+
+  const newScrollEl = document.querySelector(".options-scroll");
+  if (newScrollEl) newScrollEl.scrollTop = savedOptionsScroll;
+  else window.scrollTo(0, savedWindowScroll);
+}
+
 function wireQuestionEvents(q) {
   document.getElementById("backBtn").addEventListener("click", () => { if (state.qIndex > 0) { state.qIndex--; render(); } });
   document.getElementById("nextBtn").addEventListener("click", () => onNext(q));
-  if (q.type === "choice") { document.querySelectorAll(".option-btn").forEach(btn => { btn.addEventListener("click", () => { state.answers[q.id] = btn.dataset.value; checkSafety(q, btn.dataset.value); render(); }); }); }
-  if (q.type === "multi") { document.querySelectorAll(".multi-opt").forEach(btn => { btn.addEventListener("click", () => { const val = btn.dataset.value; const arr = state.answers[q.id] || []; const idx = arr.indexOf(val); if (idx >= 0) arr.splice(idx, 1); else arr.push(val); state.answers[q.id] = arr; checkSafety(q, arr); render(); }); }); }
+  if (q.type === "choice") { document.querySelectorAll(".option-btn").forEach(btn => { btn.addEventListener("click", () => { state.answers[q.id] = btn.dataset.value; checkSafety(q, btn.dataset.value); rerenderCurrentQuestion(); }); }); }
+  if (q.type === "multi") { document.querySelectorAll(".multi-opt").forEach(btn => { btn.addEventListener("click", () => { const val = btn.dataset.value; const arr = state.answers[q.id] || []; const idx = arr.indexOf(val); if (idx >= 0) arr.splice(idx, 1); else arr.push(val); state.answers[q.id] = arr; checkSafety(q, arr); rerenderCurrentQuestion(); }); }); }
 }
 
 function onNext(q) {
@@ -233,20 +247,6 @@ function renderResults() {
       <h2 class="question">Where should we send your action plan?</h2>
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
-      <div class="playbook-teaser">
-        <h3>Want more than these 3 steps?</h3>
-        <p>This plan covers what matters most right now. Your full situation usually needs more, though — things like <strong>${furtherStepsTeaser()[0].toLowerCase()}</strong> or <strong>${furtherStepsTeaser()[1].toLowerCase()}</strong>. That's what the <strong>Bullyproof Parent Playbook</strong> is being built for: ongoing help, personalized to your child by name and age, that adapts as things change.</p>
-        <p>It's not live yet. Checking the box costs nothing and commits you to nothing — it just means we'll email you the moment it's ready, with a free 3-day trial waiting.</p>
-      </div>
-      <div class="checkbox-row">
-        <input type="checkbox" id="playbookInterest">
-        <label for="playbookInterest">Reserve my spot for the free 3-day trial of the Bullyproof Parent Playbook</label>
-      </div>
-      <div class="network-invite">
-        <h3>Also worth knowing about — free, live today</h3>
-        <p>Bullyproof Support is a free community for parents in situations like yours: other parents' stories, articles and a podcast on exactly this kind of thing, and the professional directory you just saw — searchable anytime once you have an account, not just this once. It's still growing, so joining now makes you a Founding Member.</p>
-        <a href="${NETWORK_HOME_URL}" target="_blank" class="network-invite-link">Create your free account →</a>
-      </div>
       <div class="nav-row">
         <button class="ghost" id="backToQ">Back</button>
         <button class="primary" id="getPlanBtn">Get My Action Plan</button>
@@ -262,7 +262,6 @@ function renderResults() {
     const email = emailInput.value.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailInput.style.borderColor = "#C53030"; return; }
     state.email = email;
-    state.playbookInterest = document.getElementById("playbookInterest").checked;
     await submitToFormspree();
     generatePDF();
     track("pdf_downloaded");
@@ -313,7 +312,6 @@ async function submitToFormspree() {
         _replyto: state.email,
         _subject: subject,
         safety_flags: flagged ? state.safetyFlags.join(", ") : "none",
-        wants_playbook_trial: state.playbookInterest ? "yes" : "no",
         consent_given: state.consentGiven ? "yes" : "no",
         safety_resources_acknowledged: state.safetyFlags.length ? (state.safetyAcknowledged ? "yes" : "no") : "n/a",
         summary: buildReadableSummary()

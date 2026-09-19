@@ -180,16 +180,16 @@ function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
 function banner(svgInner, opts) {
   opts = opts || {};
   const large = !!opts.large;
-  const vbH = large ? 180 : 100;
+  const vbH = large ? 180 : 62;
   const cy = vbH / 2;
-  const size = large ? 72 : 44;
+  const size = large ? 72 : 34;
   const x = 200 - size / 2;
   const y = cy - size / 2;
   return `<div class="banner${large ? " landing-banner" : ""}">
     <svg viewBox="0 0 400 ${vbH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <circle cx="46" cy="${vbH - 28}" r="72" fill="#4F7C82" opacity="0.28"/>
-      <circle cx="366" cy="24" r="94" fill="#C89B3C" opacity="0.16"/>
-      <circle cx="330" cy="${vbH - 18}" r="38" fill="#FFFFFF" opacity="0.05"/>
+      <circle cx="46" cy="${vbH - 18}" r="42" fill="#4F7C82" opacity="0.28"/>
+      <circle cx="366" cy="14" r="54" fill="#C89B3C" opacity="0.16"/>
+      <circle cx="330" cy="${vbH - 12}" r="22" fill="#FFFFFF" opacity="0.05"/>
       <svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#EFDFB8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg>
     </svg>
   </div>`;

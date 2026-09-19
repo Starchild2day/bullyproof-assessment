@@ -228,8 +228,8 @@
      itself all stay in place; only the answer options scroll. Active only
      while a question is showing — landing and results keep normal page
      scroll, since they don't have this back/forth-per-question pattern. */
-  body.question-mode{overflow:hidden;height:100vh;}
-  body.question-mode .wrap{height:100vh;overflow:hidden;display:flex;flex-direction:column;padding-bottom:10px;}
+  body.question-mode{overflow:hidden;height:100vh;height:100dvh;}
+  body.question-mode .wrap{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column;padding-bottom:calc(10px + env(safe-area-inset-bottom));}
   body.question-mode footer.foot{display:none;}
   body.question-mode header.brand{flex-shrink:0;padding:6px 0 8px;}
   body.question-mode header.brand .mark{width:26px;height:26px;font-size:12px;}
@@ -244,7 +244,7 @@
   body.question-mode h2.question{margin-bottom:8px;padding-bottom:8px;font-size:20px;}
   body.question-mode p.sub{margin-bottom:12px;}
   .card-fixed{flex-shrink:0;}
-  body.question-mode .options-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:2px;}
+  body.question-mode .options-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:2px;}
   body.question-mode .nav-row{flex-shrink:0;}
 </style>
 </head>

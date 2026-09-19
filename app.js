@@ -44,7 +44,7 @@ function addFlag(key) {
 }
 
 function render() {
-  const useFixedShell = state.screen === "question" && state.safetyFlags.length === 0;
+  const useFixedShell = state.screen === "question" && (state.safetyFlags.length === 0 || state.safetyAcknowledged);
   document.body.classList.toggle("question-mode", useFixedShell);
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (state.screen === "landing") return renderLanding();
@@ -200,7 +200,7 @@ function rerenderCurrentQuestion() {
   const savedOptionsScroll = scrollEl ? scrollEl.scrollTop : 0;
   const savedWindowScroll = window.scrollY;
 
-  const useFixedShell = state.safetyFlags.length === 0;
+  const useFixedShell = state.safetyFlags.length === 0 || state.safetyAcknowledged;
   document.body.classList.toggle("question-mode", useFixedShell);
   renderQuestion();
 

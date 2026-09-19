@@ -44,7 +44,8 @@ function addFlag(key) {
 }
 
 function render() {
-  document.body.classList.toggle("question-mode", state.screen === "question");
+  const useFixedShell = state.screen === "question" && state.safetyFlags.length === 0;
+  document.body.classList.toggle("question-mode", useFixedShell);
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (state.screen === "landing") return renderLanding();
   if (state.screen === "question") return renderQuestion();
@@ -120,6 +121,7 @@ function renderQuestion() {
     </div>
   `;
   wireQuestionEvents(q);
+  wireSafetyBanner();
   track("question_answered_view", { question: q.id });
 }
 
@@ -127,13 +129,33 @@ function renderSafetyBanner() {
   const priority = ["sexualOrPower", "physicalSigns"];
   const key = priority.find(k => state.safetyFlags.includes(k));
   const variant = SAFETY_VARIANTS[key];
+
+  if (state.safetyAcknowledged) {
+    return `
+      <div class="safety-banner safety-banner-mini">
+        <strong>Crisis resources:</strong> ${variant.resources.map(r => r.name + " — " + r.detail).join(" · ")}
+      </div>
+    `;
+  }
+
   return `
     <div class="safety-banner">
       <h3>Please know help is available right now</h3>
       <p>Based on what you've shared, we want to make sure you have these resources close by. You can keep going with the assessment whenever you're ready.</p>
       <ul>${variant.resources.map(r => `<li><strong>${r.name}</strong> — ${r.detail}</li>`).join("")}</ul>
+      <button type="button" id="safetyAckBtn" class="safety-ack-btn">I've seen these — continue</button>
     </div>
   `;
+}
+
+function wireSafetyBanner() {
+  const btn = document.getElementById("safetyAckBtn");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      state.safetyAcknowledged = true;
+      render();
+    });
+  }
 }
 
 const CHECKMARK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
@@ -234,6 +256,7 @@ function renderResults() {
     </div>
   `;
   document.getElementById("backToQ").addEventListener("click", () => { state.screen = "question"; state.qIndex = visibleQuestions().length - 1; render(); });
+  wireSafetyBanner();
   document.getElementById("getPlanBtn").addEventListener("click", async () => {
     const emailInput = document.getElementById("finalEmail");
     const email = emailInput.value.trim();
@@ -292,6 +315,7 @@ async function submitToFormspree() {
         safety_flags: flagged ? state.safetyFlags.join(", ") : "none",
         wants_playbook_trial: state.playbookInterest ? "yes" : "no",
         consent_given: state.consentGiven ? "yes" : "no",
+        safety_resources_acknowledged: state.safetyFlags.length ? (state.safetyAcknowledged ? "yes" : "no") : "n/a",
         summary: buildReadableSummary()
       })
     });

@@ -331,7 +331,15 @@ function buildEmailHtml() {
   }
   sections.push(`
     <p style="color:${text};font-size:15px;"><strong>Recommended reading:</strong><br>${topicLabel()}<br>A good place to start: <a href="${bookRecommendationUrl()}" style="color:${navy};">${bookRecommendation()}</a></p>
-    ${sunbeamResource() ? `<p style="color:${muted};font-size:14.5px;">${sunbeamResource().text} <a href="${sunbeamResource().url}" style="color:${navy};">See it on Bullyproof.Support →</a></p>` : ""}
+    ${sunbeamResource() ? `
+      <p style="color:${muted};font-size:14.5px;">${sunbeamResource().text}</p>
+      <p style="color:${muted};font-size:14px;margin:0 0 4px;">
+        <a href="${sunbeamResource().setUrl}" style="color:${navy};">See the book + Ray plush set on Bullyproof.Support (coming soon) →</a>
+      </p>
+      <p style="color:${muted};font-size:14px;margin:0 0 4px;">
+        Or buy directly on Amazon: <a href="${sunbeamResource().fullColorUrl}" style="color:${navy};">the full-color book</a> · <a href="${sunbeamResource().coloringUrl}" style="color:${navy};">the coloring book</a>
+      </p>
+    ` : ""}
     ${affiliateDisclosure() ? `<p style="color:#8896B8;font-size:12px;">${affiliateDisclosure()}</p>` : ""}
     <p style="color:${text};font-size:15px;"><strong>Why this matters:</strong><br>${whyThisMattersNote()}</p>
     <p style="color:${text};font-size:15px;"><strong>Your next 3 steps:</strong></p>
@@ -612,9 +620,6 @@ const BOOKS = {
 // specifically on the prevention path, since the "Shining Moments" pages
 // in the back are a direct, purpose-built tool for the self-esteem habit
 // already recommended in that path's step 1.
-// TODO: SUNBEAM_PRODUCT_URL is a placeholder — swap for the real product
-// page on Bullyproof.Support's product list once Mark confirms it.
-const SUNBEAM_PRODUCT_URL = "https://www.bullyproof.support";
 
 function bookRecommendation() {
   const b = BOOKS[topicBranch()];
@@ -628,11 +633,25 @@ function bookRecommendationUrl() {
 
 // Only relevant on the prevention path — the Shining Moments pages
 // directly support the self-esteem habit already recommended in step 1.
+// Placeholders — swap for the real links the moment Mark has them:
+// - SUNBEAM_SET_URL: the "book + Ray plush toy set" bundle on
+//   Bullyproof.Support, not live yet ("soon")
+// - SUNBEAM_FULLCOLOR_AMAZON_URL / SUNBEAM_COLORING_AMAZON_URL: direct
+//   Amazon product links for each edition. Left as reliable title-based
+//   searches for now since the exact titles weren't confirmable by search —
+//   real direct product links are better once Mark confirms the exact
+//   titles or sends the links themselves.
+const SUNBEAM_SET_URL = "https://www.bullyproof.support";
+const SUNBEAM_FULLCOLOR_AMAZON_URL = bookSearchUrl("The Adventures of a True Sunbeam", "Mark Olmstead");
+const SUNBEAM_COLORING_AMAZON_URL = bookSearchUrl("The Adventures of a True Sunbeam coloring book", "Mark Olmstead");
+
 function sunbeamResource() {
   if (!isPreventive()) return null;
   return {
     text: `Along the same lines: the "Shining Moments" pages in the back of The Adventures of a True Sunbeam are built for exactly this — a simple, ready-made way to start that daily habit tonight instead of designing one from scratch.`,
-    url: SUNBEAM_PRODUCT_URL
+    setUrl: SUNBEAM_SET_URL,
+    fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,
+    coloringUrl: SUNBEAM_COLORING_AMAZON_URL
   };
 }
 
@@ -782,7 +801,21 @@ function generatePDF() {
     body(sunbeam.text, { color: [74, 109, 147] });
     doc.setFontSize(11); doc.setTextColor(66, 153, 225);
     ensureRoom(8);
-    doc.textWithLink("See it on Bullyproof.Support →", 15, y, { url: sunbeam.url });
+    doc.textWithLink("See the book + Ray plush set on Bullyproof.Support (coming soon) →", 15, y, { url: sunbeam.setUrl });
+    y += 10;
+    doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+    const label = "Or buy directly on Amazon: ";
+    ensureRoom(8);
+    doc.text(label, 15, y);
+    let lx = 15 + doc.getTextWidth(label);
+    doc.setTextColor(66, 153, 225);
+    doc.textWithLink("the full-color book", lx, y, { url: sunbeam.fullColorUrl });
+    lx += doc.getTextWidth("the full-color book");
+    doc.setTextColor(40, 40, 40);
+    doc.text(" · ", lx, y);
+    lx += doc.getTextWidth(" · ");
+    doc.setTextColor(66, 153, 225);
+    doc.textWithLink("the coloring book", lx, y, { url: sunbeam.coloringUrl });
     y += 12;
   }
   if (affiliateDisclosure()) body(affiliateDisclosure(), { color: [140, 140, 140] });

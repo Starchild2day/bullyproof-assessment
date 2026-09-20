@@ -387,11 +387,16 @@ function buildEmailHtml() {
     </ul>
   `);
   sections.push(`
-    <table role="presentation" style="width:100%;background:#1B2A4A;border-radius:10px;margin:16px 0;"><tr><td style="padding:22px 24px;">
-      <p style="color:#ffffff;font-size:17px;font-weight:700;margin:0 0 8px;">The Bullyproof Parent Playbook</p>
-      <p style="color:#C8D2E8;font-size:13.5px;margin:0 0 14px;">Ongoing, personalized scripts for your child — by name and age — as things change. Not live yet.</p>
-      <a href="${NETWORK_HOME_URL}" style="color:#FFDC82;font-size:14.5px;font-weight:700;">Join Bullyproof.Support free — be first in line →</a>
-    </td></tr></table>
+    <table role="presentation" style="width:100%;background:#F5F6FB;border-radius:10px;margin:16px 0;border:1px solid #E1E4EA;"><tr>
+      <td style="padding:20px;width:130px;vertical-align:top;">
+        <img src="${playbookBoxImageUrl()}" alt="The Bullyproof Parent Playbook" width="110" style="border-radius:6px;display:block;">
+      </td>
+      <td style="padding:20px 20px 20px 0;vertical-align:top;">
+        <p style="color:${navyDeep};font-size:17px;font-weight:700;margin:0 0 8px;">The Bullyproof Parent Playbook</p>
+        <p style="color:${muted};font-size:13.5px;margin:0 0 14px;">Ongoing, personalized scripts for your child — by name and age — as things change. Not live yet.</p>
+        <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">Join Bullyproof.Support free — be first in line →</a>
+      </td>
+    </tr></table>
     <p style="color:${muted};font-size:13.5px;">Joining is real and free today. It doesn't start a Playbook trial by itself yet — that's still being built — but you'll be exactly who we reach out to the moment it's ready, with a free 1-week trial waiting.</p>
   `);
   sections.push(`
@@ -716,6 +721,10 @@ const NETWORK_MATCH_URL = "https://www.bullyproof.support/getmatched";
 // entirely, since every visitor arriving from this tool is a parent.
 const NETWORK_HOME_URL = "https://www.bullyproof.support/checkout/hidden-profile";
 
+function playbookBoxImageUrl() {
+  return `${window.location.origin}/assets/playbook-box.jpg`;
+}
+
 // Backup only — for areas where the network doesn't yet have a strong local
 // match. Swap or remove once network coverage is dense enough on its own.
 const FIND_SUPPORT_URL = "https://www.psychologytoday.com/us/therapists";
@@ -918,16 +927,28 @@ async function generatePDF() {
   body("What you've read above is real and complete on its own. As things unfold, though, the most useful next moves usually depend on details that shift over time. That's exactly what the Bullyproof Parent Playbook is built for — not a longer list, but ongoing, evolving help. A few examples of what that looks like for a situation like yours:");
   furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
 
-  ensureRoom(60);
-  doc.setFillColor(27, 42, 74);
-  doc.roundedRect(15, y, 180, 46, 3, 3, "F");
-  doc.setFontSize(15); doc.setTextColor(255, 255, 255);
-  doc.text("The Bullyproof Parent Playbook", 25, y + 16);
-  doc.setFontSize(10); doc.setTextColor(200, 210, 235);
-  doc.text(doc.splitTextToSize("Ongoing, personalized scripts for your child — by name and age — as things change. Not live yet.", 160), 25, y + 26);
-  doc.setFontSize(11); doc.setTextColor(255, 220, 130);
-  doc.textWithLink("Join Bullyproof.Support free — be first in line →", 25, y + 40, { url: NETWORK_HOME_URL });
-  y += 56;
+  ensureRoom(70);
+  const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
+  if (playbookImg) {
+    try { doc.addImage(playbookImg, "JPEG", 15, y, 42, 50); } catch (err) { console.warn("Could not embed Playbook box image:", err); }
+    doc.setFontSize(14); doc.setTextColor(27, 42, 74);
+    doc.text("The Bullyproof Parent Playbook", 62, y + 12);
+    doc.setFontSize(10); doc.setTextColor(90, 100, 120);
+    doc.text(doc.splitTextToSize("Ongoing, personalized scripts for your child — by name and age — as things change. Not live yet.", 130), 62, y + 22);
+    doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+    doc.textWithLink("Join Bullyproof.Support free — be first in line →", 62, y + 40, { url: NETWORK_HOME_URL });
+    y += 58;
+  } else {
+    doc.setFillColor(27, 42, 74);
+    doc.roundedRect(15, y, 180, 46, 3, 3, "F");
+    doc.setFontSize(15); doc.setTextColor(255, 255, 255);
+    doc.text("The Bullyproof Parent Playbook", 25, y + 16);
+    doc.setFontSize(10); doc.setTextColor(200, 210, 235);
+    doc.text(doc.splitTextToSize("Ongoing, personalized scripts for your child — by name and age — as things change. Not live yet.", 160), 25, y + 26);
+    doc.setFontSize(11); doc.setTextColor(255, 220, 130);
+    doc.textWithLink("Join Bullyproof.Support free — be first in line →", 25, y + 40, { url: NETWORK_HOME_URL });
+    y += 56;
+  }
   body("Joining is real and free today. It doesn't start a Playbook trial by itself yet — that's still being built — but you'll be exactly who we reach out to the moment it's ready, with a free 1-week trial waiting.", { color: [140, 140, 140] });
 
   ensureRoom(10);

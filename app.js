@@ -330,7 +330,9 @@ function buildEmailHtml() {
     sections.push(`<p style="color:${muted};font-size:14.5px;">${selfReflectionNote()}</p>`);
   }
   sections.push(`
-    <p style="color:${text};font-size:15px;"><strong>Recommended reading:</strong><br>${topicLabel()}<br>A good place to start: ${bookRecommendation()}</p>
+    <p style="color:${text};font-size:15px;"><strong>Recommended reading:</strong><br>${topicLabel()}<br>A good place to start: <a href="${bookRecommendationUrl()}" style="color:${navy};">${bookRecommendation()}</a></p>
+    ${sunbeamResource() ? `<p style="color:${muted};font-size:14.5px;">${sunbeamResource().text} <a href="${sunbeamResource().url}" style="color:${navy};">See it on Bullyproof.Support →</a></p>` : ""}
+    ${affiliateDisclosure() ? `<p style="color:#8896B8;font-size:12px;">${affiliateDisclosure()}</p>` : ""}
     <p style="color:${text};font-size:15px;"><strong>Why this matters:</strong><br>${whyThisMattersNote()}</p>
     <p style="color:${text};font-size:15px;"><strong>Your next 3 steps:</strong></p>
     <ol style="color:${text};font-size:14.5px;padding-left:20px;">
@@ -571,6 +573,21 @@ function topicLabel() {
 
 // Real, verifiable books — not invented, and matched to the same branch as
 // the guide recommendation above. Swap or expand this list any time.
+// Amazon Associates tag — leave blank until Mark's account is approved.
+// The moment a real tag goes here, every book link (PDF, email, and any
+// future on-screen use) picks it up automatically, and the FTC disclosure
+// line below starts appearing automatically too.
+const AMAZON_ASSOCIATE_TAG = "";
+
+function bookSearchUrl(title, author) {
+  const base = `https://www.amazon.com/s?k=${encodeURIComponent(title + " " + author)}`;
+  return AMAZON_ASSOCIATE_TAG ? `${base}&tag=${encodeURIComponent(AMAZON_ASSOCIATE_TAG)}` : base;
+}
+
+function affiliateDisclosure() {
+  return AMAZON_ASSOCIATE_TAG ? "As an Amazon Associate, we may earn from qualifying purchases." : null;
+}
+
 const BOOKS = {
   power: { title: "Protecting the Gift", author: "Gavin de Becker" },
   physical: { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso" },
@@ -581,9 +598,32 @@ const BOOKS = {
   default: { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso" }
 };
 
+// Mark's own book — offered alongside the external recommendation
+// specifically on the prevention path, since the "Shining Moments" pages
+// in the back are a direct, purpose-built tool for the self-esteem habit
+// already recommended in that path's step 1.
+// TODO: SUNBEAM_PRODUCT_URL is a placeholder — swap for the real product
+// page on Bullyproof.Support's product list once Mark confirms it.
+const SUNBEAM_PRODUCT_URL = "https://www.bullyproof.support";
+
 function bookRecommendation() {
   const b = BOOKS[topicBranch()];
   return `"${b.title}" by ${b.author}`;
+}
+
+function bookRecommendationUrl() {
+  const b = BOOKS[topicBranch()];
+  return bookSearchUrl(b.title, b.author);
+}
+
+// Only relevant on the prevention path — the Shining Moments pages
+// directly support the self-esteem habit already recommended in step 1.
+function sunbeamResource() {
+  if (!isPreventive()) return null;
+  return {
+    text: `Along the same lines: the "Shining Moments" pages in the back of The Adventures of a True Sunbeam are built for exactly this — a simple, ready-made way to start that daily habit tonight instead of designing one from scratch.`,
+    url: SUNBEAM_PRODUCT_URL
+  };
 }
 
 // Primary: your own network's real "Get Matched" request form — takes name,
@@ -701,7 +741,24 @@ function generatePDF() {
 
   heading("Recommended reading:");
   body(topicLabel());
-  body(`A good place to start: ${bookRecommendation()}`);
+  {
+    const label = "A good place to start: ";
+    doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+    ensureRoom(7);
+    doc.text(label, 15, y);
+    doc.setTextColor(66, 153, 225);
+    doc.textWithLink(bookRecommendation(), 15 + doc.getTextWidth(label), y, { url: bookRecommendationUrl() });
+    y += 10;
+  }
+  const sunbeam = sunbeamResource();
+  if (sunbeam) {
+    body(sunbeam.text, { color: [74, 109, 147] });
+    doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+    ensureRoom(8);
+    doc.textWithLink("See it on Bullyproof.Support →", 15, y, { url: sunbeam.url });
+    y += 12;
+  }
+  if (affiliateDisclosure()) body(affiliateDisclosure(), { color: [140, 140, 140] });
 
   heading("Why this matters:");
   body(whyThisMattersNote());

@@ -339,6 +339,16 @@ function buildEmailHtml() {
       ${actionSteps().map(s => `<li style="margin-bottom:10px;">${s}</li>`).join("")}
     </ol>
   `);
+  const watchFor = preventionWatchForNote();
+  if (watchFor) {
+    sections.push(`
+      <p style="color:${text};font-size:15px;"><strong>What to watch for:</strong><br>${watchFor.intro}</p>
+      <ul style="color:${text};font-size:14.5px;padding-left:20px;">
+        ${watchFor.items.map(i => `<li style="margin-bottom:8px;">${i}</li>`).join("")}
+      </ul>
+      <p style="color:${muted};font-size:14px;">${watchFor.outro}</p>
+    `);
+  }
   const proNote = professionalSupportNote();
   if (proNote) {
     sections.push(`<p style="color:${text};font-size:15px;"><strong>Worth considering:</strong><br>${proNote}</p>`);
@@ -682,6 +692,23 @@ function preventionSteps() {
   ];
 }
 
+// For parents with nothing to report yet — a plain list of what's actually
+// worth keeping an eye on, so "just want to be prepared" gets something
+// concrete. Pulled from the same categories used in the assessment itself,
+// not a separate invented list.
+function preventionWatchForNote() {
+  if (!isPreventive()) return null;
+  return {
+    intro: "Since nothing's happened yet, here's what's actually worth keeping half an eye on — not to worry over, just to notice:",
+    items: [
+      "Physical: unexplained scratches or bruises, a sudden switch to long sleeves in warm weather, or frequent headaches/stomachaches with no clear cause",
+      "Sleep or appetite: trouble falling asleep, nightmares, or a real change in how much they're eating",
+      "Behavior: pulling back from things they used to enjoy, seeming more irritable or tearful than usual, or suddenly not wanting to go to school"
+    ],
+    outro: "None of these mean something is definitely wrong — kids go through phases for all kinds of reasons. They're just the kind of thing worth a gentle check-in if you notice a few of them together."
+  };
+}
+
 function actionSteps() {
   if (isPreventive()) return preventionSteps();
   return [stepOpening(), stepSchool(), stepContext()];
@@ -765,6 +792,14 @@ function generatePDF() {
 
   heading("Your next 3 steps:");
   actionSteps().forEach((step, i) => body(`${i + 1}. ${step}`));
+
+  const watchFor = preventionWatchForNote();
+  if (watchFor) {
+    heading("What to watch for:");
+    body(watchFor.intro);
+    watchFor.items.forEach(item => body(`• ${item}`));
+    body(watchFor.outro, { color: [130, 130, 130] });
+  }
 
   const proNote = professionalSupportNote();
   if (proNote) { heading("Worth considering:"); body(proNote); }

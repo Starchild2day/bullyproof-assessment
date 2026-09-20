@@ -577,7 +577,7 @@ function topicLabel() {
 // The moment a real tag goes here, every book link (PDF, email, and any
 // future on-screen use) picks it up automatically, and the FTC disclosure
 // line below starts appearing automatically too.
-const AMAZON_ASSOCIATE_TAG = "thebullyproof-20";
+const AMAZON_ASSOCIATE_TAG = "bullyproof20-20";
 
 function bookSearchUrl(title, author) {
   const base = `https://www.amazon.com/s?k=${encodeURIComponent(title + " " + author)}`;

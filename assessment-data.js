@@ -35,7 +35,7 @@ const RESULTS_ICON = `<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline po
 
 const ICONS = {
   q1: `<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>`,
-  q2: `<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>`,
+  q2: `<circle cx="12" cy="12" r="10"/><text x="12" y="4.4" font-size="3.6" font-weight="800" fill="#EFDFB8" stroke="none" text-anchor="middle">N</text><text x="12" y="21.6" font-size="3.6" font-weight="800" fill="#EFDFB8" stroke="none" text-anchor="middle">S</text><text x="2.8" y="13.3" font-size="3.6" font-weight="800" fill="#EFDFB8" stroke="none" text-anchor="middle">W</text><text x="21.2" y="13.3" font-size="3.6" font-weight="800" fill="#EFDFB8" stroke="none" text-anchor="middle">E</text><polygon points="17,7 13.4,13.4 12,12 10.6,10.6" fill="#EFDFB8" stroke="none"/><polygon points="7,17 13.4,13.4 12,12 10.6,10.6" fill="#EFDFB8" stroke="none" opacity="0.4"/><circle cx="12" cy="12" r="1" fill="#131E42" stroke="none"/>`,
   q3: `<path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0L12 5.35l-.77-.77a5.4 5.4 0 0 0-7.65 7.65l.77.77L12 21l7.65-7.65.77-.77a5.4 5.4 0 0 0 0-7.65z"/><path d="M8 12h2l1-2 2 4 1-2h2"/>`,
   q4: `<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`,
   q5: `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>`,
@@ -43,9 +43,9 @@ const ICONS = {
   q7: `<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>`,
   q8: `<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>`,
   q9: `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>`,
-  q10: `<path d="M3 9l9-7 9 7"/><path d="M9 22V12h6v10"/><path d="M5 10v10a1 1 0 0 0 1 1h3m6 0h3a1 1 0 0 0 1-1V10"/>`,
+  q10: `<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12.5V17c0 1.5 2.5 3 6 3s6-1.5 6-3v-4.5"/><line x1="22" y1="10" x2="22" y2="16"/>`,
   q11: `<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>`,
-  q12: `<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/>`
+  q12: `<circle cx="10" cy="9" r="7"/><circle cx="10" cy="9" r="3"/><line x1="10" y1="2" x2="10" y2="4.5"/><line x1="17" y1="9" x2="14.5" y2="9"/><line x1="10" y1="16" x2="10" y2="13.5"/><line x1="3" y1="9" x2="5.5" y2="9"/><path d="M10 16c0 1.8 3 1.5 3 3.3s-2.2 1.5-2.2 3.4"/>`
 };
 
 const QUESTIONS = [
@@ -62,11 +62,11 @@ const QUESTIONS = [
     type: "choice",
     icon: ICONS.q2,
     options: [
+      "I'm not sure yet — I just have a feeling something's off",
       "I've noticed something concerning at school",
       "Something happened online or on social media",
       "My child told me they're being treated badly by other kids",
-      "I'm trying to prevent problems before they start",
-      "I'm not sure yet — I just have a feeling something's off"
+      "I'm trying to prevent problems before they start"
     ]
   },
   {
@@ -186,8 +186,8 @@ const QUESTIONS = [
       "Yes — and they took it seriously and are helping",
       "Yes — but nothing has changed yet",
       "Yes — and they said it isn't bullying / told us to handle it at home",
-      "No — I haven't reached out yet because I don't know how to start",
-      "No — my child doesn't want me to contact the school"
+      "No — my child doesn't want me to contact the school",
+      "No — I haven't reached out yet because I don't know how to start"
     ]
   },
   {

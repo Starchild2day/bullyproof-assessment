@@ -364,6 +364,15 @@ function buildEmailHtml() {
     </tr></table>
     ${sunbeamResource() ? `
       <p style="color:${muted};font-size:14.5px;">${sunbeamResource().text}</p>
+      <table role="presentation" style="margin:6px 0 12px;"><tr>
+        <td style="padding-right:12px;vertical-align:middle;">
+          <img src="${sunbeamResource().shiningMomentsImg}" alt="A Shining Moments page from the back of the book" width="70" style="border:1px solid #E1E4EA;border-radius:3px;display:block;">
+        </td>
+        <td style="vertical-align:middle;">
+          <p style="color:${muted};font-size:12.5px;margin:0 0 4px;">One of the Shining Moments pages included in the back of the book</p>
+          <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="90" style="display:block;">
+        </td>
+      </tr></table>
       <table role="presentation" style="margin:10px 0;"><tr>
         <td style="padding-right:10px;text-align:center;">
           <img src="${sunbeamResource().fullColorImg}" alt="The Adventures of a True Sunbeam" width="80" style="border-radius:4px;display:block;">
@@ -714,7 +723,9 @@ function sunbeamResource() {
     coloringUrl: SUNBEAM_COLORING_AMAZON_URL,
     fullColorImg: sunbeamImageUrl("sunbeam-fullcolor.jpg"),
     coloringImg: sunbeamImageUrl("sunbeam-coloring.jpg"),
-    rayImg: sunbeamImageUrl("ray-plush.jpg")
+    rayImg: sunbeamImageUrl("ray-plush.jpg"),
+    shiningMomentsImg: sunbeamImageUrl("shining-moments-page.jpg"),
+    bibaBadgeImg: sunbeamImageUrl("biba-badge.png")
   };
 }
 
@@ -896,6 +907,21 @@ async function generatePDF() {
   const sunbeam = sunbeamResource();
   if (sunbeam) {
     body(sunbeam.text, { color: [74, 109, 147] });
+
+    ensureRoom(30);
+    const smY = y;
+    const [shiningImg, bibaImg] = await Promise.all([
+      fetchImageAsDataUrl(sunbeam.shiningMomentsImg),
+      fetchImageAsDataUrl(sunbeam.bibaBadgeImg)
+    ]);
+    if (shiningImg) {
+      try { doc.addImage(shiningImg, "JPEG", 15, smY, 20, 20); } catch (e) {}
+      doc.setFontSize(9); doc.setTextColor(90, 100, 120);
+      doc.text(doc.splitTextToSize("One of the Shining Moments pages included in the back of the book", 90), 40, smY + 5);
+      if (bibaImg) { try { doc.addImage(bibaImg, "PNG", 40, smY + 12, 26, 11); } catch (e) {} }
+      y = smY + 26;
+    }
+
     ensureRoom(46);
     const imgY = y;
     const [fullColorImg, coloringImg, rayImg] = await Promise.all([

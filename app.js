@@ -351,17 +351,21 @@ function buildEmailHtml() {
   }
 
   // Recommended reading now comes after the steps — a natural answer to
-  // "okay, what do I actually read," not a cold opener.
-  const coverUrl = bookRecommendationCoverUrl();
+  // "okay, what do I actually read," not a cold opener. We now show two
+  // books, each pointing at a specific section relevant to their exact
+  // situation, not just a title dropped in with no context.
   sections.push(`
     <p style="color:${text};font-size:15px;"><strong>Recommended reading:</strong><br>${topicLabel()}</p>
-    <table role="presentation" style="margin:8px 0 14px;"><tr>
-      ${coverUrl ? `<td style="padding-right:14px;vertical-align:top;"><img src="${coverUrl}" alt="${bookRecommendation()}" width="90" style="border-radius:4px;display:block;"></td>` : ""}
-      <td style="vertical-align:top;">
-        <p style="color:${text};font-size:14.5px;margin:0 0 6px;">${bookRecommendation()}</p>
-        <a href="${bookRecommendationUrl()}" style="color:${navy};font-size:14px;">View this book →</a>
-      </td>
-    </tr></table>
+    ${recommendedBooks().map(b => `
+      <table role="presentation" style="margin:8px 0 14px;"><tr>
+        ${b.coverUrl ? `<td style="padding-right:14px;vertical-align:top;"><img src="${b.coverUrl}" alt="${b.display}" width="80" style="border-radius:4px;display:block;"></td>` : ""}
+        <td style="vertical-align:top;">
+          <p style="color:${text};font-size:14.5px;margin:0 0 4px;">${b.display}</p>
+          <p style="color:${muted};font-size:13px;margin:0 0 6px;">${b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full."}</p>
+          <a href="${b.url}" style="color:${navy};font-size:14px;">View this book →</a>
+        </td>
+      </tr></table>
+    `).join("")}
     ${sunbeamResource() ? `
       <p style="color:${muted};font-size:14.5px;">${sunbeamResource().text}</p>
       <table role="presentation" style="margin:6px 0 12px;"><tr>
@@ -645,14 +649,39 @@ function affiliateDisclosure() {
   return AMAZON_ASSOCIATE_TAG ? "As an Amazon Associate, we may earn from qualifying purchases." : null;
 }
 
+// Chapter references verified against real published tables of contents
+// (Coloroso and Faber & Mazlish) — not invented. Where a specific chapter
+// couldn't be verified for a book, "chapter" is left null and the copy
+// says so honestly rather than guessing at a section title.
 const BOOKS = {
-  power: { title: "Protecting the Gift", author: "Gavin de Becker", isbn: "9780440509012" },
-  physical: { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165" },
-  exclusion: { title: "Queen Bees and Wannabes", author: "Rosalind Wiseman", isbn: "9781101903063" },
-  namecalling: { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884" },
-  online: { title: "Cyberbullying: Bullying in the Digital Age", author: "Robin Kowalski, Susan Limber & Patricia Agatston", isbn: "9781444332788" },
-  prevent: { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884" },
-  default: { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165" }
+  power: [
+    { title: "Protecting the Gift", author: "Gavin de Becker", isbn: "9780440509012", chapter: null },
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "Is There a Bullied Kid in the House?"` }
+  ],
+  physical: [
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapters "The Bullied" and "Is There a Bullied Kid in the House?"` },
+    { title: "Protecting the Gift", author: "Gavin de Becker", isbn: "9780440509012", chapter: null }
+  ],
+  exclusion: [
+    { title: "Queen Bees and Wannabes", author: "Rosalind Wiseman", isbn: "9781101903063", chapter: "the core \"Queen Bee\" framework on social hierarchies and exclusion" },
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "The Bystander"` }
+  ],
+  namecalling: [
+    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884", chapter: `Chapter 1, "Helping Children Deal with Their Feelings"` },
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "The Bullied"` }
+  ],
+  online: [
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "Cyberbullying: High-Tech Harassment in the Net Neighborhood"` },
+    { title: "Cyberbullying: Bullying in the Digital Age", author: "Robin Kowalski, Susan Limber & Patricia Agatston", isbn: "9781444332788", chapter: null }
+  ],
+  prevent: [
+    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884", chapter: `Chapters 1 and 2, "Helping Children Deal with Their Feelings" and "Engaging Cooperation"` },
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "Breaking the Cycle of Violence: Creating Circles of Caring"` }
+  ],
+  default: [
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the opening chapter, "Three Characters and a Tragedy," for a clear overview` },
+    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884", chapter: `Chapter 1, "Helping Children Deal with Their Feelings"` }
+  ]
 };
 
 function bookCoverUrl(isbn) {
@@ -664,19 +693,15 @@ function bookCoverUrl(isbn) {
 // in the back are a direct, purpose-built tool for the self-esteem habit
 // already recommended in that path's step 1.
 
-function bookRecommendation() {
-  const b = BOOKS[topicBranch()];
-  return `"${b.title}" by ${b.author}`;
-}
-
-function bookRecommendationUrl() {
-  const b = BOOKS[topicBranch()];
-  return bookSearchUrl(b.title, b.author);
-}
-
-function bookRecommendationCoverUrl() {
-  const b = BOOKS[topicBranch()];
-  return b.isbn ? bookCoverUrl(b.isbn) : null;
+function recommendedBooks() {
+  return BOOKS[topicBranch()].map(b => ({
+    title: b.title,
+    author: b.author,
+    display: `"${b.title}" by ${b.author}`,
+    url: bookSearchUrl(b.title, b.author),
+    coverUrl: b.isbn ? bookCoverUrl(b.isbn) : null,
+    chapter: b.chapter
+  }));
 }
 
 // Fetches an image and returns it as a data URL for jsPDF's addImage().
@@ -882,26 +907,35 @@ async function generatePDF() {
 
   // Recommended reading comes after the steps now — a natural answer to
   // "okay, now what do I actually go read," rather than a cold opener.
+  // Two books now, each pointing at a specific chapter for their situation.
   heading("Recommended reading:");
   body(topicLabel());
 
-  const coverDataUrl = await fetchImageAsDataUrl(bookRecommendationCoverUrl());
-  if (coverDataUrl) {
-    ensureRoom(48);
-    try { doc.addImage(coverDataUrl, "JPEG", 15, y, 32, 46); } catch (err) { console.warn("Could not embed cover image:", err); }
-    doc.setFontSize(11); doc.setTextColor(40, 40, 40);
-    doc.text(doc.splitTextToSize(bookRecommendation(), 140), 55, y + 10);
-    doc.setTextColor(66, 153, 225);
-    doc.textWithLink("View this book →", 55, y + 24, { url: bookRecommendationUrl() });
-    y += 52;
-  } else {
-    const label = "A good place to start: ";
-    doc.setFontSize(11); doc.setTextColor(40, 40, 40);
-    ensureRoom(7);
-    doc.text(label, 15, y);
-    doc.setTextColor(66, 153, 225);
-    doc.textWithLink(bookRecommendation(), 15 + doc.getTextWidth(label), y, { url: bookRecommendationUrl() });
-    y += 10;
+  for (const b of recommendedBooks()) {
+    const coverDataUrl = await fetchImageAsDataUrl(b.coverUrl);
+    if (coverDataUrl) {
+      ensureRoom(48);
+      const by = y;
+      try { doc.addImage(coverDataUrl, "JPEG", 15, by, 30, 43); } catch (err) { console.warn("Could not embed cover image:", err); }
+      doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+      doc.text(doc.splitTextToSize(b.display, 140), 52, by + 8);
+      doc.setFontSize(10); doc.setTextColor(90, 100, 120);
+      const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
+      doc.text(doc.splitTextToSize(chapterText, 140), 52, by + 20);
+      doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+      doc.textWithLink("View this book →", 52, by + 38, { url: b.url });
+      y = by + 50;
+    } else {
+      ensureRoom(20);
+      doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+      doc.text(doc.splitTextToSize(b.display, 180), 15, y); y += 6;
+      doc.setFontSize(10); doc.setTextColor(90, 100, 120);
+      const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
+      doc.text(doc.splitTextToSize(chapterText, 180), 15, y); y += 6;
+      doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+      doc.textWithLink("View this book →", 15, y, { url: b.url });
+      y += 10;
+    }
   }
 
   const sunbeam = sunbeamResource();

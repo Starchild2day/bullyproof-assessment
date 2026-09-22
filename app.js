@@ -405,7 +405,7 @@ function buildEmailHtml() {
   `);
   sections.push(`
     <p style="color:${text};font-size:15px;"><strong>What comes next:</strong><br>
-    What you've read above is real and complete on its own. As things unfold, the most useful next moves usually depend on details that shift over time. A few examples of what that looks like for a situation like yours:</p>
+    What you've read above is real and complete on its own. As this situation unfolds, the next most useful actions might depend on details that will shift and change over time. For instance:</p>
     <ul style="color:${text};font-size:14.5px;padding-left:20px;">
       ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
     </ul>
@@ -789,21 +789,52 @@ function whyThisMattersNote() {
 }
 
 function furtherStepsTeaser() {
-  const items = isPreventive() ? [
-    "Age-by-age scripts for talking about kindness and boundaries before anything comes up",
-    "A simple weekly habit that builds your child's confidence over time",
-    "How to tell normal kid conflict apart from something worth stepping in on",
-    "A way to check in on progress even when nothing seems wrong"
-  ] : [
-    "The exact words to say if the school pushes back or downplays it",
-    "A week-by-week plan to help your child rebuild confidence",
-    "What to say — and what not to say — if another family is involved",
-    "A simple way to track whether things are actually getting better"
+  if (isPreventive()) {
+    return [
+      "Age-by-age scripts for talking about kindness and boundaries before anything comes up",
+      "A simple weekly habit that builds your child's confidence over time",
+      "How to tell normal kid conflict apart from something worth stepping in on",
+      "A way to check in on progress even when nothing seems wrong",
+      "How to make sure you're passing on better tools than the ones you grew up with — even with the best intentions back then"
+    ];
+  }
+
+  // Two anchors present in every active situation — these carry the
+  // emotional core (not feeling alone, not repeating what didn't work
+  // growing up), not just tactical steps.
+  const items = [
+    "Real-time backup for the moments this feels the most overwhelming — so you're never figuring out what to say by yourself",
+    "How to make sure you're not repeating how this was handled when you were a kid — even if it was done with good intentions"
   ];
+
+  // A genuinely earned insight (only appears when the parent's own words
+  // indicated it) — given priority over the generic fallbacks below.
   if (selfReflectionNote()) {
     items.push("A gentle way to look at any patterns worth adjusting — without blame");
   }
-  return items;
+
+  // Situational pool — each only shown when it actually applies.
+  const school = schoolStatus();
+  if (school === "dismissed" || school === "no-change" || school === "not-reached-out") {
+    items.push("The exact words to say if the school pushes back or downplays it");
+  }
+  const comm = communicationStatus();
+  if (comm === "clear" || comm === "hints") {
+    items.push("What to say to help, instead of what you've already tried that hasn't worked");
+  }
+  if (topicBranch() === "online") {
+    items.push("How to handle screens and monitoring without it turning into a fight");
+  }
+  if (["physical", "namecalling", "exclusion", "power"].includes(topicBranch())) {
+    items.push("What to say — and what not to say — if another family is involved");
+  }
+
+  // Generic fallbacks — always relevant, but the most replaceable if
+  // space runs out, since they're not situation-specific.
+  items.push("A week-by-week plan to help your child rebuild confidence");
+  items.push("A simple way to track whether things are actually getting better");
+
+  return items.slice(0, 5);
 }
 
 function preventionSteps() {
@@ -1008,7 +1039,7 @@ async function generatePDF() {
   // "starting a tracked trial" isn't a thing that exists yet, so it's not
   // claimed here.
   heading("What comes next:");
-  body("What you've read above is real and complete on its own. As things unfold, though, the most useful next moves usually depend on details that shift over time. That's exactly what the Bullyproof Parent Playbook is built for — not a longer list, but ongoing, evolving help. A few examples of what that looks like for a situation like yours:");
+  body("What you've read above is real and complete on its own. As this situation unfolds, the next most useful actions might depend on details that will shift and change over time. That's exactly what the Bullyproof Parent Playbook is built for — not a longer list, but ongoing, evolving help. For instance:");
   furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
 
   ensureRoom(70);

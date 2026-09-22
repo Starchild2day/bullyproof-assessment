@@ -46,6 +46,7 @@ function addFlag(key) {
 function render() {
   const useFixedShell = state.screen === "question" && (state.safetyFlags.length === 0 || state.safetyAcknowledged);
   document.body.classList.toggle("question-mode", useFixedShell);
+  document.body.classList.toggle("landing-mode", state.screen === "landing");
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (state.screen === "landing") return renderLanding();
   if (state.screen === "question") return renderQuestion();
@@ -56,7 +57,7 @@ function renderLanding() {
   progressTrack.style.display = "none";
   appEl.innerHTML = `
     <div class="card">
-      ${banner(LANDING_ICON, { large: true, imageSrc: assetUrl("icon-landing.png") })}
+      ${banner(LANDING_ICON, { large: true, imageSrc: assetUrl("icon-landing.png"), showLogo: true })}
       <div class="card-body">
       <h1>Get clarity on what's happening.</h1>
       <p class="body-text">Twelve quick questions. About 3 minutes. At the end you'll get a personalized action plan you can start using tonight — sent straight to your inbox.</p>
@@ -180,20 +181,33 @@ function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
 function banner(svgInner, opts) {
   opts = opts || {};
   const large = !!opts.large;
-  const vbH = large ? 180 : 84;
+  const vbH = large ? 130 : 84;
   const cy = vbH / 2;
   const size = large ? 72 : 34;
   const x = 200 - size / 2;
   const y = cy - size / 2;
+  // Scale factor kept modest (1.3x) so every icon keeps clean, even blue
+  // space around it — pushing this higher looks "bigger" but crowds the
+  // banner and can make unrelated shadow/glow details in the source art
+  // look like bleed from a neighboring icon.
+  const scale = 1.3;
   const iconContent = opts.imageSrc
-    ? `<image href="${opts.imageSrc}" x="${x - size * 0.35}" y="${y - size * 0.35}" width="${size * 1.7}" height="${size * 1.7}" preserveAspectRatio="xMidYMid meet"/>`
+    ? `<image href="${opts.imageSrc}" x="${x - size * (scale - 1) / 2}" y="${y - size * (scale - 1) / 2}" width="${size * scale}" height="${size * scale}" preserveAspectRatio="xMidYMid meet"/>`
     : `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#EFDFB8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg>`;
+  const logoContent = opts.showLogo ? `
+    <g>
+      <rect x="18" y="16" width="30" height="30" rx="8" fill="#101B33"/>
+      <text x="33" y="37" font-family="'Fraunces',serif" font-size="16" font-weight="600" fill="#C89B3C" text-anchor="middle">B</text>
+      <text x="56" y="35" font-family="Inter,sans-serif" font-size="14" font-weight="600" fill="#EFDFB8">Bullyproof.Guide</text>
+    </g>
+  ` : "";
   return `<div class="banner${large ? " landing-banner" : ""}">
     <svg viewBox="0 0 400 ${vbH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <circle cx="46" cy="${vbH - 18}" r="42" fill="#4F7C82" opacity="0.28"/>
       <circle cx="366" cy="14" r="54" fill="#C89B3C" opacity="0.16"/>
       <circle cx="330" cy="${vbH - 12}" r="22" fill="#FFFFFF" opacity="0.05"/>
       ${iconContent}
+      ${logoContent}
     </svg>
   </div>`;
 }
@@ -244,12 +258,19 @@ function renderResults() {
   track("assessment_completed");
   saveProgressToFirebase();
   const summary = deriveSummary();
+  const q2Answer = state.answers.q2 || "your situation";
+  const reflection = [communicationReflection(), openingValidation()].filter(Boolean).join(" ");
   appEl.innerHTML = `
     ${state.safetyFlags.length ? renderSafetyBanner() : ""}
     <div class="card">
       ${banner(RESULTS_ICON)}
       <div class="card-body">
-      <div class="results-summary"><h3>Here's what we're seeing</h3><p>${summary}</p>${openingValidation() ? `<p style="margin-top:8px;">${openingValidation()}</p>` : ""}</div>
+      <div class="results-summary">
+        <h3>Here's what we're seeing</h3>
+        <p class="summary-label">You told us:</p>
+        <p class="summary-quote">"${q2Answer}"</p>
+        ${reflection ? `<p class="summary-reflection">${reflection}</p>` : ""}
+      </div>
       <h2 class="question">Where should we send your action plan?</h2>
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
@@ -298,6 +319,20 @@ function deriveSummary() {
     "no-signals": "Nothing concrete yet — you're going on instinct."
   }[communicationStatus()] || "";
   return `${q2}.${statusText ? " " + statusText : ""}`;
+}
+
+// Same underlying observation as deriveSummary(), but returned separately
+// from the parent's own quoted words — used on-screen so "what they said"
+// and "what we're reflecting back" read as two clearly distinct things,
+// not one blended paragraph the reader has to untangle.
+function communicationReflection() {
+  if (isPreventive()) return "";
+  return {
+    "clear": "Your child has spoken with you directly about it.",
+    "hints": "Your child has shared pieces of it, but not the full picture yet.",
+    "behavior-only": "Your child hasn't said anything directly, but their behavior is telling you something.",
+    "no-signals": "Nothing concrete yet — you're going on instinct."
+  }[communicationStatus()] || "";
 }
 
 function buildReadableSummary() {

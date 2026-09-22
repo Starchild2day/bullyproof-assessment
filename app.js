@@ -104,7 +104,7 @@ function renderQuestion() {
   appEl.innerHTML = `
     ${safetyHTML}
     <div class="card">
-      ${q.icon ? banner(q.icon) : ""}
+      ${q.icon ? banner(q.icon, { imageSrc: questionIconUrl(q.id) }) : ""}
       <div class="card-body">
       <div class="card-fixed">
         <h2 class="question">${q.title}</h2>
@@ -185,14 +185,21 @@ function banner(svgInner, opts) {
   const size = large ? 72 : 34;
   const x = 200 - size / 2;
   const y = cy - size / 2;
+  const iconContent = opts.imageSrc
+    ? `<image href="${opts.imageSrc}" x="${x - size * 0.35}" y="${y - size * 0.35}" width="${size * 1.7}" height="${size * 1.7}" preserveAspectRatio="xMidYMid meet"/>`
+    : `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#EFDFB8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg>`;
   return `<div class="banner${large ? " landing-banner" : ""}">
     <svg viewBox="0 0 400 ${vbH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <circle cx="46" cy="${vbH - 18}" r="42" fill="#4F7C82" opacity="0.28"/>
       <circle cx="366" cy="14" r="54" fill="#C89B3C" opacity="0.16"/>
       <circle cx="330" cy="${vbH - 12}" r="22" fill="#FFFFFF" opacity="0.05"/>
-      <svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#EFDFB8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg>
+      ${iconContent}
     </svg>
   </div>`;
+}
+
+function questionIconUrl(qid) {
+  return `${window.location.origin}/assets/icon-${qid}.png`;
 }
 
 function rerenderCurrentQuestion() {
@@ -367,33 +374,35 @@ function buildEmailHtml() {
       </tr></table>
     `).join("")}
     ${sunbeamResource() ? `
-      <p style="color:${muted};font-size:14.5px;">${sunbeamResource().text}</p>
-      <table role="presentation" style="margin:6px 0 12px;"><tr>
-        <td style="padding-right:12px;vertical-align:middle;">
-          <img src="${sunbeamResource().shiningMomentsImg}" alt="A Shining Moments page from the back of the book" width="70" style="border:1px solid #E1E4EA;border-radius:3px;display:block;">
-        </td>
-        <td style="vertical-align:middle;">
-          <p style="color:${muted};font-size:12.5px;margin:0 0 4px;">One of the Shining Moments pages included in the back of the book</p>
-          <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="90" style="display:block;">
-        </td>
-      </tr></table>
-      <table role="presentation" style="margin:10px 0;"><tr>
-        <td style="padding-right:10px;text-align:center;">
-          <img src="${sunbeamResource().fullColorImg}" alt="The Adventures of a True Sunbeam" width="80" style="border-radius:4px;display:block;">
-          <a href="${sunbeamResource().fullColorUrl}" style="color:${navy};font-size:12px;">Full-color book</a>
-        </td>
-        <td style="padding-right:10px;text-align:center;">
-          <img src="${sunbeamResource().coloringImg}" alt="The Adventures of a True Sunbeam Coloring Book" width="80" style="border-radius:4px;display:block;">
-          <a href="${sunbeamResource().coloringUrl}" style="color:${navy};font-size:12px;">Coloring book</a>
-        </td>
-        <td style="text-align:center;">
-          <img src="${sunbeamResource().rayImg}" alt="Ray the plush toy" width="60" style="display:block;margin:0 auto;">
-          <span style="color:${muted};font-size:12px;">Ray</span>
-        </td>
-      </tr></table>
-      <p style="color:${muted};font-size:14px;margin:0 0 4px;">
-        <a href="${sunbeamResource().setUrl}" style="color:${navy};">See the book + Ray plush set on Bullyproof.Support (coming soon) →</a>
-      </p>
+      <table role="presentation" style="width:100%;background:#F5F6FB;border:1px solid #E1E4EA;border-radius:12px;margin:14px 0;"><tr><td style="padding:20px 22px;">
+        <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
+        <table role="presentation" style="width:100%;"><tr>
+          <td style="width:140px;vertical-align:top;text-align:center;padding-right:16px;">
+            <img src="${sunbeamResource().animatedCoverImg}" alt="The Adventures of a True Sunbeam" width="130" style="border-radius:6px;display:block;">
+            <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="90" style="display:block;margin:8px auto 0;">
+          </td>
+          <td style="vertical-align:top;">
+            <p style="color:${text};font-size:15px;font-weight:700;margin:0 0 6px;">The Adventures of a True Sunbeam</p>
+            <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">${sunbeamResource().text}</p>
+            <img src="${sunbeamResource().shiningMomentsImg}" alt="A Shining Moments page from the back of the book" width="64" style="border:1px solid #E1E4EA;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:8px;">
+            <span style="color:${muted};font-size:12px;vertical-align:middle;">A Shining Moments page from the back of the book</span>
+          </td>
+        </tr></table>
+        <table role="presentation" style="width:100%;margin-top:16px;border-top:1px solid #E1E4EA;padding-top:14px;"><tr>
+          <td style="text-align:center;padding-right:14px;">
+            <img src="${sunbeamResource().coloringImg}" alt="The Adventures of a True Sunbeam Coloring Book" width="64" style="border-radius:4px;display:block;margin:0 auto 4px;">
+            <a href="${sunbeamResource().coloringUrl}" style="color:${navy};font-size:12px;">Coloring book →</a>
+          </td>
+          <td style="text-align:center;padding-right:14px;">
+            <img src="${sunbeamResource().rayImg}" alt="Ray the plush toy" width="48" style="display:block;margin:0 auto 4px;">
+            <span style="color:${muted};font-size:12px;">Meet Ray</span>
+          </td>
+          <td style="vertical-align:middle;">
+            <a href="${sunbeamResource().fullColorUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the book →</a><br>
+            <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
+          </td>
+        </tr></table>
+      </td></tr></table>
     ` : ""}
     ${affiliateDisclosure() ? `<p style="color:#8896B8;font-size:12px;">${affiliateDisclosure()}</p>` : ""}
   `);
@@ -655,32 +664,32 @@ function affiliateDisclosure() {
 // says so honestly rather than guessing at a section title.
 const BOOKS = {
   power: [
-    { title: "Protecting the Gift", author: "Gavin de Becker", isbn: "9780440509012", chapter: null },
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "Is There a Bullied Kid in the House?"` }
+    { title: "Protecting the Gift", author: "Gavin de Becker", coverImg: "book-debecker.jpg", chapter: null },
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "Is There a Bullied Kid in the House?"` }
   ],
   physical: [
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapters "The Bullied" and "Is There a Bullied Kid in the House?"` },
-    { title: "Protecting the Gift", author: "Gavin de Becker", isbn: "9780440509012", chapter: null }
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapters "The Bullied" and "Is There a Bullied Kid in the House?"` },
+    { title: "Protecting the Gift", author: "Gavin de Becker", coverImg: "book-debecker.jpg", chapter: null }
   ],
   exclusion: [
-    { title: "Queen Bees and Wannabes", author: "Rosalind Wiseman", isbn: "9781101903063", chapter: "the core \"Queen Bee\" framework on social hierarchies and exclusion" },
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "The Bystander"` }
+    { title: "Queen Bees and Wannabes", author: "Rosalind Wiseman", coverImg: "book-wiseman.jpg", chapter: "the core \"Queen Bee\" framework on social hierarchies and exclusion" },
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "The Bystander"` }
   ],
   namecalling: [
-    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884", chapter: `Chapter 1, "Helping Children Deal with Their Feelings"` },
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "The Bullied"` }
+    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", coverImg: "book-fabermazlish.jpg", chapter: `Chapter 1, "Helping Children Deal with Their Feelings"` },
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "The Bullied"` }
   ],
   online: [
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "Cyberbullying: High-Tech Harassment in the Net Neighborhood"` },
-    { title: "Cyberbullying: Bullying in the Digital Age", author: "Robin Kowalski, Susan Limber & Patricia Agatston", isbn: "9781444332788", chapter: null }
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "Cyberbullying: High-Tech Harassment in the Net Neighborhood"` },
+    { title: "Cyberbullying: Bullying in the Digital Age", author: "Robin Kowalski, Susan Limber & Patricia Agatston", coverImg: "book-kowalski.jpg", chapter: null }
   ],
   prevent: [
-    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884", chapter: `Chapters 1 and 2, "Helping Children Deal with Their Feelings" and "Engaging Cooperation"` },
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the chapter "Breaking the Cycle of Violence: Creating Circles of Caring"` }
+    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", coverImg: "book-fabermazlish.jpg", chapter: `Chapters 1 and 2, "Helping Children Deal with Their Feelings" and "Engaging Cooperation"` },
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "Breaking the Cycle of Violence: Creating Circles of Caring"` }
   ],
   default: [
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780062572165", chapter: `the opening chapter, "Three Characters and a Tragedy," for a clear overview` },
-    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884", chapter: `Chapter 1, "Helping Children Deal with Their Feelings"` }
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the opening chapter, "Three Characters and a Tragedy," for a clear overview` },
+    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", coverImg: "book-fabermazlish.jpg", chapter: `Chapter 1, "Helping Children Deal with Their Feelings"` }
   ]
 };
 
@@ -699,7 +708,7 @@ function recommendedBooks() {
     author: b.author,
     display: `"${b.title}" by ${b.author}`,
     url: bookSearchUrl(b.title, b.author),
-    coverUrl: b.isbn ? bookCoverUrl(b.isbn) : null,
+    coverUrl: assetUrl(b.coverImg),
     chapter: b.chapter
   }));
 }
@@ -735,7 +744,7 @@ const SUNBEAM_SET_URL = "https://www.bullyproof.support";
 const SUNBEAM_FULLCOLOR_AMAZON_URL = bookSearchUrl("The Adventures of a True Sunbeam", "Mark Olmstead");
 const SUNBEAM_COLORING_AMAZON_URL = bookSearchUrl("The Adventures of a True Sunbeam coloring book", "Mark Olmstead");
 
-function sunbeamImageUrl(name) {
+function assetUrl(name) {
   return `${window.location.origin}/assets/${name}`;
 }
 
@@ -746,11 +755,12 @@ function sunbeamResource() {
     setUrl: SUNBEAM_SET_URL,
     fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,
     coloringUrl: SUNBEAM_COLORING_AMAZON_URL,
-    fullColorImg: sunbeamImageUrl("sunbeam-fullcolor.jpg"),
-    coloringImg: sunbeamImageUrl("sunbeam-coloring.jpg"),
-    rayImg: sunbeamImageUrl("ray-plush.jpg"),
-    shiningMomentsImg: sunbeamImageUrl("shining-moments-page.jpg"),
-    bibaBadgeImg: sunbeamImageUrl("biba-badge.png")
+    fullColorImg: assetUrl("sunbeam-fullcolor.jpg"),
+    coloringImg: assetUrl("sunbeam-coloring.jpg"),
+    rayImg: assetUrl("ray-plush.jpg"),
+    shiningMomentsImg: assetUrl("shining-moments-page.jpg"),
+    animatedCoverImg: assetUrl("sunbeam-cover-animated.gif"),
+    bibaBadgeImg: assetUrl("biba-badge.png")
   };
 }
 

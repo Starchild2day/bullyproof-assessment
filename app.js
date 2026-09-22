@@ -180,7 +180,7 @@ function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
 function banner(svgInner, opts) {
   opts = opts || {};
   const large = !!opts.large;
-  const vbH = large ? 180 : 62;
+  const vbH = large ? 180 : 84;
   const cy = vbH / 2;
   const size = large ? 72 : 34;
   const x = 200 - size / 2;
@@ -250,7 +250,6 @@ function renderResults() {
       ${banner(RESULTS_ICON)}
       <div class="card-body">
       <div class="results-summary"><h3>Here's what we're seeing</h3><p>${summary}</p>${openingValidation() ? `<p style="margin-top:8px;">${openingValidation()}</p>` : ""}</div>
-      <p class="sub" style="margin-bottom:20px;">Want to talk to someone? <a href="${NETWORK_MATCH_URL}" target="_blank" style="color:var(--navy);font-weight:600;">Get matched with a professional near you</a> through the Bullyproof Support network — this will also be in your emailed plan.</p>
       <h2 class="question">Where should we send your action plan?</h2>
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
@@ -358,23 +357,13 @@ function buildEmailHtml() {
   }
 
   // Recommended reading now comes after the steps — a natural answer to
-  // "okay, what do I actually read," not a cold opener. We now show two
-  // books, each pointing at a specific section relevant to their exact
-  // situation, not just a title dropped in with no context.
+  // "okay, what do I actually read," not a cold opener. On the prevention
+  // path, Sunbeam leads — it's the most directly actionable, tonight,
+  // of anything recommended here.
   sections.push(`
     <p style="color:${text};font-size:15px;"><strong>Recommended reading:</strong><br>${topicLabel()}</p>
-    ${recommendedBooks().map(b => `
-      <table role="presentation" style="margin:8px 0 14px;"><tr>
-        ${b.coverUrl ? `<td style="padding-right:14px;vertical-align:top;"><img src="${b.coverUrl}" alt="${b.display}" width="80" style="border-radius:4px;display:block;"></td>` : ""}
-        <td style="vertical-align:top;">
-          <p style="color:${text};font-size:14.5px;margin:0 0 4px;">${b.display}</p>
-          <p style="color:${muted};font-size:13px;margin:0 0 6px;">${b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full."}</p>
-          <a href="${b.url}" style="color:${navy};font-size:14px;">View this book →</a>
-        </td>
-      </tr></table>
-    `).join("")}
     ${sunbeamResource() ? `
-      <table role="presentation" style="width:100%;background:#F5F6FB;border:1px solid #E1E4EA;border-radius:12px;margin:14px 0;"><tr><td style="padding:20px 22px;">
+      <table role="presentation" style="width:100%;background:#F5F6FB;border:1px solid #E1E4EA;border-radius:12px;margin:10px 0 14px;"><tr><td style="padding:20px 22px;">
         <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
         <table role="presentation" style="width:100%;"><tr>
           <td style="width:140px;vertical-align:top;text-align:center;padding-right:16px;">
@@ -383,9 +372,17 @@ function buildEmailHtml() {
           </td>
           <td style="vertical-align:top;">
             <p style="color:${text};font-size:15px;font-weight:700;margin:0 0 6px;">The Adventures of a True Sunbeam</p>
-            <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">${sunbeamResource().text}</p>
-            <img src="${sunbeamResource().shiningMomentsImg}" alt="A Shining Moments page from the back of the book" width="64" style="border:1px solid #E1E4EA;border-radius:3px;display:inline-block;vertical-align:middle;margin-right:8px;">
-            <span style="color:${muted};font-size:12px;vertical-align:middle;">A Shining Moments page from the back of the book</span>
+            <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
+          </td>
+        </tr></table>
+        <p style="color:${navyDeep};font-size:12.5px;font-weight:700;margin:16px 0 6px;">Start collecting your child's Shining Moments:</p>
+        <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
+        <table role="presentation" style="margin-top:10px;"><tr>
+          <td style="width:130px;vertical-align:top;">
+            <img src="${sunbeamResource().shiningMomentsCloseupImg}" alt="A close-up of a Shining Moments prompt" width="120" style="border-radius:4px;display:block;">
+          </td>
+          <td style="vertical-align:top;padding-left:10px;">
+            <span style="color:${muted};font-size:12.5px;">Simple prompts turn ordinary days into moments your child can look back on — proof, in their own words, of how far they've come.</span>
           </td>
         </tr></table>
         <table role="presentation" style="width:100%;margin-top:16px;border-top:1px solid #E1E4EA;padding-top:14px;"><tr>
@@ -404,13 +401,17 @@ function buildEmailHtml() {
         </tr></table>
       </td></tr></table>
     ` : ""}
+    ${recommendedBooks().map(b => `
+      <table role="presentation" style="margin:8px 0 14px;"><tr>
+        ${b.coverUrl ? `<td style="padding-right:14px;vertical-align:top;"><img src="${b.coverUrl}" alt="${b.display}" width="80" style="border-radius:4px;display:block;"></td>` : ""}
+        <td style="vertical-align:top;">
+          <p style="color:${text};font-size:14.5px;margin:0 0 4px;">${b.display}</p>
+          <p style="color:${muted};font-size:13px;margin:0 0 6px;">${b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full."}</p>
+          <a href="${b.url}" style="color:${navy};font-size:14px;">View this book →</a>
+        </td>
+      </tr></table>
+    `).join("")}
     ${affiliateDisclosure() ? `<p style="color:#8896B8;font-size:12px;">${affiliateDisclosure()}</p>` : ""}
-  `);
-  sections.push(`
-    <p style="color:${text};font-size:15px;"><strong>Find support near you:</strong><br>
-      <a href="${NETWORK_MATCH_URL}" style="color:${navy};">Get matched with a professional near you</a> through the Bullyproof Support network.<br>
-      If your area doesn't have a strong match yet, <a href="${FIND_SUPPORT_URL}" style="color:${navy};">Psychology Today's directory</a> is a good backup.
-    </p>
   `);
   sections.push(`
     <p style="color:${text};font-size:15px;"><strong>What comes next:</strong><br>
@@ -426,11 +427,19 @@ function buildEmailHtml() {
       </td>
       <td style="padding:20px 20px 20px 0;vertical-align:top;">
         <p style="color:${navyDeep};font-size:17px;font-weight:700;margin:0 0 8px;">The Bullyproof Parent Playbook</p>
-        <p style="color:${muted};font-size:13.5px;margin:0 0 14px;">Ongoing, personalized scripts for your child — by name and age — as things change. Not live yet.</p>
-        <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">Join Bullyproof.Support free — be first in line →</a>
+        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;font-weight:600;">Personalized guidance that grows with your child.</p>
+        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">The Bullyproof Parent Playbook is being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.</p>
+        <p style="color:${muted};font-size:13px;margin:0 0 10px;">Coming soon — and Bullyproof.Support members will be first in line.</p>
+        <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">Join Bullyproof.Support FREE today and we'll let you know as soon as the Playbook is ready →</a>
       </td>
     </tr></table>
-    <p style="color:${muted};font-size:13.5px;">Joining is real and free today. It doesn't start a Playbook trial by itself yet — that's still being built — but you'll be exactly who we reach out to the moment it's ready, with a free 1-week trial waiting.</p>
+    <p style="color:${muted};font-size:13.5px;">Your membership does not start a trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
+  `);
+  sections.push(`
+    <p style="color:${text};font-size:15px;"><strong>Prefer to talk to a licensed professional?</strong><br>
+      That's always an option too — <a href="${NETWORK_MATCH_URL}" style="color:${navy};">get matched with one near you</a> through the Bullyproof Support network.<br>
+      If your area doesn't have a strong match yet, <a href="${FIND_SUPPORT_URL}" style="color:${navy};">Psychology Today's directory</a> is a good backup.
+    </p>
   `);
   sections.push(`
     <p style="color:#8896B8;font-size:12px;margin-top:24px;border-top:1px solid #E1E4EA;padding-top:14px;">
@@ -751,14 +760,15 @@ function assetUrl(name) {
 function sunbeamResource() {
   if (!isPreventive()) return null;
   return {
-    text: `Along the same lines: the "Shining Moments" pages in the back of The Adventures of a True Sunbeam are built for exactly this — a simple, ready-made way to start that daily habit tonight instead of designing one from scratch.`,
+    text: `The "Shining Moments" pages in the back of The Adventures of a True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, and adding it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of a True Sunbeam the International Best Indie Book Award in the Children's category.`,
     setUrl: SUNBEAM_SET_URL,
     fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,
     coloringUrl: SUNBEAM_COLORING_AMAZON_URL,
     fullColorImg: assetUrl("sunbeam-fullcolor.jpg"),
     coloringImg: assetUrl("sunbeam-coloring.jpg"),
     rayImg: assetUrl("ray-plush.jpg"),
-    shiningMomentsImg: assetUrl("shining-moments-page.jpg"),
+    shiningMomentsSpreadImg: assetUrl("shining-moments-spread.jpg"),
+    shiningMomentsCloseupImg: assetUrl("shining-moments-closeup.jpg"),
     animatedCoverImg: assetUrl("sunbeam-cover-animated.gif"),
     bibaBadgeImg: assetUrl("biba-badge.png")
   };
@@ -801,11 +811,11 @@ function whyThisMattersNote() {
 function furtherStepsTeaser() {
   if (isPreventive()) {
     return [
-      "Age-by-age scripts for talking about kindness and boundaries before anything comes up",
+      "What to say about kindness and boundaries — before there's a problem.",
       "A simple weekly habit that builds your child's confidence over time",
-      "How to tell normal kid conflict apart from something worth stepping in on",
+      "How to know when kids can work it out — and when they need your help.",
       "A way to check in on progress even when nothing seems wrong",
-      "How to make sure you're passing on better tools than the ones you grew up with — even with the best intentions back then"
+      "How to keep the good things you learned growing up — and give your kids better tools for the rest."
     ];
   }
 
@@ -814,7 +824,7 @@ function furtherStepsTeaser() {
   // growing up), not just tactical steps.
   const items = [
     "Real-time backup for the moments this feels the most overwhelming — so you're never figuring out what to say by yourself",
-    "How to make sure you're not repeating how this was handled when you were a kid — even if it was done with good intentions"
+    "How to keep the good things you learned growing up — and give your kids better tools for the rest."
   ];
 
   // A genuinely earned insight (only appears when the parent's own words
@@ -831,6 +841,9 @@ function furtherStepsTeaser() {
   const comm = communicationStatus();
   if (comm === "clear" || comm === "hints") {
     items.push("What to say to help, instead of what you've already tried that hasn't worked");
+  }
+  if (["11–14", "15–18"].includes(state.answers.q1)) {
+    items.push("Age appropriate conversation guidance so your words are actually heard and received");
   }
   if (topicBranch() === "online") {
     items.push("How to handle screens and monitoring without it turning into a fight");
@@ -952,33 +965,6 @@ async function generatePDF() {
   heading("Recommended reading:");
   body(topicLabel());
 
-  for (const b of recommendedBooks()) {
-    const coverDataUrl = await fetchImageAsDataUrl(b.coverUrl);
-    if (coverDataUrl) {
-      ensureRoom(48);
-      const by = y;
-      try { doc.addImage(coverDataUrl, "JPEG", 15, by, 30, 43); } catch (err) { console.warn("Could not embed cover image:", err); }
-      doc.setFontSize(11); doc.setTextColor(40, 40, 40);
-      doc.text(doc.splitTextToSize(b.display, 140), 52, by + 8);
-      doc.setFontSize(10); doc.setTextColor(90, 100, 120);
-      const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
-      doc.text(doc.splitTextToSize(chapterText, 140), 52, by + 20);
-      doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-      doc.textWithLink("View this book →", 52, by + 38, { url: b.url });
-      y = by + 50;
-    } else {
-      ensureRoom(20);
-      doc.setFontSize(11); doc.setTextColor(40, 40, 40);
-      doc.text(doc.splitTextToSize(b.display, 180), 15, y); y += 6;
-      doc.setFontSize(10); doc.setTextColor(90, 100, 120);
-      const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
-      doc.text(doc.splitTextToSize(chapterText, 180), 15, y); y += 6;
-      doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-      doc.textWithLink("View this book →", 15, y, { url: b.url });
-      y += 10;
-    }
-  }
-
   const sunbeam = sunbeamResource();
   if (sunbeam) {
     body(sunbeam.text, { color: [74, 109, 147] });
@@ -986,14 +972,14 @@ async function generatePDF() {
     ensureRoom(30);
     const smY = y;
     const [shiningImg, bibaImg] = await Promise.all([
-      fetchImageAsDataUrl(sunbeam.shiningMomentsImg),
+      fetchImageAsDataUrl(sunbeam.shiningMomentsCloseupImg),
       fetchImageAsDataUrl(sunbeam.bibaBadgeImg)
     ]);
     if (shiningImg) {
-      try { doc.addImage(shiningImg, "JPEG", 15, smY, 20, 20); } catch (e) {}
+      try { doc.addImage(shiningImg, "JPEG", 15, smY, 30, 13); } catch (e) {}
       doc.setFontSize(9); doc.setTextColor(90, 100, 120);
-      doc.text(doc.splitTextToSize("One of the Shining Moments pages included in the back of the book", 90), 40, smY + 5);
-      if (bibaImg) { try { doc.addImage(bibaImg, "PNG", 40, smY + 12, 26, 11); } catch (e) {} }
+      doc.text(doc.splitTextToSize("Start collecting your child's Shining Moments — real prompts from the back of the book", 90), 50, smY + 5);
+      if (bibaImg) { try { doc.addImage(bibaImg, "PNG", 50, smY + 12, 26, 11); } catch (e) {} }
       y = smY + 26;
     }
 
@@ -1028,19 +1014,35 @@ async function generatePDF() {
     doc.textWithLink("See the book + Ray plush set on Bullyproof.Support (coming soon) →", 15, y, { url: sunbeam.setUrl });
     y += 12;
   }
-  if (affiliateDisclosure()) body(affiliateDisclosure(), { color: [140, 140, 140] });
 
-  heading("Find support near you:");
-  body("Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:");
-  ensureRoom(8);
-  doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-  doc.textWithLink("bullyproof.support/getmatched", 15, y, { url: NETWORK_MATCH_URL });
-  y += 12;
-  body("If your area doesn't have a strong match yet, Psychology Today's broader directory is a good backup:");
-  ensureRoom(8);
-  doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-  doc.textWithLink("psychologytoday.com/us/therapists", 15, y, { url: FIND_SUPPORT_URL });
-  y += 12;
+  for (const b of recommendedBooks()) {
+    const coverDataUrl = await fetchImageAsDataUrl(b.coverUrl);
+    if (coverDataUrl) {
+      ensureRoom(48);
+      const by = y;
+      try { doc.addImage(coverDataUrl, "JPEG", 15, by, 30, 43); } catch (err) { console.warn("Could not embed cover image:", err); }
+      doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+      doc.text(doc.splitTextToSize(b.display, 140), 52, by + 8);
+      doc.setFontSize(10); doc.setTextColor(90, 100, 120);
+      const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
+      doc.text(doc.splitTextToSize(chapterText, 140), 52, by + 20);
+      doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+      doc.textWithLink("View this book →", 52, by + 38, { url: b.url });
+      y = by + 50;
+    } else {
+      ensureRoom(20);
+      doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+      doc.text(doc.splitTextToSize(b.display, 180), 15, y); y += 6;
+      doc.setFontSize(10); doc.setTextColor(90, 100, 120);
+      const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
+      doc.text(doc.splitTextToSize(chapterText, 180), 15, y); y += 6;
+      doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+      doc.textWithLink("View this book →", 15, y, { url: b.url });
+      y += 10;
+    }
+  }
+
+  if (affiliateDisclosure()) body(affiliateDisclosure(), { color: [140, 140, 140] });
 
   // One consolidated close, instead of two separate sections: what's next,
   // a simple honest card for the Playbook (not a fake screenshot — it
@@ -1052,29 +1054,47 @@ async function generatePDF() {
   body("What you've read above is real and complete on its own. As this situation unfolds, the next most useful actions might depend on details that will shift and change over time. That's exactly what the Bullyproof Parent Playbook is built for — not a longer list, but ongoing, evolving help. For instance:");
   furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
 
-  ensureRoom(70);
+  ensureRoom(95);
   const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
   if (playbookImg) {
     try { doc.addImage(playbookImg, "JPEG", 15, y, 42, 50); } catch (err) { console.warn("Could not embed Playbook box image:", err); }
     doc.setFontSize(14); doc.setTextColor(27, 42, 74);
-    doc.text("The Bullyproof Parent Playbook", 62, y + 12);
-    doc.setFontSize(10); doc.setTextColor(90, 100, 120);
-    doc.text(doc.splitTextToSize("Ongoing, personalized scripts for your child — by name and age — as things change. Not live yet.", 130), 62, y + 22);
-    doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-    doc.textWithLink("Join Bullyproof.Support free — be first in line →", 62, y + 40, { url: NETWORK_HOME_URL });
-    y += 58;
+    doc.text("The Bullyproof Parent Playbook", 62, y + 10);
+    doc.setFontSize(10); doc.setTextColor(60, 70, 100);
+    doc.text("Personalized guidance that grows with your child.", 62, y + 18);
+    doc.setFontSize(9.5); doc.setTextColor(90, 100, 120);
+    doc.text(doc.splitTextToSize("Being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.", 130), 62, y + 27);
+    doc.setFontSize(9); doc.setTextColor(90, 100, 120);
+    doc.text("Coming soon — Bullyproof.Support members will be first in line.", 62, y + 52);
+    doc.setFontSize(10.5); doc.setTextColor(66, 153, 225);
+    doc.textWithLink("Join Bullyproof.Support FREE today →", 62, y + 62, { url: NETWORK_HOME_URL });
+    y += 80;
   } else {
     doc.setFillColor(27, 42, 74);
-    doc.roundedRect(15, y, 180, 46, 3, 3, "F");
+    doc.roundedRect(15, y, 180, 74, 3, 3, "F");
     doc.setFontSize(15); doc.setTextColor(255, 255, 255);
-    doc.text("The Bullyproof Parent Playbook", 25, y + 16);
-    doc.setFontSize(10); doc.setTextColor(200, 210, 235);
-    doc.text(doc.splitTextToSize("Ongoing, personalized scripts for your child — by name and age — as things change. Not live yet.", 160), 25, y + 26);
+    doc.text("The Bullyproof Parent Playbook", 25, y + 14);
+    doc.setFontSize(10.5); doc.setTextColor(220, 225, 245);
+    doc.text("Personalized guidance that grows with your child.", 25, y + 23);
+    doc.setFontSize(9.5); doc.setTextColor(200, 210, 235);
+    doc.text(doc.splitTextToSize("Being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.", 160), 25, y + 32);
     doc.setFontSize(11); doc.setTextColor(255, 220, 130);
-    doc.textWithLink("Join Bullyproof.Support free — be first in line →", 25, y + 40, { url: NETWORK_HOME_URL });
-    y += 56;
+    doc.textWithLink("Join Bullyproof.Support FREE today →", 25, y + 65, { url: NETWORK_HOME_URL });
+    y += 84;
   }
-  body("Joining is real and free today. It doesn't start a Playbook trial by itself yet — that's still being built — but you'll be exactly who we reach out to the moment it's ready, with a free 1-week trial waiting.", { color: [140, 140, 140] });
+  body("Your membership does not start a trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", { color: [140, 140, 140] });
+
+  heading("Prefer to talk to a licensed professional?");
+  body("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:");
+  ensureRoom(8);
+  doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+  doc.textWithLink("bullyproof.support/getmatched", 15, y, { url: NETWORK_MATCH_URL });
+  y += 12;
+  body("If your area doesn't have a strong match yet, Psychology Today's broader directory is a good backup:");
+  ensureRoom(8);
+  doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+  doc.textWithLink("psychologytoday.com/us/therapists", 15, y, { url: FIND_SUPPORT_URL });
+  y += 12;
 
   ensureRoom(10);
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);

@@ -349,8 +349,16 @@ function buildReadableSummary() {
 }
 
 function buildEmailHtml() {
-  const navy = "#1B2A4A", navyDeep = "#101B33", text = "#1F2430", muted = "#5B6472";
+  const navy = "#1B2A4A", navyDeep = "#101B33", text = "#1F2430", muted = "#5B6472", gold = "#C89B3C";
   const sections = [];
+
+  // One consistent section-header treatment used everywhere below —
+  // this is the single biggest visual-hierarchy fix: previously every
+  // section (You told us, Why this matters, Recommended reading, etc.)
+  // used the exact same flat inline-bold text with no real distinction
+  // from body copy, so nothing stood out and the whole plan read as one
+  // undifferentiated block.
+  const sectionHeader = (label) => `<p style="color:${navy};font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;margin:28px 0 10px;padding-bottom:8px;border-bottom:2px solid ${gold};">${label}</p>`;
 
   if (state.safetyFlags.length) {
     const priority = ["sexualOrPower", "physicalSigns"];
@@ -367,47 +375,63 @@ function buildEmailHtml() {
   }
 
   if (state.answers.q4) {
-    sections.push(`<p style="color:${text};font-size:15px;"><strong>You told us:</strong><br><em>"${state.answers.q4}"</em></p>`);
+    sections.push(`${sectionHeader("You told us")}<p style="color:${text};font-size:15.5px;font-style:italic;margin:0;">"${state.answers.q4}"</p>`);
   }
   if (openingValidation()) {
-    sections.push(`<p style="color:${muted};font-size:14.5px;">${openingValidation()}</p>`);
+    sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${openingValidation()}</p>`);
   }
-  sections.push(`<p style="color:${text};font-size:15px;"><strong>What's happening:</strong><br>${deriveSummary()}</p>`);
+  sections.push(`${sectionHeader("What's happening")}<p style="color:${text};font-size:15px;margin:0;">${deriveSummary()}</p>`);
   if (focusLine()) {
-    sections.push(`<p style="color:${text};font-size:14.5px;font-style:italic;">${focusLine()}</p>`);
+    sections.push(`<p style="color:${text};font-size:14.5px;font-style:italic;margin:10px 0 0;">${focusLine()}</p>`);
   }
   if (selfReflectionNote()) {
-    sections.push(`<p style="color:${muted};font-size:14.5px;">${selfReflectionNote()}</p>`);
+    sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${selfReflectionNote()}</p>`);
   }
-  sections.push(`<p style="color:${text};font-size:15px;"><strong>Why this matters:</strong><br>${whyThisMattersNote()}</p>
-    <p style="color:${text};font-size:15px;"><strong>Your next 3 steps:</strong></p>
-    <ol style="color:${text};font-size:14.5px;padding-left:20px;">
-      ${actionSteps().map(s => `<li style="margin-bottom:10px;">${s}</li>`).join("")}
-    </ol>
+  sections.push(`${sectionHeader("Why this matters")}<p style="color:${text};font-size:15px;margin:0;">${whyThisMattersNote()}</p>`);
+  sections.push(`
+    ${sectionHeader("Your next 3 steps")}
+    <table role="presentation" style="width:100%;">
+      ${actionSteps().map((s, i) => `
+        <tr>
+          <td style="width:28px;vertical-align:top;padding:0 10px 14px 0;">
+            <div style="width:24px;height:24px;border-radius:50%;background:${navy};color:#fff;font-size:13px;font-weight:700;text-align:center;line-height:24px;">${i + 1}</div>
+          </td>
+          <td style="vertical-align:top;padding:0 0 14px;">
+            <p style="color:${text};font-size:14.5px;margin:1px 0 0;">${s}</p>
+          </td>
+        </tr>
+      `).join("")}
+    </table>
   `);
   const watchFor = preventionWatchForNote();
   if (watchFor) {
     sections.push(`
-      <p style="color:${text};font-size:15px;"><strong>What to watch for:</strong><br>${watchFor.intro}</p>
-      <ul style="color:${text};font-size:14.5px;padding-left:20px;">
+      ${sectionHeader("What to watch for")}
+      <p style="color:${text};font-size:15px;margin:0 0 10px;">${watchFor.intro}</p>
+      <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0 0 10px;">
         ${watchFor.items.map(i => `<li style="margin-bottom:8px;">${i}</li>`).join("")}
       </ul>
-      <p style="color:${muted};font-size:14px;">${watchFor.outro}</p>
+      <p style="color:${muted};font-size:14px;margin:0;">${watchFor.outro}</p>
     `);
   }
   const proNote = professionalSupportNote();
   if (proNote) {
-    sections.push(`<p style="color:${text};font-size:15px;"><strong>Worth considering:</strong><br>${proNote}</p>`);
+    sections.push(`${sectionHeader("Worth considering")}<p style="color:${text};font-size:15px;margin:0;">${proNote}</p>`);
   }
 
   // Recommended reading now comes after the steps — a natural answer to
   // "okay, what do I actually read," not a cold opener. On the prevention
   // path, Sunbeam leads — it's the most directly actionable, tonight,
-  // of anything recommended here.
+  // of anything recommended here. Everything here now sits inside one
+  // consistent card, matching the visual weight the Playbook section
+  // already had — previously this was the one major section with no
+  // card treatment at all, which made it feel like an afterthought.
   sections.push(`
-    <p style="color:${text};font-size:15px;"><strong>Recommended reading:</strong><br>${topicLabel()}</p>
+    ${sectionHeader("Recommended reading")}
+    <table role="presentation" style="width:100%;background:#F9FAFC;border:1px solid #E1E4EA;border-radius:12px;"><tr><td style="padding:20px 22px;">
+    <p style="color:${text};font-size:14.5px;margin:0 0 16px;">${topicLabel()}</p>
     ${sunbeamResource() ? `
-      <table role="presentation" style="width:100%;background:#F5F6FB;border:1px solid #E1E4EA;border-radius:12px;margin:10px 0 14px;"><tr><td style="padding:20px 22px;">
+      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;"><tr><td style="padding:18px 20px;">
         <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
         <table role="presentation" style="width:100%;"><tr>
           <td style="width:140px;vertical-align:top;text-align:center;padding-right:16px;">
@@ -445,22 +469,23 @@ function buildEmailHtml() {
         </tr></table>
       </td></tr></table>
     ` : ""}
-    ${recommendedBooks().map(b => `
-      <table role="presentation" style="margin:8px 0 14px;"><tr>
-        ${b.coverUrl ? `<td style="padding-right:14px;vertical-align:top;"><img src="${b.coverUrl}" alt="${b.display}" width="80" style="border-radius:4px;display:block;"></td>` : ""}
-        <td style="vertical-align:top;">
+    ${recommendedBooks().map((b, i) => `
+      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 ${i === recommendedBooks().length - 1 ? "0" : "12px"};"><tr>
+        ${b.coverUrl ? `<td style="padding:16px 0 16px 16px;vertical-align:top;"><img src="${b.coverUrl}" alt="${b.title} by ${b.author}" width="70" style="border-radius:4px;display:block;"></td>` : ""}
+        <td style="vertical-align:top;padding:16px;">
           <p style="color:${text};font-size:14.5px;margin:0 0 4px;">${b.display}</p>
           <p style="color:${muted};font-size:13px;margin:0 0 6px;">${b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full."}</p>
           <a href="${b.url}" style="color:${navy};font-size:14px;">View this book →</a>
         </td>
       </tr></table>
     `).join("")}
-    ${affiliateDisclosure() ? `<p style="color:#8896B8;font-size:12px;">${affiliateDisclosure()}</p>` : ""}
+    ${affiliateDisclosure() ? `<p style="color:#8896B8;font-size:12px;margin:14px 0 0;">${affiliateDisclosure()}</p>` : ""}
+    </td></tr></table>
   `);
   sections.push(`
-    <p style="color:${text};font-size:15px;"><strong>What comes next:</strong><br>
-    What you've read above is real and complete on its own. As this situation unfolds, the next most useful actions might depend on details that will shift and change over time. For instance:</p>
-    <ul style="color:${text};font-size:14.5px;padding-left:20px;">
+    ${sectionHeader("What comes next")}
+    <p style="color:${text};font-size:15px;margin:0 0 12px;">What you've read above is real and complete on its own. As this situation unfolds, the next most useful actions might depend on details that will shift and change over time. For instance:</p>
+    <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0;">
       ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
     </ul>
   `);
@@ -477,23 +502,24 @@ function buildEmailHtml() {
         <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">Join Bullyproof.Support FREE today and we'll let you know as soon as the Playbook is ready →</a>
       </td>
     </tr></table>
-    <p style="color:${muted};font-size:13.5px;">Your membership does not start a trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
+    <p style="color:${muted};font-size:13.5px;margin:0;">Your membership does not start a trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
   `);
   sections.push(`
-    <p style="color:${text};font-size:15px;"><strong>Prefer to talk to a licensed professional?</strong><br>
+    ${sectionHeader("Prefer to talk to a licensed professional?")}
+    <p style="color:${text};font-size:15px;margin:0;">
       That's always an option too — <a href="${NETWORK_MATCH_URL}" style="color:${navy};">get matched with one near you</a> through the Bullyproof Support network.<br>
       If your area doesn't have a strong match yet, <a href="${FIND_SUPPORT_URL}" style="color:${navy};">Psychology Today's directory</a> is a good backup.
     </p>
   `);
   sections.push(`
-    <p style="color:#8896B8;font-size:12px;margin-top:24px;border-top:1px solid #E1E4EA;padding-top:14px;">
+    <p style="color:#8896B8;font-size:12px;margin-top:28px;border-top:1px solid #E1E4EA;padding-top:14px;">
     This plan is for general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. Please use your own judgment and talk to a licensed professional about your specific situation. If your child is in immediate danger, call 911.
     </p>
   `);
 
   return `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
-      <h1 style="color:${navy};font-size:22px;margin:0 0 20px;">Bullyproof.Guide — Your Action Plan</h1>
+      <h1 style="color:${navy};font-size:22px;margin:0 0 8px;">Bullyproof.Guide — Your Action Plan</h1>
       ${sections.join("\n")}
     </div>
   `;

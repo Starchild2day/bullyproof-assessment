@@ -6,7 +6,7 @@
 <title>Bullyproof.Guide — Get Clarity On What's Happening</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
@@ -14,8 +14,6 @@
     --navy-deep:#101B33;
     --gold:#C89B3C;
     --gold-soft:#EFDFB8;
-    --teal:#4F7C82;
-    --teal-soft:#DCEAE9;
     --bg:#F5F6F8;
     --card:#FFFFFF;
     --text:#1F2430;
@@ -55,8 +53,8 @@
     width:36px;height:36px;border-radius:9px;
     background:var(--navy);
     display:flex;align-items:center;justify-content:center;
-    color:var(--gold);font-weight:600;font-size:15px;
-    font-family:'Fraunces',serif;
+    color:var(--gold);font-weight:800;font-size:15px;
+    font-family:'Inter',sans-serif;
   }
   header.brand .name{font-weight:600;font-size:17px;color:var(--navy);letter-spacing:-0.01em;}
 
@@ -102,8 +100,8 @@
   body.landing-mode .wrap{padding-top:8px;}
   .banner svg{width:100%;height:100%;position:relative;z-index:1;}
 
-  h1{font-family:'Fraunces',serif;font-weight:600;font-size:28px;line-height:1.2;margin:0 0 14px;color:var(--navy);}
-  h2.question{font-family:'Fraunces',serif;font-weight:600;font-size:23px;line-height:1.28;margin:0 0 14px;color:var(--navy);position:relative;padding-bottom:14px;}
+  h1{font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-0.015em;font-size:28px;line-height:1.22;margin:0 0 14px;color:var(--navy);}
+  h2.question{font-family:'Inter',sans-serif;font-weight:800;letter-spacing:-0.015em;font-size:23px;line-height:1.28;margin:0 0 14px;color:var(--navy);position:relative;padding-bottom:14px;}
   h2.question::after{content:"";position:absolute;left:0;bottom:0;width:36px;height:3px;background:var(--gold);border-radius:2px;}
   p.sub{font-size:16px;color:var(--text-muted);margin:0 0 20px;}
   p.body-text{font-size:16px;color:var(--text);}
@@ -139,7 +137,7 @@
   }
 
   .subsection{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);}
-  .subsection h3{font-family:'Fraunces',serif;font-size:17px;margin:0 0 10px;color:var(--navy);font-weight:600;}
+  .subsection h3{font-family:'Inter',sans-serif;font-size:17px;margin:0 0 10px;color:var(--navy);font-weight:700;}
 
   .nav-row{
     display:flex;justify-content:space-between;align-items:center;
@@ -173,7 +171,7 @@
     padding:18px;
     margin-bottom:18px;
   }
-  .safety-banner h3{font-family:'Fraunces',serif;color:var(--danger);margin:0 0 8px;font-size:18px;font-weight:600;}
+  .safety-banner h3{font-family:'Inter',sans-serif;color:var(--danger);margin:0 0 8px;font-size:18px;font-weight:800;}
   .safety-banner p{margin:0 0 10px;font-size:15px;color:#7A2E31;}
   .safety-banner ul{margin:0;padding-left:20px;font-size:15px;color:#7A2E31;}
   .safety-banner li{margin-bottom:4px;}
@@ -202,27 +200,10 @@
     background:var(--gold-soft);border-radius:12px;padding:20px 22px;margin-bottom:20px;
     border-left:4px solid var(--gold);
   }
-  .results-summary h3{font-family:'Fraunces',serif;margin:0 0 14px;font-size:18px;color:var(--navy);font-weight:600;}
+  .results-summary h3{font-family:'Inter',sans-serif;margin:0 0 14px;font-size:18px;color:var(--navy);font-weight:800;}
   .summary-label{font-size:11.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--navy);opacity:0.65;margin:0 0 4px;}
-  .summary-quote{font-family:'Fraunces',serif;font-style:italic;font-size:16.5px;color:var(--navy-deep);margin:0 0 14px;line-height:1.45;}
+  .summary-quote{font-family:'Inter',sans-serif;font-style:italic;font-weight:500;font-size:16.5px;color:var(--navy-deep);margin:0 0 14px;line-height:1.45;}
   .summary-reflection{font-size:14.5px;color:var(--text);line-height:1.55;margin:0;padding-top:14px;border-top:1px solid rgba(27,42,74,0.12);}
-
-  .playbook-teaser{
-    background:rgba(200,155,60,0.08);border-left:4px solid var(--gold);border-radius:12px;
-    padding:16px 18px;margin:18px 0 4px;
-  }
-  .playbook-teaser h3{font-family:'Fraunces',serif;font-size:16px;margin:0 0 8px;color:var(--navy);font-weight:600;}
-  .playbook-teaser p{font-size:14.5px;color:var(--text);margin:0 0 8px;line-height:1.5;}
-  .playbook-teaser p:last-child{margin-bottom:0;color:var(--text-muted);}
-
-  .network-invite{
-    background:var(--teal-soft);border-left:4px solid var(--teal);border-radius:12px;
-    padding:16px 18px;margin:14px 0 4px;
-  }
-  .network-invite h3{font-family:'Fraunces',serif;font-size:16px;margin:0 0 8px;color:var(--navy);font-weight:600;}
-  .network-invite p{font-size:14.5px;color:var(--text);margin:0 0 10px;line-height:1.5;}
-  .network-invite-link{display:inline-block;color:var(--navy);font-weight:600;font-size:14.5px;text-decoration:none;border-bottom:2px solid var(--teal);}
-  .network-invite-link:hover{color:var(--navy-deep);}
 
   footer.foot{
     text-align:center;font-size:12px;color:#9098A6;margin-top:40px;line-height:1.6;

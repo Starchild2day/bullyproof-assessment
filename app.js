@@ -56,7 +56,7 @@ function renderLanding() {
   progressTrack.style.display = "none";
   appEl.innerHTML = `
     <div class="card">
-      ${banner(LANDING_ICON, { large: true })}
+      ${banner(LANDING_ICON, { large: true, imageSrc: assetUrl("icon-landing.png") })}
       <div class="card-body">
       <h1>Get clarity on what's happening.</h1>
       <p class="body-text">Twelve quick questions. About 3 minutes. At the end you'll get a personalized action plan you can start using tonight — sent straight to your inbox.</p>
@@ -256,6 +256,15 @@ function renderResults() {
       <div class="nav-row">
         <button class="ghost" id="backToQ">Back</button>
         <button class="primary" id="getPlanBtn">Get My Action Plan</button>
+      </div>
+      <div class="results-summary" style="margin-top:18px;">
+        <p style="margin:0;font-size:14.5px;">Don't miss your:</p>
+        <ul style="margin:6px 0 0;padding-left:20px;font-size:14px;">
+          <li>Top 3 next steps for your specific situation</li>
+          <li>Targeted, recommended reading</li>
+          <li>Links to free helpful tools and appropriate professionals</li>
+          <li>...and more!</li>
+        </ul>
       </div>
       <p class="privacy-note">Your responses are saved securely and only used to generate your action plan. We never share your data. Every follow-up email includes a "Delete my data" link.</p>
       </div>

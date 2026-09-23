@@ -1069,6 +1069,8 @@ async function generatePDF() {
 
   const sunbeam = sunbeamResource();
   if (sunbeam) {
+    ensureRoom(20);
+    const cardStartY = y - 4;
     body(sunbeam.text, { color: [74, 109, 147] });
 
     ensureRoom(30);
@@ -1115,6 +1117,14 @@ async function generatePDF() {
     ensureRoom(8);
     doc.textWithLink("See the book + Ray plush set on Bullyproof.Support (coming soon) →", 15, y, { url: sunbeam.setUrl });
     y += 12;
+
+    // Draw the card border last, using the recorded start/end range —
+    // stroke only (no fill), so it frames the content instead of
+    // covering it, matching the email's bordered-box treatment.
+    doc.setDrawColor(225, 228, 234);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(11, cardStartY, 188, (y - 6) - cardStartY, 3, 3, "S");
+    y += 4;
   }
 
   for (const b of recommendedBooks()) {

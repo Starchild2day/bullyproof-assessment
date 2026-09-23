@@ -114,6 +114,7 @@ function renderQuestion() {
       <div class="options-scroll">
         ${bodyHTML}
       </div>
+      <p id="validationMsg" style="display:none;color:#B23A48;font-size:13.5px;margin:0 0 8px;font-weight:600;">Please select an answer to continue.</p>
       <div class="nav-row">
         <button class="ghost" id="backBtn" ${state.qIndex === 0 ? "disabled style='visibility:hidden'" : ""}>Back</button>
         <button class="primary" id="nextBtn">Next</button>
@@ -240,6 +241,16 @@ function wireQuestionEvents(q) {
 function onNext(q) {
   if (q.type === "text") {
     state.answers[q.id] = document.getElementById("textInput").value.trim();
+  }
+  if (q.type === "choice" && !state.answers[q.id]) {
+    const msg = document.getElementById("validationMsg");
+    if (msg) msg.style.display = "block";
+    return;
+  }
+  if (q.type === "multi" && (!state.answers[q.id] || state.answers[q.id].length === 0)) {
+    const msg = document.getElementById("validationMsg");
+    if (msg) msg.style.display = "block";
+    return;
   }
   track("question_answered", { question: q.id });
   state.qIndex++;

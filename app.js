@@ -1073,18 +1073,24 @@ async function generatePDF() {
     const cardStartY = y - 4;
     body(sunbeam.text, { color: [74, 109, 147] });
 
-    ensureRoom(30);
+    doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
+    ensureRoom(8);
+    doc.text("Start collecting your child's Shining Moments:", 15, y);
+    doc.setFont(undefined, "normal");
+    y += 6;
+
+    ensureRoom(58);
+    const spreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
+    if (spreadImg) {
+      try { doc.addImage(spreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
+      y += 58;
+    }
+
     const smY = y;
-    const [shiningImg, bibaImg] = await Promise.all([
-      fetchImageAsDataUrl(sunbeam.shiningMomentsCloseupImg),
-      fetchImageAsDataUrl(sunbeam.bibaBadgeImg)
-    ]);
-    if (shiningImg) {
-      try { doc.addImage(shiningImg, "JPEG", 15, smY, 30, 13); } catch (e) {}
-      doc.setFontSize(9); doc.setTextColor(90, 100, 120);
-      doc.text(doc.splitTextToSize("Start collecting your child's Shining Moments — real prompts from the back of the book", 90), 50, smY + 5);
-      if (bibaImg) { try { doc.addImage(bibaImg, "PNG", 50, smY + 12, 26, 11); } catch (e) {} }
-      y = smY + 26;
+    const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);
+    if (bibaImg) {
+      try { doc.addImage(bibaImg, "PNG", 15, smY, 26, 11); } catch (e) {}
+      y = smY + 15;
     }
 
     ensureRoom(46);

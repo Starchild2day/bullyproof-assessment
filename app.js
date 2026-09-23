@@ -994,8 +994,15 @@ async function generatePDF() {
     if (y + needed > 280) { doc.addPage(); y = 20; }
   }
   function heading(text) {
-    ensureRoom(14);
-    doc.setFontSize(13); doc.setTextColor(44, 82, 130); doc.text(text, 15, y); y += 7;
+    ensureRoom(16);
+    doc.setFontSize(11); doc.setFont(undefined, "bold"); doc.setTextColor(27, 42, 74);
+    doc.text(text.toUpperCase(), 15, y);
+    y += 3;
+    doc.setDrawColor(200, 155, 60);
+    doc.setLineWidth(0.7);
+    doc.line(15, y, 45, y);
+    doc.setFont(undefined, "normal");
+    y += 7;
   }
   function body(text, opts) {
     opts = opts || {};

@@ -446,14 +446,8 @@ function buildEmailHtml() {
       <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:0;">
         <img src="${sunbeamResource().heroImg}" alt="A child writing in the Shining Moments pages with Ray" width="100%" style="display:block;max-width:100%;">
         <div style="padding:18px 20px;">
-          <table role="presentation" style="width:100%;"><tr>
-            <td style="vertical-align:middle;">
-              <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0;text-transform:uppercase;">Award-winning children's book</p>
-            </td>
-            <td style="text-align:right;vertical-align:middle;width:90px;">
-              <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="90" style="display:block;">
-            </td>
-          </tr></table>
+          <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
+          <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="170" style="display:block;margin:0 0 14px;">
           <p style="color:${text};font-size:15px;font-weight:700;margin:14px 0 6px;">The Adventures of a True Sunbeam</p>
           <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
           <p style="color:${navyDeep};font-size:12.5px;font-weight:700;margin:18px 0 8px;">Start collecting your child's Shining Moments:</p>
@@ -1043,7 +1037,20 @@ async function generatePDF() {
   body(whyThisMattersNote());
 
   heading("Your next 3 steps:");
-  actionSteps().forEach((step, i) => body(`${i + 1}. ${step}`));
+  doc.setFontSize(11);
+  actionSteps().forEach((step, i) => {
+    doc.setTextColor(40, 40, 40);
+    const lines = doc.splitTextToSize(step, 165);
+    ensureRoom(Math.max(lines.length * 6, 10) + 6);
+    const stepTopY = y;
+    doc.setFillColor(27, 42, 74);
+    doc.circle(19, stepTopY - 2, 4, "F");
+    doc.setFontSize(10); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold");
+    doc.text(String(i + 1), 19, stepTopY - 0.5, { align: "center" });
+    doc.setFont(undefined, "normal"); doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+    doc.text(lines, 28, y);
+    y += Math.max(lines.length * 6, 10) + 6;
+  });
 
   const watchFor = preventionWatchForNote();
   if (watchFor) {
@@ -1093,8 +1100,8 @@ async function generatePDF() {
     const smY = y;
     const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);
     if (bibaImg) {
-      try { doc.addImage(bibaImg, "PNG", 15, smY, 26, 11); } catch (e) {}
-      y = smY + 15;
+      try { doc.addImage(bibaImg, "PNG", 15, smY, 55, 23); } catch (e) {}
+      y = smY + 27;
     }
 
     ensureRoom(46);

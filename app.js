@@ -484,7 +484,7 @@ function buildEmailHtml() {
   `);
   sections.push(`
     ${sectionHeader("What comes next")}
-    <p style="color:${text};font-size:15px;margin:0 0 12px;">What you've read above is real and complete on its own. As this situation unfolds, the next most useful actions might depend on details that will shift and change over time. For instance:</p>
+    <p style="color:${text};font-size:15px;margin:0 0 12px;">What you just read is real and complete on its own. But situations change — and when they do, here's the kind of thing that tends to help:</p>
     <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0;">
       ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
     </ul>
@@ -1121,7 +1121,7 @@ async function generatePDF() {
   // "starting a tracked trial" isn't a thing that exists yet, so it's not
   // claimed here.
   heading("What comes next:");
-  body("What you've read above is real and complete on its own. As this situation unfolds, the next most useful actions might depend on details that will shift and change over time. That's exactly what the Bullyproof Parent Playbook is built for — not a longer list, but ongoing, evolving help. For instance:");
+  body("What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of thing that tends to help:");
   furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
 
   ensureRoom(95);

@@ -58,7 +58,7 @@ const QUESTIONS = [
   },
   {
     id: "q2",
-    title: "What's bringing you here today?",
+    title: "What brings you here today?",
     type: "choice",
     icon: ICONS.q2,
     options: [

@@ -197,9 +197,9 @@ function banner(svgInner, opts) {
     : `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#EFDFB8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg>`;
   const logoContent = opts.showLogo ? `
     <g>
-      <rect x="16" y="13" width="16" height="16" rx="4" fill="#101B33"/>
-      <text x="24" y="24" font-family="Inter,sans-serif" font-size="9" font-weight="800" fill="#C89B3C" text-anchor="middle">B</text>
-      <text x="36" y="23.5" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#EFDFB8">Bullyproof.Guide</text>
+      <rect x="24" y="22" width="16" height="16" rx="4" fill="#101B33"/>
+      <text x="32" y="33" font-family="Inter,sans-serif" font-size="9" font-weight="800" fill="#C89B3C" text-anchor="middle">B</text>
+      <text x="44" y="32.5" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#EFDFB8">Bullyproof.Guide</text>
     </g>
   ` : "";
   return `<div class="banner${large ? " landing-banner" : ""}">

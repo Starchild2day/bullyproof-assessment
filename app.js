@@ -370,7 +370,7 @@ function buildEmailHtml() {
   // used the exact same flat inline-bold text with no real distinction
   // from body copy, so nothing stood out and the whole plan read as one
   // undifferentiated block.
-  const sectionHeader = (label) => `<p style="color:${navy};font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;margin:28px 0 10px;padding-bottom:8px;border-bottom:2px solid ${gold};">${label}</p>`;
+  const sectionHeader = (label) => `<table role="presentation" style="width:100%;margin:28px 0 10px;"><tr><td style="border-bottom:2px solid ${gold};padding-bottom:8px;"><span style="color:${navy};font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">${label}</span></td></tr></table>`;
 
   if (state.safetyFlags.length) {
     const priority = ["sexualOrPower", "physicalSigns"];
@@ -443,47 +443,40 @@ function buildEmailHtml() {
     <table role="presentation" style="width:100%;background:#F9FAFC;border:1px solid #E1E4EA;border-radius:12px;"><tr><td style="padding:20px 22px;">
     <p style="color:${text};font-size:14.5px;margin:0 0 16px;">${topicLabel()}</p>
     ${sunbeamResource() ? `
-      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;"><tr><td style="padding:18px 20px;">
-        <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
-        <table role="presentation" style="width:100%;"><tr>
-          <td style="width:160px;vertical-align:top;text-align:center;padding-right:16px;">
-            <div style="padding-top:14px;">
-              <img src="${sunbeamResource().animatedCoverImg}" alt="The Adventures of a True Sunbeam" width="150" style="border-radius:6px;display:block;margin:0 auto;">
-              <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="90" style="display:block;margin:10px auto 0;">
-            </div>
-          </td>
-          <td style="vertical-align:top;">
-            <p style="color:${text};font-size:15px;font-weight:700;margin:0 0 6px;">The Adventures of a True Sunbeam</p>
-            <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
-          </td>
-        </tr></table>
-        <p style="color:${navyDeep};font-size:12.5px;font-weight:700;margin:16px 0 6px;">Start collecting your child's Shining Moments:</p>
-        <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
-        <table role="presentation" style="margin-top:10px;"><tr>
-          <td style="width:130px;vertical-align:top;">
-            <img src="${sunbeamResource().shiningMomentsCloseupImg}" alt="A close-up of a Shining Moments prompt" width="120" style="border-radius:4px;display:block;">
-          </td>
-          <td style="vertical-align:top;padding-left:10px;">
-            <span style="color:${muted};font-size:12.5px;">Simple prompts turn ordinary days into moments your child can look back on — proof, in their own words, of how far they've come.</span>
-          </td>
-        </tr></table>
-        <table role="presentation" style="width:100%;margin-top:16px;border-top:1px solid #E1E4EA;padding-top:14px;"><tr>
-          <td style="text-align:center;width:120px;">
-            <img src="${sunbeamResource().coloringImg}" alt="The Adventures of a True Sunbeam Coloring Book" width="105" style="border-radius:4px;display:block;margin:0 auto 6px;">
-            <span style="color:${muted};font-size:11.5px;">Coloring Book version</span>
-          </td>
-          <td style="text-align:center;width:100px;">
-            <img src="${sunbeamResource().rayImg}" alt="Ray the plush toy" width="80" style="display:block;margin:0 auto 6px;">
-            <span style="color:${muted};font-size:11.5px;">Meet Ray the Sunbeam- plush toy</span>
-          </td>
-        </tr></table>
-        <table role="presentation" style="width:100%;margin-top:14px;"><tr>
-          <td style="text-align:right;padding-right:6px;">
-            <a href="${sunbeamResource().fullColorUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the full-color book →</a><br>
-            <a href="${sunbeamResource().coloringUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the coloring book →</a><br>
-            <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
-          </td>
-        </tr></table>
+      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:0;">
+        <img src="${sunbeamResource().heroImg}" alt="A child writing in the Shining Moments pages with Ray" width="100%" style="display:block;max-width:100%;">
+        <div style="padding:18px 20px;">
+          <table role="presentation" style="width:100%;"><tr>
+            <td style="vertical-align:middle;">
+              <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0;text-transform:uppercase;">Award-winning children's book</p>
+            </td>
+            <td style="text-align:right;vertical-align:middle;width:90px;">
+              <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="90" style="display:block;">
+            </td>
+          </tr></table>
+          <p style="color:${text};font-size:15px;font-weight:700;margin:14px 0 6px;">The Adventures of a True Sunbeam</p>
+          <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
+          <p style="color:${navyDeep};font-size:12.5px;font-weight:700;margin:18px 0 8px;">Start collecting your child's Shining Moments:</p>
+          <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
+          <p style="color:${muted};font-size:12.5px;margin:10px 0 0;">${sunbeamResource().closeupCaption}</p>
+          <table role="presentation" style="width:100%;margin-top:18px;border-top:1px solid #E1E4EA;padding-top:16px;"><tr>
+            <td style="text-align:center;width:120px;">
+              <img src="${sunbeamResource().coloringImg}" alt="The Adventures of a True Sunbeam Coloring Book" width="105" style="border-radius:4px;display:block;margin:0 auto 6px;">
+              <span style="color:${muted};font-size:11.5px;">Coloring Book version</span>
+            </td>
+            <td style="text-align:center;width:100px;">
+              <img src="${sunbeamResource().rayImg}" alt="Ray the plush toy" width="80" style="display:block;margin:0 auto 6px;">
+              <span style="color:${muted};font-size:11.5px;">Meet Ray the Sunbeam- plush toy</span>
+            </td>
+          </tr></table>
+          <table role="presentation" style="width:100%;margin-top:14px;"><tr>
+            <td style="text-align:right;padding-right:6px;">
+              <a href="${sunbeamResource().fullColorUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the full-color book →</a><br>
+              <a href="${sunbeamResource().coloringUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the coloring book →</a><br>
+              <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
+            </td>
+          </tr></table>
+        </div>
       </td></tr></table>
     ` : ""}
     ${recommendedBooks().map((b, i) => `
@@ -855,7 +848,8 @@ function assetUrl(name) {
 function sunbeamResource() {
   if (!isPreventive()) return null;
   return {
-    text: `The "Shining Moments" pages in the back of The Adventures of a True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, and adding it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of a True Sunbeam the International Best Indie Book Award in the Children's category.`,
+    text: `The "Shining Moments" pages in the back of The Adventures of a True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of a True Sunbeam the International Best Indie Book Award in the Children's category.`,
+    closeupCaption: `Training your child to notice the good — in every day, in every moment — so when something hard does happen, it's met with perspective instead of feeling like the whole story.`,
     setUrl: SUNBEAM_SET_URL,
     fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,
     coloringUrl: SUNBEAM_COLORING_AMAZON_URL,
@@ -865,6 +859,7 @@ function sunbeamResource() {
     shiningMomentsSpreadImg: assetUrl("shining-moments-spread.jpg"),
     shiningMomentsCloseupImg: assetUrl("shining-moments-closeup.jpg"),
     animatedCoverImg: assetUrl("sunbeam-cover-animated.gif"),
+    heroImg: assetUrl("sunbeam-hero-bedtime.jpg"),
     bibaBadgeImg: assetUrl("biba-badge.png")
   };
 }
@@ -1000,7 +995,7 @@ async function generatePDF() {
     y += 3;
     doc.setDrawColor(200, 155, 60);
     doc.setLineWidth(0.7);
-    doc.line(15, y, 45, y);
+    doc.line(15, y, 195, y);
     doc.setFont(undefined, "normal");
     y += 7;
   }
@@ -1071,6 +1066,14 @@ async function generatePDF() {
   if (sunbeam) {
     ensureRoom(20);
     const cardStartY = y - 4;
+
+    ensureRoom(105);
+    const heroImg = await fetchImageAsDataUrl(sunbeam.heroImg);
+    if (heroImg) {
+      try { doc.addImage(heroImg, "JPEG", 15, y, 180, 120); } catch (e) {}
+      y += 124;
+    }
+
     body(sunbeam.text, { color: [74, 109, 147] });
 
     doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
@@ -1085,6 +1088,7 @@ async function generatePDF() {
       try { doc.addImage(spreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
       y += 58;
     }
+    body(sunbeam.closeupCaption, { color: [90, 100, 120] });
 
     const smY = y;
     const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);

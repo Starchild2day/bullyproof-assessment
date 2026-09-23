@@ -106,7 +106,7 @@ const QUESTIONS = [
   {
     id: "q5",
     icon: ICONS.q5,
-    title: "How long has this been going on?",
+    title: "How long has this been happening?",
     type: "choice",
     options: ["Just noticed it (less than a week)", "A few weeks", "A month or two", "Several months or longer", "Not sure"]
   },

@@ -279,11 +279,12 @@ function renderResults() {
         <button class="primary" id="getPlanBtn">Get My Action Plan</button>
       </div>
       <div class="results-summary" style="margin-top:18px;">
-        <p style="margin:0;font-size:14.5px;">Don't miss your:</p>
+        <p style="margin:0;font-size:14.5px;">Included in your complimentary Action Plan:</p>
         <ul style="margin:6px 0 0;padding-left:20px;font-size:14px;">
           <li>Top 3 next steps for your specific situation</li>
           <li>Targeted, recommended reading</li>
-          <li>Links to free helpful tools and appropriate professionals</li>
+          <li>Links to free helpful tools</li>
+          <li>Connections to appropriate local professionals</li>
           <li>...and more!</li>
         </ul>
       </div>

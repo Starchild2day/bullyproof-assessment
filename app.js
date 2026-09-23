@@ -434,9 +434,11 @@ function buildEmailHtml() {
       <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;"><tr><td style="padding:18px 20px;">
         <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
         <table role="presentation" style="width:100%;"><tr>
-          <td style="width:140px;vertical-align:top;text-align:center;padding-right:16px;">
-            <img src="${sunbeamResource().animatedCoverImg}" alt="The Adventures of a True Sunbeam" width="130" style="border-radius:6px;display:block;">
-            <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="90" style="display:block;margin:8px auto 0;">
+          <td style="width:160px;vertical-align:top;text-align:center;padding-right:16px;">
+            <div style="padding-top:14px;">
+              <img src="${sunbeamResource().animatedCoverImg}" alt="The Adventures of a True Sunbeam" width="150" style="border-radius:6px;display:block;margin:0 auto;">
+              <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="90" style="display:block;margin:10px auto 0;">
+            </div>
           </td>
           <td style="vertical-align:top;">
             <p style="color:${text};font-size:15px;font-weight:700;margin:0 0 6px;">The Adventures of a True Sunbeam</p>
@@ -454,16 +456,19 @@ function buildEmailHtml() {
           </td>
         </tr></table>
         <table role="presentation" style="width:100%;margin-top:16px;border-top:1px solid #E1E4EA;padding-top:14px;"><tr>
-          <td style="text-align:center;padding-right:14px;">
-            <img src="${sunbeamResource().coloringImg}" alt="The Adventures of a True Sunbeam Coloring Book" width="64" style="border-radius:4px;display:block;margin:0 auto 4px;">
-            <a href="${sunbeamResource().coloringUrl}" style="color:${navy};font-size:12px;">Coloring book →</a>
+          <td style="text-align:center;width:120px;">
+            <img src="${sunbeamResource().coloringImg}" alt="The Adventures of a True Sunbeam Coloring Book" width="105" style="border-radius:4px;display:block;margin:0 auto 6px;">
+            <span style="color:${muted};font-size:11.5px;">Coloring Book version</span>
           </td>
-          <td style="text-align:center;padding-right:14px;">
-            <img src="${sunbeamResource().rayImg}" alt="Ray the plush toy" width="48" style="display:block;margin:0 auto 4px;">
-            <span style="color:${muted};font-size:12px;">Meet Ray</span>
+          <td style="text-align:center;width:100px;">
+            <img src="${sunbeamResource().rayImg}" alt="Ray the plush toy" width="80" style="display:block;margin:0 auto 6px;">
+            <span style="color:${muted};font-size:11.5px;">Meet Ray the Sunbeam- plush toy</span>
           </td>
-          <td style="vertical-align:middle;">
-            <a href="${sunbeamResource().fullColorUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the book →</a><br>
+        </tr></table>
+        <table role="presentation" style="width:100%;margin-top:14px;"><tr>
+          <td style="text-align:right;padding-right:6px;">
+            <a href="${sunbeamResource().fullColorUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the full-color book →</a><br>
+            <a href="${sunbeamResource().coloringUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the coloring book →</a><br>
             <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
           </td>
         </tr></table>
@@ -484,7 +489,7 @@ function buildEmailHtml() {
   `);
   sections.push(`
     ${sectionHeader("What comes next")}
-    <p style="color:${text};font-size:15px;margin:0 0 12px;">What you just read is real and complete on its own. But situations change — and when they do, here's the kind of thing that tends to help:</p>
+    <p style="color:${text};font-size:15px;margin:0 0 12px;">What you just read is real and complete on its own. But situations change — and when they do, here's the kind of support parents find most helpful on a consistent basis:</p>
     <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0;">
       ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
     </ul>
@@ -499,7 +504,15 @@ function buildEmailHtml() {
         <p style="color:${muted};font-size:13.5px;margin:0 0 10px;font-weight:600;">Personalized guidance that grows with your child.</p>
         <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">The Bullyproof Parent Playbook is being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.</p>
         <p style="color:${muted};font-size:13px;margin:0 0 10px;">Coming soon — and Bullyproof.Support members will be first in line.</p>
-        <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">Join Bullyproof.Support FREE today and we'll let you know as soon as the Playbook is ready →</a>
+        <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">Join Bullyproof.Support FREE today →</a>
+        <p style="color:${muted};font-size:12.5px;margin:12px 0 4px;font-weight:700;">What membership includes, starting today:</p>
+        <ul style="color:${muted};font-size:12.5px;padding-left:18px;margin:0;">
+          <li style="margin-bottom:4px;">First in line for the free Playbook trial the moment it launches</li>
+          <li style="margin-bottom:4px;">Search the professional directory anytime — not just this once</li>
+          <li style="margin-bottom:4px;">Real stories from other parents navigating situations like yours</li>
+          <li style="margin-bottom:4px;">Articles and a podcast focused specifically on kids and bullying</li>
+          <li style="margin-bottom:0;">Founding Member status while the community is still growing</li>
+        </ul>
       </td>
     </tr></table>
     <p style="color:${muted};font-size:13.5px;margin:0;">Your membership does not start a trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
@@ -881,10 +894,10 @@ function whyThisMattersNote() {
 function furtherStepsTeaser() {
   if (isPreventive()) {
     return [
-      "What to say about kindness and boundaries — before there's a problem.",
+      "Knowing what to say so your child will listen — instead of getting one-word answers.",
+      "How to talk about kindness and boundaries — before there's a problem.",
       "A simple weekly habit that builds your child's confidence over time",
       "How to know when kids can work it out — and when they need your help.",
-      "A way to check in on progress even when nothing seems wrong",
       "How to keep the good things you learned growing up — and give your kids better tools for the rest."
     ];
   }
@@ -1121,7 +1134,7 @@ async function generatePDF() {
   // "starting a tracked trial" isn't a thing that exists yet, so it's not
   // claimed here.
   heading("What comes next:");
-  body("What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of thing that tends to help:");
+  body("What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of support parents find most helpful on a consistent basis:");
   furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
 
   ensureRoom(95);

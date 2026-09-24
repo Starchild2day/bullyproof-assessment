@@ -274,7 +274,7 @@ function renderResults() {
   appEl.innerHTML = `
     ${state.safetyFlags.length ? renderSafetyBanner() : ""}
     <div class="card">
-      ${banner(RESULTS_ICON)}
+      ${banner(RESULTS_ICON, { imageSrc: assetUrl("icon-results.png") })}
       <div class="card-body">
       <div class="results-summary">
         <h3>Here's what we're seeing</h3>

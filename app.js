@@ -321,6 +321,24 @@ function isPreventive() {
   return (state.answers.q2 || "").includes("prevent");
 }
 
+// Sunbeam/Shining Moments is valuable beyond the prevention path — anywhere
+// a child is showing signs of an emotional challenge, regardless of age,
+// since the bedtime redirection technique works whether or not they have
+// words for what they're feeling yet.
+function hasEmotionalChallengeSignals() {
+  const q6 = state.answers.q6 || [];
+  const distressBehaviors = [
+    "Withdrawing from family activities they used to enjoy",
+    "More irritable, tearful, or anxious than usual",
+    "Reluctant to go to school or ride the bus",
+    "Avoiding certain places, people, or activities they used to like"
+  ];
+  if (q6.some(b => distressBehaviors.includes(b))) return true;
+  const comm = communicationStatus();
+  if (comm === "behavior-only" || comm === "no-signals") return true;
+  return false;
+}
+
 function deriveSummary() {
   const q2 = state.answers.q2 || "a bullying situation you're working through";
   if (isPreventive()) return `${q2}.`;
@@ -844,9 +862,12 @@ function assetUrl(name) {
 }
 
 function sunbeamResource() {
-  if (!isPreventive()) return null;
+  if (!isPreventive() && !hasEmotionalChallengeSignals()) return null;
+  const text = isPreventive()
+    ? `The "Shining Moments" pages in the back of The Adventures of a True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of a True Sunbeam the International Best Indie Book Award in the Children's category.`
+    : `When hard feelings are difficult to put into words, the "Shining Moments" pages in the back of The Adventures of a True Sunbeam offer a gentle way in — just a few minutes at bedtime, redirecting their thinking toward the best moment of the day right as they're falling asleep. That shift alone can mean better dreams, and a better start to tomorrow. Coloring the pages together, as a family, turns it into something more lasting: a real keepsake of shared artwork your child can hold onto — tangible proof of love, there for them even in a moment when no one else is close by. The impact of these same tools is what earned The Adventures of a True Sunbeam the International Best Indie Book Award in the Children's category.`;
   return {
-    text: `The "Shining Moments" pages in the back of The Adventures of a True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of a True Sunbeam the International Best Indie Book Award in the Children's category.`,
+    text,
     closeupCaption: `Just a simple habit — writing down what went right each day. Nothing more is asked of it. But kept up over time, confidence and perspective grow quietly alongside it, without ever being the point.`,
     setUrl: SUNBEAM_SET_URL,
     fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,

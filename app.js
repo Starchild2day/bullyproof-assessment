@@ -871,7 +871,7 @@ const NETWORK_MATCH_URL = "https://www.bullyproof.support/getmatched";
 // Confirmed by Mark: the direct signup page for a parent/guardian
 // ("hidden profile") account — skips the account-type choice screen
 // entirely, since every visitor arriving from this tool is a parent.
-const NETWORK_HOME_URL = "https://www.bullyproof.support/checkout/hidden-profile";
+const NETWORK_HOME_URL = "https://www.bullyproof.support/checkout/clarity-check";
 
 function playbookBoxImageUrl() {
   return `${window.location.origin}/assets/playbook-box.jpg`;

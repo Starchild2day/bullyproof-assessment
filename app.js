@@ -447,7 +447,7 @@ function buildEmailHtml() {
         <img src="${sunbeamResource().heroImg}" alt="A child writing in the Shining Moments pages with Ray" width="100%" style="display:block;max-width:100%;">
         <div style="padding:18px 20px;">
           <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
-          <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="170" style="display:block;margin:0 0 14px;">
+          <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="340" style="display:block;margin:0 0 14px;max-width:100%;">
           <p style="color:${text};font-size:15px;font-weight:700;margin:14px 0 6px;">The Adventures of a True Sunbeam</p>
           <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
           <p style="color:${navyDeep};font-size:12.5px;font-weight:700;margin:18px 0 8px;">Start collecting your child's Shining Moments:</p>
@@ -514,7 +514,7 @@ function buildEmailHtml() {
         </ul>
       </td>
     </tr></table>
-    <p style="color:${muted};font-size:13.5px;margin:0;">Your membership does not start a trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
+    <p style="color:${muted};font-size:13.5px;margin:0;">Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
   `);
   sections.push(`
     ${sectionHeader("Prefer to talk to a licensed professional?")}
@@ -946,7 +946,7 @@ function furtherStepsTeaser() {
 
 function preventionSteps() {
   return [
-    "Build the habit of easy conversation now, before you'd ever need it. Try one low-stakes nightly question, like \"What was the best and worst part of your day?\" The goal isn't spotting a problem — it's making talking to you feel normal, so if something ever does happen, coming to you is already the default.",
+    "Build the habit of easy conversation now, before you'd ever need it. Try one low-stakes nightly question, like \"What was the best part of your day, the brightest moment when you felt the biggest smile in your heart?\" The goal isn't spotting a problem — it's making talking to you feel normal, so if something ever does happen, coming to you is already the default.",
     "Introduce yourself to your child's teacher or school counselor now, before there's anything to report. Something as simple as \"Just wanted to say hello and let you know I'm around if anything ever comes up\" opens a door you might need later, without waiting for a reason to make first contact.",
     "Practice a simple response together for handling unkindness, before they ever need it — a phrase like \"That's not okay, and I'm going to tell someone\" that they can fall back on automatically, the same way you'd practice a fire drill."
   ];
@@ -1073,6 +1073,7 @@ async function generatePDF() {
   if (sunbeam) {
     ensureRoom(20);
     const cardStartY = y - 4;
+    const cardStartPage = doc.internal.getNumberOfPages();
 
     ensureRoom(105);
     const heroImg = await fetchImageAsDataUrl(sunbeam.heroImg);
@@ -1100,8 +1101,8 @@ async function generatePDF() {
     const smY = y;
     const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);
     if (bibaImg) {
-      try { doc.addImage(bibaImg, "PNG", 15, smY, 55, 23); } catch (e) {}
-      y = smY + 27;
+      try { doc.addImage(bibaImg, "PNG", 15, smY, 110, 46); } catch (e) {}
+      y = smY + 50;
     }
 
     ensureRoom(46);
@@ -1129,18 +1130,23 @@ async function generatePDF() {
       doc.setFontSize(9); doc.setTextColor(100, 100, 100);
       doc.text("Ray", ix, imgY + 34);
     }
-    y = imgY + 42;
+    y = (fullColorImg || coloringImg || rayImg) ? imgY + 42 : imgY;
     doc.setFontSize(11); doc.setTextColor(66, 153, 225);
     ensureRoom(8);
-    doc.textWithLink("See the book + Ray plush set on Bullyproof.Support (coming soon) →", 15, y, { url: sunbeam.setUrl });
+    doc.textWithLink("See the book + Ray plush set (coming soon) →", 15, y, { url: sunbeam.setUrl });
     y += 12;
 
     // Draw the card border last, using the recorded start/end range —
     // stroke only (no fill), so it frames the content instead of
-    // covering it, matching the email's bordered-box treatment.
-    doc.setDrawColor(225, 228, 234);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(11, cardStartY, 188, (y - 6) - cardStartY, 3, 3, "S");
+    // covering it, matching the email's bordered-box treatment. Skipped
+    // if a page break happened mid-section, since the start/end
+    // coordinates would then reference different pages and produce a
+    // visibly wrong box rather than no box at all.
+    if (doc.internal.getNumberOfPages() === cardStartPage) {
+      doc.setDrawColor(225, 228, 234);
+      doc.setLineWidth(0.4);
+      doc.roundedRect(11, cardStartY, 188, (y - 6) - cardStartY, 3, 3, "S");
+    }
     y += 4;
   }
 
@@ -1211,7 +1217,7 @@ async function generatePDF() {
     doc.textWithLink("Join Bullyproof.Support FREE today →", 25, y + 65, { url: NETWORK_HOME_URL });
     y += 84;
   }
-  body("Your membership does not start a trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", { color: [140, 140, 140] });
+  body("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", { color: [140, 140, 140] });
 
   heading("Prefer to talk to a licensed professional?");
   body("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:");

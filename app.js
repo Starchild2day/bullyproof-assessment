@@ -470,9 +470,14 @@ function buildEmailHtml() {
           <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="260" style="display:block;margin:0 0 14px;max-width:100%;">
           <p style="color:${text};font-size:15px;font-weight:700;margin:14px 0 6px;">The Adventures of the True Sunbeam</p>
           <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
-          <p style="color:${navyDeep};font-size:12.5px;font-weight:700;margin:18px 0 8px;">Start collecting your child's Shining Moments:</p>
+          ${sunbeamResource().introCaption ? `
+            <div style="border-left:3px solid ${gold};padding:2px 0 2px 16px;margin:20px 0;">
+              <p style="color:${navyDeep};font-size:14px;font-style:italic;line-height:1.6;margin:0;">${sunbeamResource().introCaption}</p>
+            </div>
+          ` : ""}
+          <p style="color:${navyDeep};font-size:12.5px;font-weight:700;letter-spacing:0.02em;margin:18px 0 8px;">Start collecting your child's Shining Moments:</p>
           <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
-          <p style="color:${muted};font-size:12.5px;margin:10px 0 0;">${sunbeamResource().closeupCaption}</p>
+          <p style="color:${muted};font-size:13px;font-style:italic;line-height:1.5;margin:12px 0 0;">${sunbeamResource().closeupCaption}</p>
           <table role="presentation" style="width:100%;margin-top:18px;border-top:1px solid #E1E4EA;padding-top:20px;"><tr>
             <td style="text-align:center;width:33%;vertical-align:bottom;">
               <img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="80" style="border-radius:4px;display:block;margin:0 auto 8px;">
@@ -921,9 +926,15 @@ function sunbeamResource() {
   if (!isPreventive() && !hasEmotionalChallengeSignals()) return null;
   const text = isPreventive()
     ? `The "Shining Moments" pages in the back of The Adventures of the True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`
-    : `When they're being hurt by others, it can be hard for a child to stop the painful thoughts that cloud their thinking — especially at bedtime. This is the time to protect their dreams: to gently shift their thinking to the best moment of the day, even if it's difficult to find at first. Try asking, in the style of the prompting questions at the top of each Shining Moments page: What happened today that helped you feel special or loved? If you have more time, coloring a page together and creating a "keepsake" moment can provide lasting comfort — the evidence of your love and care recorded there, in your signed and dated artwork, in their book. Creating and recording these Shining Moments can be instrumental in filling your child's "toolkit of protection," collecting tools they may use for the rest of their life. The impact of these same tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`;
+    : `Try asking, in the style of the prompting questions at the top of each Shining Moments page: What happened today that helped you feel special or loved? If you have more time, coloring a page together and creating a "keepsake" moment can provide lasting comfort — the evidence of your love and care recorded there, in your signed and dated artwork, in their book. Creating and recording these Shining Moments can be instrumental in filling your child's "toolkit of protection," collecting tools they may use for the rest of their life. The impact of these same tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`;
+  // The opening framing — introduced right above the Shining Moments
+  // pages themselves, since it's setting up *why* this specific practice
+  // helps, not a general pitch for the book.
+  const introCaption = isPreventive() ? null
+    : `When they're being hurt by others, it can be hard for a child to stop the painful thoughts that cloud their thinking — especially at bedtime. This is the time to protect their dreams: to gently shift their thinking to the best moment of the day, even if it's difficult to find at first.`;
   return {
     text,
+    introCaption,
     closeupCaption: `Just a simple habit — writing down what went right each day. Nothing more is asked of it. But kept up over time, confidence and perspective grow quietly alongside it, without ever being the point.`,
     setUrl: SUNBEAM_SET_URL,
     fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,
@@ -1164,6 +1175,19 @@ async function generatePDF() {
 
     body(sunbeam.text, { color: [74, 109, 147] });
 
+    if (sunbeam.introCaption) {
+      const introLines = doc.splitTextToSize(sunbeam.introCaption, 168);
+      ensureRoom(introLines.length * 6 + 16);
+      const barTopY = y;
+      doc.setFontSize(11); doc.setFont(undefined, "italic"); doc.setTextColor(16, 27, 51);
+      doc.text(introLines, 27, y + 4);
+      const barHeight = introLines.length * 6 + 4;
+      doc.setFillColor(200, 155, 60);
+      doc.rect(15, barTopY, 1.2, barHeight, "F");
+      doc.setFont(undefined, "normal");
+      y = barTopY + barHeight + 12;
+    }
+
     doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
     ensureRoom(8);
     doc.text("Start collecting your child's Shining Moments:", 15, y);
@@ -1176,7 +1200,7 @@ async function generatePDF() {
       try { doc.addImage(spreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
       y += 58;
     }
-    body(sunbeam.closeupCaption, { color: [90, 100, 120] });
+    body(sunbeam.closeupCaption, { color: [90, 100, 120], italic: true });
 
     ensureRoom(39);
     const smY = y;

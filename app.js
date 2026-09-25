@@ -191,7 +191,10 @@ function banner(svgInner, opts) {
   // space around it — pushing this higher looks "bigger" but crowds the
   // banner and can make unrelated shadow/glow details in the source art
   // look like bleed from a neighboring icon.
-  const scale = 1.3;
+  // Kept modest so every icon keeps clean, even blue space around it —
+  // reduced further after screenshots showed icons rendering with almost
+  // no margin and corners clipped by the banner's own rounded edges.
+  const scale = 1.05;
   const iconContent = opts.imageSrc
     ? `<image href="${opts.imageSrc}" x="${x - size * (scale - 1) / 2}" y="${y - size * (scale - 1) / 2}" width="${size * scale}" height="${size * scale}" preserveAspectRatio="xMidYMid meet"/>`
     : `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#EFDFB8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg>`;

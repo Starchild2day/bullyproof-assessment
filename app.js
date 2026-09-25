@@ -861,6 +861,21 @@ function assetUrl(name) {
   return `${window.location.origin}/assets/${name}`;
 }
 
+// Age-appropriate hero images for the Sunbeam section — a young child
+// typically has a parent writing in the journal for them, while an older
+// child writes independently. Add more age brackets here as more photos
+// become available; any age not listed falls back to the default (older,
+// independent-writing) image.
+const SUNBEAM_HERO_BY_AGE = {
+  "Under 5": assetUrl("sunbeam-hero-young.jpg"),
+  "5–7": assetUrl("sunbeam-hero-young.jpg")
+};
+const SUNBEAM_HERO_DEFAULT = assetUrl("sunbeam-hero-bedtime.jpg");
+
+function sunbeamHeroImage() {
+  return SUNBEAM_HERO_BY_AGE[state.answers.q1] || SUNBEAM_HERO_DEFAULT;
+}
+
 function sunbeamResource() {
   if (!isPreventive() && !hasEmotionalChallengeSignals()) return null;
   const text = isPreventive()
@@ -878,7 +893,7 @@ function sunbeamResource() {
     shiningMomentsSpreadImg: assetUrl("shining-moments-spread.jpg"),
     shiningMomentsCloseupImg: assetUrl("shining-moments-closeup.jpg"),
     animatedCoverImg: assetUrl("sunbeam-cover-animated.gif"),
-    heroImg: assetUrl("sunbeam-hero-bedtime.jpg"),
+    heroImg: sunbeamHeroImage(),
     bibaBadgeImg: assetUrl("biba-badge.png")
   };
 }

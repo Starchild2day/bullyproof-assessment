@@ -466,18 +466,18 @@ function buildEmailHtml() {
         <div style="padding:18px 10px;">
           <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
           <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="260" style="display:block;margin:0 0 14px;max-width:100%;">
-          <p style="color:${text};font-size:15px;font-weight:700;margin:14px 0 6px;">The Adventures of a True Sunbeam</p>
+          <p style="color:${text};font-size:15px;font-weight:700;margin:14px 0 6px;">The Adventures of the True Sunbeam</p>
           <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
           <p style="color:${navyDeep};font-size:12.5px;font-weight:700;margin:18px 0 8px;">Start collecting your child's Shining Moments:</p>
           <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
           <p style="color:${muted};font-size:12.5px;margin:10px 0 0;">${sunbeamResource().closeupCaption}</p>
           <table role="presentation" style="width:100%;margin-top:18px;border-top:1px solid #E1E4EA;padding-top:20px;"><tr>
             <td style="text-align:center;width:33%;vertical-align:bottom;">
-              <img src="${sunbeamResource().fullColorImg}" alt="The Adventures of a True Sunbeam" width="80" style="border-radius:4px;display:block;margin:0 auto 8px;">
+              <img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="80" style="border-radius:4px;display:block;margin:0 auto 8px;">
               <span style="color:${muted};font-size:11.5px;">Full-color book</span>
             </td>
             <td style="text-align:center;width:33%;vertical-align:bottom;">
-              <img src="${sunbeamResource().coloringImg}" alt="The Adventures of a True Sunbeam Coloring Book" width="80" style="border-radius:4px;display:block;margin:0 auto 8px;">
+              <img src="${sunbeamResource().coloringImg}" alt="The Adventures of the True Sunbeam Coloring Book" width="80" style="border-radius:4px;display:block;margin:0 auto 8px;">
               <span style="color:${muted};font-size:11.5px;">Coloring Book version</span>
             </td>
             <td style="text-align:center;width:34%;vertical-align:bottom;">
@@ -854,8 +854,8 @@ async function fetchImageAsDataUrl(url) {
 // SUNBEAM_SET_URL is still a placeholder — swap for the real bundle page
 // on Bullyproof.Support the moment it's live ("soon").
 const SUNBEAM_SET_URL = "https://www.bullyproof.support";
-const SUNBEAM_FULLCOLOR_AMAZON_URL = bookSearchUrl("The Adventures of a True Sunbeam", "Mark Olmstead");
-const SUNBEAM_COLORING_AMAZON_URL = bookSearchUrl("The Adventures of a True Sunbeam coloring book", "Mark Olmstead");
+const SUNBEAM_FULLCOLOR_AMAZON_URL = bookSearchUrl("The Adventures of the True Sunbeam", "Mark Olmstead");
+const SUNBEAM_COLORING_AMAZON_URL = bookSearchUrl("The Adventures of the True Sunbeam coloring book", "Mark Olmstead");
 
 function assetUrl(name) {
   return `${window.location.origin}/assets/${name}`;
@@ -879,8 +879,8 @@ function sunbeamHeroImage() {
 function sunbeamResource() {
   if (!isPreventive() && !hasEmotionalChallengeSignals()) return null;
   const text = isPreventive()
-    ? `The "Shining Moments" pages in the back of The Adventures of a True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of a True Sunbeam the International Best Indie Book Award in the Children's category.`
-    : `When hard feelings are difficult to put into words, the "Shining Moments" pages in the back of The Adventures of a True Sunbeam offer a gentle way in — just a few minutes at bedtime, redirecting their thinking toward the best moment of the day right as they're falling asleep. That shift alone can mean better dreams, and a better start to tomorrow. Coloring the pages together, as a family, turns it into something more lasting: a real keepsake of shared artwork your child can hold onto — tangible proof of love, there for them even in a moment when no one else is close by. The impact of these same tools is what earned The Adventures of a True Sunbeam the International Best Indie Book Award in the Children's category.`;
+    ? `The "Shining Moments" pages in the back of The Adventures of the True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`
+    : `When hard feelings are difficult to put into words, the "Shining Moments" pages in the back of The Adventures of the True Sunbeam offer a gentle way in — just a few minutes at bedtime, redirecting their thinking toward the best moment of the day right as they're falling asleep. That shift alone can mean better dreams, and a better start to tomorrow. Coloring the pages together, as a family, turns it into something more lasting: a real keepsake of shared artwork your child can hold onto — tangible proof of love, there for them even in a moment when no one else is close by. The impact of these same tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`;
   return {
     text,
     closeupCaption: `Just a simple habit — writing down what went right each day. Nothing more is asked of it. But kept up over time, confidence and perspective grow quietly alongside it, without ever being the point.`,

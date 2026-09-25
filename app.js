@@ -868,7 +868,8 @@ function assetUrl(name) {
 // independent-writing) image.
 const SUNBEAM_HERO_BY_AGE = {
   "Under 5": assetUrl("sunbeam-hero-young.jpg"),
-  "5–7": assetUrl("sunbeam-hero-young.jpg")
+  "5–7": assetUrl("sunbeam-hero-young.jpg"),
+  "8–10": assetUrl("sunbeam-hero-10yo.jpg")
 };
 const SUNBEAM_HERO_DEFAULT = assetUrl("sunbeam-hero-bedtime.jpg");
 

@@ -900,7 +900,8 @@ const SUNBEAM_HERO_BY_AGE = {
     girl: assetUrl("sunbeam-hero-young.jpg"),
     default: assetUrl("sunbeam-hero-young.jpg")
   },
-  "8–10": { default: assetUrl("sunbeam-hero-10yo.jpg") }
+  "8–10": { default: assetUrl("sunbeam-hero-10yo.jpg") },
+  "11–14": { default: assetUrl("sunbeam-hero-11-13-boy.jpg") }
 };
 const SUNBEAM_HERO_DEFAULT = assetUrl("sunbeam-hero-bedtime.jpg");
 

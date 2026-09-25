@@ -459,7 +459,6 @@ function buildEmailHtml() {
   sections.push(`
     ${sectionHeader("Recommended reading")}
     <table role="presentation" style="width:100%;background:#F9FAFC;border:1px solid #E1E4EA;border-radius:12px;"><tr><td style="padding:20px 22px;">
-    <p style="color:${text};font-size:14.5px;margin:0 0 16px;">${topicLabel()}</p>
     ${sunbeamResource() ? `
       <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:10px 10px 0;">
         <img src="${sunbeamResource().heroImg}" alt="A child writing in the Shining Moments pages with Ray" width="100%" style="display:block;max-width:100%;border-radius:6px;">
@@ -495,6 +494,7 @@ function buildEmailHtml() {
         </div>
       </td></tr></table>
     ` : ""}
+    <p style="color:${text};font-size:14.5px;margin:${sunbeamResource() ? "16px" : "0"} 0 16px;">${topicLabel()}</p>
     ${recommendedBooks().map((b, i) => `
       <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 ${i === recommendedBooks().length - 1 ? "0" : "12px"};"><tr>
         ${b.coverUrl ? `<td style="padding:16px 0 16px 16px;vertical-align:top;"><img src="${b.coverUrl}" alt="${b.title} by ${b.author}" width="70" style="border-radius:4px;display:block;"></td>` : ""}
@@ -629,6 +629,7 @@ function onlineWeight() {
   const q7 = state.answers.q7 || [];
   const q11 = state.answers.q11 || "";
   if (q11.startsWith("Yes — primarily online")) return "online";
+  if (q11.startsWith("Yes — online for sure")) return "online";
   if (q11.startsWith("Yes — both")) return "both";
   const onlineCount = q7.filter(l => l.includes("social media") || l.includes("text messages") || l.includes("gaming platform")).length;
   const inPersonCount = q7.filter(l => l.includes("At school") || l.includes("school bus") || l.includes("after-school") || l.includes("neighborhood")).length;
@@ -693,7 +694,18 @@ function stepOpening() {
   }
   if (status === "behavior-only") {
     const named = (state.answers.q6 || []).filter(b => b !== "No noticeable changes");
-    const behavior = named.length ? named[0].toLowerCase() : "different lately";
+    // Q6's option text is written third-person for a parent's checkbox
+    // ("...activities they used to like"), but here it's dropped into a
+    // quote the parent says directly to the child, so it needs to read in
+    // second person ("...activities you used to like") to stay consistent
+    // with the rest of the quoted line.
+    const secondPerson = {
+      "Withdrawing from family activities they used to enjoy": "withdrawing from family activities you used to enjoy",
+      "More irritable, tearful, or anxious than usual": "more irritable, tearful, or anxious than usual",
+      "Reluctant to go to school or ride the bus": "reluctant to go to school or ride the bus",
+      "Avoiding certain places, people, or activities they used to like": "avoiding certain places, people, or activities you used to like"
+    };
+    const behavior = named.length ? (secondPerson[named[0]] || named[0].toLowerCase()) : "different lately";
     return `Say what you see, without asking why. Try: "I've noticed you've been ${behavior}. You don't have to explain it right now. I just want you to know I see it, and I'm here." This opens the door without any pressure.`;
   }
   if (status === "no-signals") {
@@ -881,7 +893,7 @@ function sunbeamResource() {
   if (!isPreventive() && !hasEmotionalChallengeSignals()) return null;
   const text = isPreventive()
     ? `The "Shining Moments" pages in the back of The Adventures of the True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`
-    : `When hard feelings are difficult to put into words, the "Shining Moments" pages in the back of The Adventures of the True Sunbeam offer a gentle way in — just a few minutes at bedtime, redirecting their thinking toward the best moment of the day right as they're falling asleep. That shift alone can mean better dreams, and a better start to tomorrow. Coloring the pages together, as a family, turns it into something more lasting: a real keepsake of shared artwork your child can hold onto — tangible proof of love, there for them even in a moment when no one else is close by. The impact of these same tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`;
+    : `When they're being hurt by others, it can be hard for a child to stop the painful thoughts that cloud their thinking — especially at bedtime. This is the time to protect their dreams: to gently shift their thinking to the best moment of the day, even if it's difficult to find at first. Try asking, in the style of the prompting questions at the top of each Shining Moments page: What happened today that helped you feel special or loved? If you have more time, coloring a page together and creating a "keepsake" moment can provide lasting comfort — the evidence of your love and care recorded there, in your signed and dated artwork, in their book. Creating and recording these Shining Moments can be instrumental in filling your child's "toolkit of protection," collecting tools they may use for the rest of their life. The impact of these same tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`;
   return {
     text,
     closeupCaption: `Just a simple habit — writing down what went right each day. Nothing more is asked of it. But kept up over time, confidence and perspective grow quietly alongside it, without ever being the point.`,
@@ -1108,7 +1120,6 @@ async function generatePDF() {
   // "okay, now what do I actually go read," rather than a cold opener.
   // Two books now, each pointing at a specific chapter for their situation.
   heading("Recommended reading:");
-  body(topicLabel());
 
   const sunbeam = sunbeamResource();
   if (sunbeam) {
@@ -1139,6 +1150,7 @@ async function generatePDF() {
     }
     body(sunbeam.closeupCaption, { color: [90, 100, 120] });
 
+    ensureRoom(39);
     const smY = y;
     const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);
     if (bibaImg) {
@@ -1196,6 +1208,8 @@ async function generatePDF() {
     }
     y += 4;
   }
+
+  body(topicLabel());
 
   for (const b of recommendedBooks()) {
     const coverDataUrl = await fetchImageAsDataUrl(b.coverUrl);

@@ -198,6 +198,7 @@ const QUESTIONS = [
     type: "choice",
     options: [
       "Yes — primarily online",
+      "Yes — online for sure, and I'm not sure if it's also happening in person",
       "Yes — both online and in person",
       "No — this is only happening in person",
       "I'm not sure"

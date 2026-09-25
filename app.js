@@ -873,20 +873,44 @@ function assetUrl(name) {
   return `${window.location.origin}/assets/${name}`;
 }
 
-// Age-appropriate hero images for the Sunbeam section — a young child
+// Detect the child's gender from the parent's own free-text answers (Q4,
+// Q12) when they clearly use gendered pronouns or nouns — used only to
+// pick between gender-matched hero photos where we have both for the same
+// age bracket. Ambiguous or silent text (neither or both signals present)
+// returns "unknown" and the bracket's default photo is used instead.
+function detectChildGender() {
+  const text = `${state.answers.q4 || ""} ${state.answers.q12 || ""}`.toLowerCase();
+  const boySignal = /\b(he|him|his|son|boy)\b/.test(text);
+  const girlSignal = /\b(she|her|hers|daughter|girl)\b/.test(text);
+  if (boySignal && !girlSignal) return "boy";
+  if (girlSignal && !boySignal) return "girl";
+  return "unknown";
+}
+
+// Age-appropriate hero images for the Sunbeam section. A young child
 // typically has a parent writing in the journal for them, while an older
-// child writes independently. Add more age brackets here as more photos
-// become available; any age not listed falls back to the default (older,
-// independent-writing) image.
+// child writes independently. Where matching photos exist for both a boy
+// and a girl at the same age, gender is inferred from the parent's own
+// wording; otherwise the bracket's default photo is used. Add more
+// entries, or a boy/girl pair, as more photos become available.
 const SUNBEAM_HERO_BY_AGE = {
-  "Under 5": assetUrl("sunbeam-hero-young.jpg"),
-  "5–7": assetUrl("sunbeam-hero-young.jpg"),
-  "8–10": assetUrl("sunbeam-hero-10yo.jpg")
+  "Under 5": { default: assetUrl("sunbeam-hero-young.jpg") },
+  "5–7": {
+    boy: assetUrl("sunbeam-hero-7-8-boy.jpg"),
+    girl: assetUrl("sunbeam-hero-young.jpg"),
+    default: assetUrl("sunbeam-hero-young.jpg")
+  },
+  "8–10": { default: assetUrl("sunbeam-hero-10yo.jpg") }
 };
 const SUNBEAM_HERO_DEFAULT = assetUrl("sunbeam-hero-bedtime.jpg");
 
 function sunbeamHeroImage() {
-  return SUNBEAM_HERO_BY_AGE[state.answers.q1] || SUNBEAM_HERO_DEFAULT;
+  const bracket = SUNBEAM_HERO_BY_AGE[state.answers.q1];
+  if (!bracket) return SUNBEAM_HERO_DEFAULT;
+  const gender = detectChildGender();
+  if (gender === "boy" && bracket.boy) return bracket.boy;
+  if (gender === "girl" && bracket.girl) return bracket.girl;
+  return bracket.default;
 }
 
 function sunbeamResource() {

@@ -183,36 +183,30 @@ function banner(svgInner, opts) {
   opts = opts || {};
   const large = !!opts.large;
   const vbH = large ? 130 : 84;
-  const cy = vbH / 2;
-  const size = large ? 72 : 34;
-  const x = 200 - size / 2;
-  const y = cy - size / 2;
-  // Scale factor kept modest (1.3x) so every icon keeps clean, even blue
-  // space around it — pushing this higher looks "bigger" but crowds the
-  // banner and can make unrelated shadow/glow details in the source art
-  // look like bleed from a neighboring icon.
-  // Kept modest so every icon keeps clean, even blue space around it —
-  // reduced further after screenshots showed icons rendering with almost
-  // no margin and corners clipped by the banner's own rounded edges.
-  const scale = 1.05;
-  const iconContent = opts.imageSrc
-    ? `<image href="${opts.imageSrc}" x="${x - size * (scale - 1) / 2}" y="${y - size * (scale - 1) / 2}" width="${size * scale}" height="${size * scale}" preserveAspectRatio="xMidYMid meet"/>`
-    : `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="#EFDFB8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">${svgInner}</svg>`;
+  // Fixed CSS pixel sizes for the icon — independent of any SVG viewBox
+  // scaling math, which is exactly what kept producing inconsistent
+  // results across renders. A plain <img>, centered by the container's
+  // own flexbox, behaves the same everywhere.
+  const iconPx = large ? 92 : 44;
   const logoContent = opts.showLogo ? `
-    <g>
-      <rect x="24" y="22" width="16" height="16" rx="4" fill="#101B33"/>
-      <text x="32" y="33" font-family="Inter,sans-serif" font-size="9" font-weight="800" fill="#C89B3C" text-anchor="middle">B</text>
-      <text x="44" y="32.5" font-family="Inter,sans-serif" font-size="8" font-weight="600" fill="#EFDFB8">Bullyproof.Guide</text>
-    </g>
+    <div style="position:absolute;top:22px;left:24px;display:flex;align-items:center;gap:8px;z-index:2;">
+      <div style="width:16px;height:16px;border-radius:4px;background:#101B33;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-family:Inter,sans-serif;font-size:9px;font-weight:800;color:#C89B3C;line-height:1;">B</span>
+      </div>
+      <span style="font-family:Inter,sans-serif;font-size:8px;font-weight:600;color:#EFDFB8;">Bullyproof.Guide</span>
+    </div>
   ` : "";
+  const iconHtml = opts.imageSrc
+    ? `<img src="${opts.imageSrc}" alt="" style="width:${iconPx}px;height:${iconPx}px;object-fit:contain;display:block;position:relative;z-index:1;">`
+    : `<svg width="${Math.round(iconPx * 0.65)}" height="${Math.round(iconPx * 0.65)}" viewBox="0 0 24 24" fill="none" stroke="#EFDFB8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" style="position:relative;z-index:1;">${svgInner}</svg>`;
   return `<div class="banner${large ? " landing-banner" : ""}">
-    <svg viewBox="0 0 400 ${vbH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg viewBox="0 0 400 ${vbH}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;">
       <circle cx="46" cy="${vbH - 18}" r="42" fill="#4F7C82" opacity="0.28"/>
       <circle cx="366" cy="14" r="54" fill="#C89B3C" opacity="0.16"/>
       <circle cx="330" cy="${vbH - 12}" r="22" fill="#FFFFFF" opacity="0.05"/>
-      ${iconContent}
-      ${logoContent}
     </svg>
+    ${iconHtml}
+    ${logoContent}
   </div>`;
 }
 

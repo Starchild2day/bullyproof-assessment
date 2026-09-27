@@ -55,12 +55,23 @@ function render() {
 
 function renderLanding() {
   progressTrack.style.display = "none";
+  let returningNotice = "";
+  try {
+    const prior = JSON.parse(localStorage.getItem("bp_completions") || "[]");
+    if (prior.length >= 2) {
+      returningNotice = `
+        <div style="background:var(--gold-soft);border-left:4px solid var(--gold);border-radius:10px;padding:14px 16px;margin:0 0 18px;">
+          <p style="margin:0;font-size:14px;color:var(--navy-deep);">Looks like you've done this a few times before. If your situation has genuinely changed, go ahead and retake it — but for ongoing, personalized support as things keep evolving, that's exactly what <a href="${NETWORK_HOME_URL}" style="color:var(--navy);font-weight:600;">Bullyproof.Support</a> and the upcoming Parent Playbook are built for, rather than re-running this each time.</p>
+        </div>`;
+    }
+  } catch (e) { /* storage unavailable — just skip the notice */ }
   appEl.innerHTML = `
     <div class="card">
       ${banner(LANDING_ICON, { large: true, imageSrc: assetUrl("icon-landing.png"), showLogo: true })}
       <div class="card-body">
       <h1>You don't have to figure this out alone.</h1>
       <p class="body-text">Twelve quick questions — about 3 minutes — and you'll have a personalized action plan for your exact situation, sent straight to your inbox tonight.</p>
+      ${returningNotice}
       <p class="privacy-note">Your responses are saved securely and only used to generate your action plan. We never share your data.</p>
       <div class="checkbox-row">
         <input type="checkbox" id="consentCheck">
@@ -265,6 +276,11 @@ function renderResults() {
   progressTrack.style.display = "none";
   track("assessment_completed");
   saveProgressToFirebase();
+  try {
+    const prior = JSON.parse(localStorage.getItem("bp_completions") || "[]");
+    prior.push(Date.now());
+    localStorage.setItem("bp_completions", JSON.stringify(prior.slice(-10)));
+  } catch (e) { /* storage unavailable — not critical, just skip the nudge later */ }
   const summary = deriveSummary();
   const q2Answer = state.answers.q2 || "your situation";
   const reflection = [communicationReflection(), openingValidation()].filter(Boolean).join(" ");

@@ -457,21 +457,27 @@ function buildEmailHtml() {
     ${sectionHeader("Recommended reading")}
     <table role="presentation" style="width:100%;background:#F9FAFC;border:1px solid #E1E4EA;border-radius:12px;"><tr><td style="padding:20px 22px;">
     ${sunbeamResource() ? `
-      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:10px 10px 0;">
+      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:${sunbeamResource().introCaption ? "22px 20px 4px" : "10px 10px 0"};">
+        ${sunbeamResource().introCaption ? `
+          <div style="border-left:3px solid ${gold};padding:2px 0 2px 18px;margin:0 0 22px;">
+            <p style="color:${navyDeep};font-size:16px;font-style:italic;line-height:1.65;margin:0;">${sunbeamResource().introCaption}</p>
+          </div>
+          <p style="color:${navyDeep};font-size:12.5px;font-weight:700;letter-spacing:0.02em;margin:0 0 8px;">Start collecting your child's Shining Moments:</p>
+          <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
+          <p style="color:${muted};font-size:13px;font-style:italic;line-height:1.5;margin:12px 0 24px;">${sunbeamResource().closeupCaption}</p>
+        ` : ""}
+        <div style="${sunbeamResource().introCaption ? "border-top:1px solid #E1E4EA;padding-top:20px;margin:0 -20px;padding-left:20px;padding-right:20px;" : ""}">
         <img src="${sunbeamResource().heroImg}" alt="A child writing in the Shining Moments pages with Ray" width="100%" style="display:block;max-width:100%;border-radius:6px;">
-        <div style="padding:18px 10px;">
+        <div style="padding:18px 0 0;">
           <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
           <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="260" style="display:block;margin:0 0 14px;max-width:100%;">
           <p style="color:${text};font-size:15px;font-weight:700;margin:14px 0 6px;">The Adventures of the True Sunbeam</p>
           <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
-          ${sunbeamResource().introCaption ? `
-            <div style="border-left:3px solid ${gold};padding:2px 0 2px 16px;margin:20px 0;">
-              <p style="color:${navyDeep};font-size:14px;font-style:italic;line-height:1.6;margin:0;">${sunbeamResource().introCaption}</p>
-            </div>
+          ${!sunbeamResource().introCaption ? `
+            <p style="color:${navyDeep};font-size:12.5px;font-weight:700;letter-spacing:0.02em;margin:18px 0 8px;">Start collecting your child's Shining Moments:</p>
+            <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
+            <p style="color:${muted};font-size:13px;font-style:italic;line-height:1.5;margin:12px 0 0;">${sunbeamResource().closeupCaption}</p>
           ` : ""}
-          <p style="color:${navyDeep};font-size:12.5px;font-weight:700;letter-spacing:0.02em;margin:18px 0 8px;">Start collecting your child's Shining Moments:</p>
-          <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
-          <p style="color:${muted};font-size:13px;font-style:italic;line-height:1.5;margin:12px 0 0;">${sunbeamResource().closeupCaption}</p>
           <table role="presentation" style="width:100%;margin-top:18px;border-top:1px solid #E1E4EA;padding-top:20px;"><tr>
             <td style="text-align:center;width:33%;vertical-align:bottom;">
               <img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="80" style="border-radius:4px;display:block;margin:0 auto 8px;">
@@ -493,6 +499,7 @@ function buildEmailHtml() {
               <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
             </td>
           </tr></table>
+        </div>
         </div>
       </td></tr></table>
     ` : ""}
@@ -1160,6 +1167,38 @@ async function generatePDF() {
     const cardStartY = y - 4;
     const cardStartPage = doc.internal.getNumberOfPages();
 
+    if (sunbeam.introCaption) {
+      const introLines = doc.splitTextToSize(sunbeam.introCaption, 168);
+      ensureRoom(introLines.length * 6 + 20);
+      const barTopY = y;
+      doc.setFontSize(12); doc.setFont(undefined, "italic"); doc.setTextColor(16, 27, 51);
+      doc.text(introLines, 27, y + 4);
+      const barHeight = introLines.length * 6.5 + 4;
+      doc.setFillColor(200, 155, 60);
+      doc.rect(15, barTopY, 1.2, barHeight, "F");
+      doc.setFont(undefined, "normal");
+      y = barTopY + barHeight + 14;
+
+      doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
+      ensureRoom(8);
+      doc.text("Start collecting your child's Shining Moments:", 15, y);
+      doc.setFont(undefined, "normal");
+      y += 6;
+
+      ensureRoom(58);
+      const introSpreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
+      if (introSpreadImg) {
+        try { doc.addImage(introSpreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
+        y += 58;
+      }
+      body(sunbeam.closeupCaption, { color: [90, 100, 120], italic: true });
+      ensureRoom(6);
+      doc.setDrawColor(225, 228, 234);
+      doc.setLineWidth(0.3);
+      doc.line(15, y, 195, y);
+      y += 12;
+    }
+
     ensureRoom(105);
     const heroImg = await fetchImageAsDataUrl(sunbeam.heroImg);
     if (heroImg) {
@@ -1167,41 +1206,30 @@ async function generatePDF() {
       y += 124;
     }
 
-    body(sunbeam.text, { color: [74, 109, 147] });
-
-    if (sunbeam.introCaption) {
-      const introLines = doc.splitTextToSize(sunbeam.introCaption, 168);
-      ensureRoom(introLines.length * 6 + 16);
-      const barTopY = y;
-      doc.setFontSize(11); doc.setFont(undefined, "italic"); doc.setTextColor(16, 27, 51);
-      doc.text(introLines, 27, y + 4);
-      const barHeight = introLines.length * 6 + 4;
-      doc.setFillColor(200, 155, 60);
-      doc.rect(15, barTopY, 1.2, barHeight, "F");
-      doc.setFont(undefined, "normal");
-      y = barTopY + barHeight + 12;
-    }
-
-    doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
-    ensureRoom(8);
-    doc.text("Start collecting your child's Shining Moments:", 15, y);
-    doc.setFont(undefined, "normal");
-    y += 6;
-
-    ensureRoom(58);
-    const spreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
-    if (spreadImg) {
-      try { doc.addImage(spreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
-      y += 58;
-    }
-    body(sunbeam.closeupCaption, { color: [90, 100, 120], italic: true });
-
     ensureRoom(39);
     const smY = y;
     const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);
     if (bibaImg) {
       try { doc.addImage(bibaImg, "PNG", 15, smY, 84, 35); } catch (e) {}
       y = smY + 39;
+    }
+
+    body(sunbeam.text, { color: [74, 109, 147] });
+
+    if (!sunbeam.introCaption) {
+      doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
+      ensureRoom(8);
+      doc.text("Start collecting your child's Shining Moments:", 15, y);
+      doc.setFont(undefined, "normal");
+      y += 6;
+
+      ensureRoom(58);
+      const spreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
+      if (spreadImg) {
+        try { doc.addImage(spreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
+        y += 58;
+      }
+      body(sunbeam.closeupCaption, { color: [90, 100, 120], italic: true });
     }
 
     // Proportional sizing based on real-world dimensions: books are 9in

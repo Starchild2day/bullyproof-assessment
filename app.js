@@ -703,19 +703,19 @@ function stepOpening() {
   }
   if (status === "behavior-only") {
     const named = (state.answers.q6 || []).filter(b => b !== "No noticeable changes");
-    // Q6's option text is written third-person for a parent's checkbox
-    // ("...activities they used to like"), but here it's dropped into a
-    // quote the parent says directly to the child, so it needs to read in
-    // second person ("...activities you used to like") to stay consistent
-    // with the rest of the quoted line.
+    // Q6's option text is written in checkbox/clinical language for a
+    // parent to select ("withdrawing", "reluctant", "irritable") — but a
+    // parent would never actually say these words out loud to their own
+    // child. Rewritten here in the plain, warm language a parent would
+    // really use, not just swapped to second person.
     const secondPerson = {
-      "Withdrawing from family activities they used to enjoy": "withdrawing from family activities you used to enjoy",
-      "More irritable, tearful, or anxious than usual": "more irritable, tearful, or anxious than usual",
-      "Reluctant to go to school or ride the bus": "reluctant to go to school or ride the bus",
-      "Avoiding certain places, people, or activities they used to like": "avoiding certain places, people, or activities you used to like"
+      "Withdrawing from family activities they used to enjoy": "you haven't wanted to join in on things with us that you used to love doing",
+      "More irritable, tearful, or anxious than usual": "you've seemed more upset, or more worried, than usual",
+      "Reluctant to go to school or ride the bus": "you haven't wanted to go to school or get on the bus",
+      "Avoiding certain places, people, or activities they used to like": "you've been staying away from some places or people you used to like being around"
     };
-    const behavior = named.length ? (secondPerson[named[0]] || named[0].toLowerCase()) : "different lately";
-    return `Say what you see, without asking why. Try: "I've noticed you've been ${behavior}. You don't have to explain it right now. I just want you to know I see it, and I'm here." This opens the door without any pressure.`;
+    const behavior = named.length ? (secondPerson[named[0]] || named[0].toLowerCase()) : "a little different lately";
+    return `Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: "Want to build something with me?" or "Want to go for a walk?" — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face.`;
   }
   if (status === "no-signals") {
     return "Nothing has been said yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you.";

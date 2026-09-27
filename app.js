@@ -473,27 +473,30 @@ function buildEmailHtml() {
     ${sectionHeader("Recommended reading")}
     <table role="presentation" style="width:100%;background:#F9FAFC;border:1px solid #E1E4EA;border-radius:12px;"><tr><td style="padding:20px 22px;">
     ${sunbeamResource() ? `
-      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:${sunbeamResource().introCaption ? "22px 20px 4px" : "10px 10px 0"};">
-        ${sunbeamResource().introCaption ? `
-          <div style="border-left:3px solid ${gold};padding:2px 0 2px 18px;margin:0 0 22px;">
-            <p style="color:${navyDeep};font-size:16px;font-style:italic;line-height:1.65;margin:0;">${sunbeamResource().introCaption}</p>
-          </div>
-          <p style="color:${navyDeep};font-size:12.5px;font-weight:700;letter-spacing:0.02em;margin:0 0 8px;">Start collecting your child's Shining Moments:</p>
-          <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
-          <p style="color:${muted};font-size:13px;font-style:italic;line-height:1.5;margin:12px 0 24px;">${sunbeamResource().closeupCaption}</p>
-        ` : ""}
-        <div style="${sunbeamResource().introCaption ? "border-top:1px solid #E1E4EA;padding-top:20px;margin:0 -20px;padding-left:20px;padding-right:20px;" : ""}">
+      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:26px 24px 4px;">
+        <p style="color:${gold};font-size:11px;font-weight:800;letter-spacing:0.1em;margin:0 0 14px;text-transform:uppercase;">Why this matters</p>
+        ${sunbeamResource().introCaption.split("\n\n").map((para, i) => {
+          if (i === 1) {
+            return `<p style="color:${text};font-size:15px;line-height:1.7;margin:0 0 16px;">${para}</p>
+              <table role="presentation" style="width:100%;margin:0 0 18px;"><tr><td style="border-left:3px solid ${gold};padding:2px 0 2px 16px;"><p style="color:${navyDeep};font-size:17px;font-weight:700;line-height:1.5;margin:0;">Up to 70% of what a child absorbs, by Lipton's account, isn't empowering — it's limiting, fearful, self-doubting.</p></td></tr></table>`;
+          }
+          return `<p style="color:${text};font-size:15px;line-height:1.7;margin:0 0 18px;">${para}</p>`;
+        }).join("")}
+        <p style="color:${navyDeep};font-size:12.5px;font-weight:700;letter-spacing:0.02em;margin:0 0 8px;">Start collecting your child's Shining Moments:</p>
+        <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
+        <table role="presentation" style="width:100%;background:#EEF2F7;border-radius:8px;margin:16px 0 24px;"><tr><td style="padding:16px 18px;">
+          <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 6px;text-transform:uppercase;">How it works</p>
+          <p style="color:${navyDeep};font-size:14px;line-height:1.6;margin:0;">${sunbeamResource().closeupCaption}</p>
+        </td></tr></table>
+        <p style="color:${muted};font-size:13.5px;font-style:italic;margin:0 0 20px;">You'll find these pages waiting in the back of the book —</p>
+      </td></tr></table>
+      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:10px 10px 0;">
         <img src="${sunbeamResource().heroImg}" alt="A child writing in the Shining Moments pages with Ray" width="100%" style="display:block;max-width:100%;border-radius:6px;">
-        <div style="padding:18px 0 0;">
+        <div style="padding:18px 10px 20px;">
           <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
           <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="260" style="display:block;margin:0 0 14px;max-width:100%;">
           <p style="color:${text};font-size:15px;font-weight:700;margin:14px 0 6px;">The Adventures of the True Sunbeam</p>
           <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
-          ${!sunbeamResource().introCaption ? `
-            <p style="color:${navyDeep};font-size:12.5px;font-weight:700;letter-spacing:0.02em;margin:18px 0 8px;">Start collecting your child's Shining Moments:</p>
-            <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
-            <p style="color:${muted};font-size:13px;font-style:italic;line-height:1.5;margin:12px 0 0;">${sunbeamResource().closeupCaption}</p>
-          ` : ""}
           <table role="presentation" style="width:100%;margin-top:18px;border-top:1px solid #E1E4EA;padding-top:20px;"><tr>
             <td style="text-align:center;width:33%;vertical-align:bottom;">
               <img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="80" style="border-radius:4px;display:block;margin:0 auto 8px;">
@@ -515,7 +518,6 @@ function buildEmailHtml() {
               <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
             </td>
           </tr></table>
-        </div>
         </div>
       </td></tr></table>
     ` : ""}
@@ -944,15 +946,19 @@ function sunbeamResource() {
   const text = isPreventive()
     ? `The "Shining Moments" pages in the back of The Adventures of the True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`
     : `Try asking, in the style of the prompting questions at the top of each Shining Moments page: What happened today that helped you feel special or loved? If you have more time, coloring a page together and creating a "keepsake" moment can provide lasting comfort — the evidence of your love and care recorded there, in your signed and dated artwork, in their book. Creating and recording these Shining Moments can be instrumental in filling your child's "toolkit of protection," collecting tools they may use for the rest of their life. The impact of these same tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`;
-  // The opening framing — introduced right above the Shining Moments
-  // pages themselves, since it's setting up *why* this specific practice
-  // helps, not a general pitch for the book.
-  const introCaption = isPreventive() ? null
-    : `When they're being hurt by others, it can be hard for a child to stop the painful thoughts that cloud their thinking — especially at bedtime. This is the time to protect their dreams: to gently shift their thinking to the best moment of the day, even if it's difficult to find at first.`;
+  // The opening framing — a real explanation of the mechanism and why it
+  // matters, introduced before the Shining Moments pages themselves and
+  // before the book reveal, since this concept has to be understood and
+  // "sold" on its own merits first.
+  const introCaption = `A child's mind can get stuck. Whatever's bothering them — a hard day, a hurtful moment, a worry with no easy answer — often loops the loudest right at bedtime, when there's nothing left to distract from it.
+
+Here's why that moment matters more than it seems. Cell biologist Bruce Lipton has spent decades studying how a child's subconscious mind forms — and by his account, up to 70% of what gets absorbed and carried forward isn't empowering. It's limiting, fearful, self-doubting. Every night, as your child drifts toward sleep, their mind passes through the same open, impressionable state that makes early childhood so absorbent in the first place. Call it dreamtime programming: whatever's on their mind in those last few minutes has an outsized chance of settling in.
+
+Which means every bedtime is also an opportunity — a nightly chance to interrupt that programming before it takes hold, and redirect it toward something that builds your child up instead. That's the entire idea behind Shining Moments.`;
   return {
     text,
     introCaption,
-    closeupCaption: `Just a simple habit — writing down what went right each day. Nothing more is asked of it. But kept up over time, confidence and perspective grow quietly alongside it, without ever being the point.`,
+    closeupCaption: `It only takes a few minutes: naming one good moment from the day, and letting that be the last thing on their mind before sleep. Do it most nights, and something happens beneath the surface — confidence builds, worry loosens its grip, and it happens so gradually your child may never notice it's working.`,
     setUrl: SUNBEAM_SET_URL,
     fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,
     coloringUrl: SUNBEAM_COLORING_AMAZON_URL,
@@ -1183,37 +1189,66 @@ async function generatePDF() {
     const cardStartY = y - 4;
     const cardStartPage = doc.internal.getNumberOfPages();
 
-    if (sunbeam.introCaption) {
-      const introLines = doc.splitTextToSize(sunbeam.introCaption, 168);
-      ensureRoom(introLines.length * 6 + 20);
-      const barTopY = y;
-      doc.setFontSize(12); doc.setFont(undefined, "italic"); doc.setTextColor(16, 27, 51);
-      doc.text(introLines, 27, y + 4);
-      const barHeight = introLines.length * 6.5 + 4;
-      doc.setFillColor(200, 155, 60);
-      doc.rect(15, barTopY, 1.2, barHeight, "F");
-      doc.setFont(undefined, "normal");
-      y = barTopY + barHeight + 14;
+    doc.setFontSize(10); doc.setTextColor(200, 155, 60); doc.setFont(undefined, "bold");
+    ensureRoom(8);
+    doc.text("WHY THIS MATTERS", 15, y);
+    doc.setFont(undefined, "normal");
+    y += 8;
 
-      doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
-      ensureRoom(8);
-      doc.text("Start collecting your child's Shining Moments:", 15, y);
-      doc.setFont(undefined, "normal");
-      y += 6;
-
-      ensureRoom(58);
-      const introSpreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
-      if (introSpreadImg) {
-        try { doc.addImage(introSpreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
-        y += 58;
+    const introParas = sunbeam.introCaption.split("\n\n");
+    for (let pi = 0; pi < introParas.length; pi++) {
+      body(introParas[pi], { color: [31, 36, 48] });
+      if (pi === 1) {
+        const quoteText = "Up to 70% of what a child absorbs, by Lipton's account, isn't empowering — it's limiting, fearful, self-doubting.";
+        doc.setFontSize(13); doc.setFont(undefined, "bold");
+        const quoteLines = doc.splitTextToSize(quoteText, 160);
+        ensureRoom(quoteLines.length * 7 + 10);
+        const qBarTopY = y;
+        doc.setTextColor(16, 27, 51);
+        doc.text(quoteLines, 24, y + 4);
+        const qBarHeight = quoteLines.length * 7 + 4;
+        doc.setFillColor(200, 155, 60);
+        doc.rect(15, qBarTopY, 1.2, qBarHeight, "F");
+        doc.setFont(undefined, "normal");
+        y = qBarTopY + qBarHeight + 10;
       }
-      body(sunbeam.closeupCaption, { color: [90, 100, 120], italic: true });
-      ensureRoom(6);
-      doc.setDrawColor(225, 228, 234);
-      doc.setLineWidth(0.3);
-      doc.line(15, y, 195, y);
-      y += 12;
     }
+
+    doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
+    ensureRoom(8);
+    doc.text("Start collecting your child's Shining Moments:", 15, y);
+    doc.setFont(undefined, "normal");
+    y += 6;
+
+    ensureRoom(58);
+    const introSpreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
+    if (introSpreadImg) {
+      try { doc.addImage(introSpreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
+      y += 58;
+    }
+
+    // "How it works" as a tinted card, not italic text tacked below the
+    // image — gives it the same visual weight as an intentional design
+    // element rather than a caption.
+    doc.setFontSize(10);
+    const howItWorksLines = doc.splitTextToSize(sunbeam.closeupCaption, 172);
+    const cardH = howItWorksLines.length * 5.5 + 16;
+    ensureRoom(cardH + 8);
+    doc.setFillColor(238, 242, 247);
+    doc.roundedRect(15, y, 180, cardH, 2, 2, "F");
+    doc.setFontSize(9); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
+    doc.text("HOW IT WORKS", 21, y + 9);
+    doc.setFont(undefined, "normal");
+    doc.setFontSize(10); doc.setTextColor(16, 27, 51);
+    doc.text(howItWorksLines, 21, y + 16);
+    y += cardH + 10;
+
+    body("You'll find these pages waiting in the back of the book —", { color: [90, 100, 120], italic: true });
+    ensureRoom(6);
+    doc.setDrawColor(225, 228, 234);
+    doc.setLineWidth(0.3);
+    doc.line(15, y, 195, y);
+    y += 12;
 
     ensureRoom(105);
     const heroImg = await fetchImageAsDataUrl(sunbeam.heroImg);
@@ -1231,22 +1266,6 @@ async function generatePDF() {
     }
 
     body(sunbeam.text, { color: [74, 109, 147] });
-
-    if (!sunbeam.introCaption) {
-      doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
-      ensureRoom(8);
-      doc.text("Start collecting your child's Shining Moments:", 15, y);
-      doc.setFont(undefined, "normal");
-      y += 6;
-
-      ensureRoom(58);
-      const spreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
-      if (spreadImg) {
-        try { doc.addImage(spreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
-        y += 58;
-      }
-      body(sunbeam.closeupCaption, { color: [90, 100, 120], italic: true });
-    }
 
     // Proportional sizing based on real-world dimensions: books are 9in
     // square, Ray is 12in tall — at 5mm/in that's 45mm for books and

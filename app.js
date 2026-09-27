@@ -187,7 +187,7 @@ function banner(svgInner, opts) {
   // scaling math, which is exactly what kept producing inconsistent
   // results across renders. A plain <img>, centered by the container's
   // own flexbox, behaves the same everywhere.
-  const iconPx = large ? 92 : 44;
+  const iconPx = large ? 116 : 74;
   const logoContent = opts.showLogo ? `
     <div style="position:absolute;top:22px;left:24px;display:flex;align-items:center;gap:8px;z-index:2;">
       <div style="width:16px;height:16px;border-radius:4px;background:#101B33;display:flex;align-items:center;justify-content:center;flex-shrink:0;">

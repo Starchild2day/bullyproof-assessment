@@ -215,6 +215,22 @@ const QUESTIONS = [
 
 // ---- Safety escalation resources — per Kris's doc, same 3 resources for every trigger ----
 const SAFETY_VARIANTS = {
+  selfHarmOrSuicide: {
+    label: "Possible Self-Harm or Suicide Risk",
+    resources: [
+      { name: "988 Suicide & Crisis Lifeline", detail: "Call or text 988 — available 24/7" },
+      { name: "Crisis Text Line", detail: "Text HOME to 741741" },
+      { name: "Childhelp National Child Abuse Hotline", detail: "1-800-422-4453" }
+    ]
+  },
+  violenceRisk: {
+    label: "Possible Risk of Harm to Someone Else",
+    resources: [
+      { name: "988 Suicide & Crisis Lifeline", detail: "Call or text 988 — available 24/7" },
+      { name: "Crisis Text Line", detail: "Text HOME to 741741" },
+      { name: "Childhelp National Child Abuse Hotline", detail: "1-800-422-4453" }
+    ]
+  },
   physicalSigns: {
     label: "Physical Signs / Possible Self-Harm",
     resources: [

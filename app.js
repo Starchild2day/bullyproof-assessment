@@ -39,6 +39,22 @@ function checkSafety(question, selected) {
   }
 }
 
+// Free-text answers (Q4, Q12) were never being scanned for safety signals
+// at all — only fixed-choice answers on other questions triggered the
+// escalation banner. This closes that gap: a parent can write anything in
+// their own words, and language indicating risk of harm to someone else,
+// or risk of self-harm/suicide (the parent's own, or described for the
+// child), should surface the same crisis resources immediately, not a
+// routine action plan.
+function checkTextSafety(rawText) {
+  if (!rawText) return;
+  const text = rawText.toLowerCase();
+  const selfHarmPattern = /\b(suicide|suicidal)\b|\b(kill|hurt|harm)(ing)?\s+(myself|himself|herself|themselves)\b|\bwant(s|ed)?\s+to\s+die\b|\bend(ing)?\s+(my|his|her|their)\s+life\b|\bdon'?t\s+want\s+to\s+(live|be\s+here)\b/;
+  const violencePattern = /\bkill(ing)?\b|\b(hurt|harm)(ing)?\s+(him|her|them|someone|somebody)\b|\bwant(s|ed)?\s+to\s+hurt\b/;
+  if (selfHarmPattern.test(text)) { addFlag("selfHarmOrSuicide"); return; }
+  if (violencePattern.test(text)) { addFlag("violenceRisk"); }
+}
+
 function addFlag(key) {
   if (!state.safetyFlags.includes(key)) { state.safetyFlags.push(key); track("safety_escalation_triggered", { trigger: key }); }
 }
@@ -139,7 +155,7 @@ function renderQuestion() {
 }
 
 function renderSafetyBanner() {
-  const priority = ["sexualOrPower", "physicalSigns"];
+  const priority = ["selfHarmOrSuicide", "violenceRisk", "sexualOrPower", "physicalSigns"];
   const key = priority.find(k => state.safetyFlags.includes(k));
   const variant = SAFETY_VARIANTS[key];
 
@@ -249,6 +265,7 @@ function wireQuestionEvents(q) {
 function onNext(q) {
   if (q.type === "text") {
     state.answers[q.id] = document.getElementById("textInput").value.trim();
+    checkTextSafety(state.answers[q.id]);
   }
   if (q.type === "choice" && !state.answers[q.id]) {
     const msg = document.getElementById("validationMsg");
@@ -404,7 +421,7 @@ function buildEmailHtml() {
   const sectionHeader = (label) => `<table role="presentation" style="width:100%;margin:28px 0 10px;"><tr><td style="border-bottom:2px solid ${gold};padding-bottom:8px;"><span style="color:${navy};font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">${label}</span></td></tr></table>`;
 
   if (state.safetyFlags.length) {
-    const priority = ["sexualOrPower", "physicalSigns"];
+    const priority = ["selfHarmOrSuicide", "violenceRisk", "sexualOrPower", "physicalSigns"];
     const key = priority.find(k => state.safetyFlags.includes(k));
     const variant = SAFETY_VARIANTS[key];
     sections.push(`
@@ -696,6 +713,9 @@ function openingValidation() {
 function focusLine() {
   const q12 = (state.answers.q12 || "").trim();
   if (!q12) return null;
+  if (state.safetyFlags.length) {
+    return `You told us: "${q12}" — please reach out to the resources above first. Everything below is still here when you're ready.`;
+  }
   return `You told us you want help with: "${q12}" — that's exactly where we start below.`;
 }
 
@@ -1143,7 +1163,7 @@ async function generatePDF() {
   y = 62;
 
   if (state.safetyFlags.length) {
-    const priority = ["sexualOrPower", "physicalSigns"];
+    const priority = ["selfHarmOrSuicide", "violenceRisk", "sexualOrPower", "physicalSigns"];
     const key = priority.find(k => state.safetyFlags.includes(k));
     const variant = SAFETY_VARIANTS[key];
     ensureRoom(10 + variant.resources.length * 6);

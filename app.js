@@ -579,9 +579,15 @@ function buildEmailHtml() {
   `);
 
   return `
-    <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
-      <h1 style="color:${navy};font-size:22px;margin:0 0 8px;">Bullyproof.Guide — Your Action Plan</h1>
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;">
+      <table role="presentation" style="width:100%;background-color:${navyDeep};border-bottom:3px solid ${gold};"><tr><td style="padding:36px 30px 32px;text-align:center;">
+        <img src="${assetUrl("icon-landing.png")}" width="58" alt="" style="display:block;margin:0 auto 16px;">
+        <p style="color:${gold};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 8px;">Bullyproof.Guide</p>
+        <p style="color:#ffffff;font-size:25px;font-weight:800;letter-spacing:-0.01em;margin:0;">Your Personalized Action Plan</p>
+      </td></tr></table>
+      <div style="padding:34px 24px 24px;">
       ${sections.join("\n")}
+      </div>
     </div>
   `;
 }
@@ -1120,7 +1126,21 @@ async function generatePDF() {
     if (opts.italic) doc.setFont(undefined, "normal");
   }
 
-  doc.setFontSize(18); doc.setTextColor(44, 82, 130); doc.text("Bullyproof.Guide — Your Action Plan", 15, y); y += 12;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setFillColor(16, 27, 51);
+  doc.rect(0, 0, pageWidth, 48, "F");
+  const bannerIconImg = await fetchImageAsDataUrl(assetUrl("icon-landing.png"));
+  if (bannerIconImg) {
+    try { doc.addImage(bannerIconImg, "PNG", pageWidth / 2 - 8, 6, 16, 16); } catch (e) {}
+  }
+  doc.setFontSize(10); doc.setTextColor(200, 155, 60); doc.setFont(undefined, "bold");
+  doc.text("BULLYPROOF.GUIDE", pageWidth / 2, 29, { align: "center", charSpace: 0.5 });
+  doc.setFontSize(17); doc.setTextColor(255, 255, 255);
+  doc.text("Your Personalized Action Plan", pageWidth / 2, 39, { align: "center" });
+  doc.setFillColor(200, 155, 60);
+  doc.rect(0, 48, pageWidth, 1.2, "F");
+  doc.setFont(undefined, "normal");
+  y = 62;
 
   if (state.safetyFlags.length) {
     const priority = ["sexualOrPower", "physicalSigns"];

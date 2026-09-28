@@ -384,7 +384,7 @@ function renderResults() {
 // PLAYBOOK INVITATION (opt-in)
 // The invitation checkbox appears only AFTER the Playbook has been
 // introduced, so parents know what they're saying yes to: from the
-// "Yes, send me my invitation" button in the Playbook section of the
+// "Reserve my copy" boxes in the Playbook section of the
 // email and the PDF, which opens ?invite=1. (Per Mark: not on the
 // email-entry screen, before or after sending.)
 // ============================================================
@@ -412,7 +412,7 @@ function playbookInviteHtml(askEmail) {
         <label for="marketingConsent">${PLAYBOOK_INVITE_LABEL}</label>
       </div>
       <div class="nav-row" style="justify-content:flex-start;margin-top:10px;">
-        <button class="primary" id="saveInviteBtn" disabled>Send me the invitation</button>
+        <button class="primary" id="saveInviteBtn" disabled>Reserve my copy</button>
       </div>
       <p id="inviteStatus" role="status" aria-live="polite" style="display:none;margin:10px 0 0;font-size:14.5px;line-height:1.5;"></p>
     </div>`;
@@ -437,9 +437,9 @@ function wirePlaybookInvite(askEmail) {
     status.style.display = "block";
     status.style.color = ok ? "#276749" : "#C53030";
     status.textContent = ok
-      ? `You're on the list. We'll send your invitation to ${email} when the Playbook launches.`
+      ? `Your copy is reserved. We'll send your invitation to ${email} when the Playbook launches.`
       : "We couldn't save that just now. Please try again in a minute.";
-    btn.textContent = ok ? "Saved" : "Send me the invitation";
+    btn.textContent = ok ? "Reserved" : "Reserve my copy";
     btn.disabled = ok;
     if (ok) { state.marketingConsent = true; box.disabled = true; }
   });
@@ -470,7 +470,7 @@ function renderInvite() {
     <div class="card">
       ${banner(RESULTS_ICON, { imageSrc: assetUrl("icon-results.png") })}
       <div class="card-body">
-        <h2 class="question">Get your Playbook invitation</h2>
+        <h2 class="question">Reserve your copy of the Playbook</h2>
         <p class="sub">Enter the email where you received your action plan.</p>
         ${playbookInviteHtml(true)}
         <p class="privacy-note">We never share your data. Every email includes a way to unsubscribe.</p>
@@ -723,19 +723,30 @@ function buildEmailHtml() {
     ${affiliateDisclosure() ? `<p style="color:#8896B8;font-size:12px;margin:14px 0 0;">${affiliateDisclosure()}</p>` : ""}
     </td></tr></table>
   `);
+  // "What comes next": the Playbook picture sits on the RIGHT, beside the intro
+  // and the list, so parents are looking at it while they read what it does
+  // (per Mark). A "Reserve my copy" box sits right under the picture, and again
+  // after the full details below. Email can't hold a working checkbox, so both
+  // open the reserve page, where the real checkbox is.
+  const reserveBox = (align) => `<a href="${playbookInviteUrl()}" style="display:inline-block;text-decoration:none;color:${navyDeep};font-size:13.5px;font-weight:700;line-height:1.3;white-space:nowrap;text-align:${align};"><span style="display:inline-block;width:14px;height:14px;border:2px solid ${navyDeep};border-radius:3px;background:#ffffff;vertical-align:-3px;margin-right:7px;"></span>Reserve my copy</a>`;
   sections.push(`
     ${sectionHeader("What comes next")}
-    <p style="color:${text};font-size:15px;margin:0 0 12px;">${WHAT_COMES_NEXT_INTRO}</p>
-    <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0;">
-      ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
-    </ul>
+    <table role="presentation" style="width:100%;border-collapse:collapse;"><tr>
+      <td style="vertical-align:top;padding:0 14px 0 0;">
+        <p style="color:${text};font-size:15px;margin:0 0 12px;">${WHAT_COMES_NEXT_INTRO}</p>
+        <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0;">
+          ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
+        </ul>
+      </td>
+      <td style="vertical-align:top;width:140px;text-align:center;">
+        <img src="${playbookBoxImageUrl()}" alt="The Bullyproof Parent Playbook" width="130" style="display:block;width:130px;max-width:130px;border-radius:6px;margin:0 0 10px;">
+        ${state.marketingConsent ? "" : reserveBox("center")}
+      </td>
+    </tr></table>
   `);
   sections.push(`
-    <table role="presentation" style="width:100%;background:#F5F6FB;border-radius:10px;margin:16px 0;border:1px solid #E1E4EA;"><tr>
-      <td style="padding:20px;width:130px;vertical-align:top;">
-        <img src="${playbookBoxImageUrl()}" alt="The Bullyproof Parent Playbook" width="110" style="border-radius:6px;display:block;">
-      </td>
-      <td style="padding:20px 20px 20px 0;vertical-align:top;">
+    <table role="presentation" style="width:100%;background:#F5F6FB;border-radius:10px;margin:18px 0 16px;border:1px solid #E1E4EA;"><tr>
+      <td style="padding:20px;vertical-align:top;">
         <p style="color:${navyDeep};font-size:17px;font-weight:700;margin:0 0 8px;">The Bullyproof Parent Playbook</p>
         <p style="color:${muted};font-size:13.5px;margin:0 0 10px;font-weight:600;">Personalized guidance that grows with your child.</p>
         <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">${PLAYBOOK_BLURB}</p>
@@ -748,7 +759,7 @@ function buildEmailHtml() {
       </td>
     </tr></table>
     <p style="color:${muted};font-size:13.5px;margin:0 0 14px;">Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
-    ${state.marketingConsent ? "" : `<p style="margin:0;"><a href="${playbookInviteUrl()}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:14.5px;font-weight:700;padding:13px 24px;border-radius:8px;text-decoration:none;">Yes, send me my invitation</a></p>`}
+    ${state.marketingConsent ? "" : `<p style="margin:0;">${reserveBox("left")}</p>`}
   `);
   sections.push(`
     ${sectionHeader("Prefer to talk to a licensed professional?")}
@@ -1273,8 +1284,8 @@ function sunbeamResource() {
   // this already say what and where the book is (and that it won the award),
   // so this only adds what they don't: how to use the pages.
   const text = isPreventive()
-    ? `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you feel special or loved?" A few minutes a night adds to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it.`
-    : `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you feel special or loved?" If you have more time, color a page together and make it a keepsake: your signed and dated artwork in their book is lasting proof of your love and care. Over time, these Shining Moments fill your child's "toolkit of protection" with tools they can carry for the rest of their life.`;
+    ? `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" A few minutes a night adds to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it.`
+    : `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" If you have more time, color a page together and make it a keepsake: your signed and dated artwork in their book is lasting proof of your love and care. Over time, these Shining Moments fill your child's "toolkit of protection" with tools they can carry for the rest of their life.`;
   // The opening framing — a real explanation of the mechanism and why it
   // matters, introduced before the Shining Moments pages themselves and
   // before the book reveal, since this concept has to be understood and
@@ -1772,39 +1783,52 @@ async function generatePDF() {
   // real, honest call to action. Joining Bullyproof.Support today is real;
   // "starting a tracked trial" isn't a thing that exists yet, so it's not
   // claimed here.
-  heading("What comes next:");
-  body(WHAT_COMES_NEXT_INTRO);
-  furtherStepsTeaser().forEach(t => body(`• ${t}`));
-
-  ensureRoom(172); // the Playbook card, its benefits list, the trial note and the invitation button stay together on one page
-  const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
-  if (playbookImg) {
-    try { doc.addImage(playbookImg, "JPEG", 15, y, 42, 50); } catch (err) { console.warn("Could not embed Playbook box image:", err); }
-    doc.setFontSize(14); doc.setTextColor(27, 42, 74);
-    doc.text("The Bullyproof Parent Playbook", 62, y + 10);
-    doc.setFontSize(10); doc.setTextColor(60, 70, 100);
-    doc.text("Personalized guidance that grows with your child.", 62, y + 18);
-    doc.setFontSize(9.5); doc.setTextColor(90, 100, 120);
-    doc.text(doc.splitTextToSize(PLAYBOOK_BLURB, 130), 62, y + 27);
-    doc.setFontSize(9); doc.setTextColor(90, 100, 120);
-    doc.text(PLAYBOOK_SOON, 62, y + 52);
-    doc.setFontSize(10.5); doc.setTextColor(66, 153, 225);
-    doc.textWithLink("Join Bullyproof.Support FREE today", 62, y + 62, { url: NETWORK_HOME_URL });
-    y += 80;
-  } else {
-    doc.setFillColor(16, 27, 51);
-    doc.roundedRect(15, y, 180, 74, 3, 3, "F");
-    doc.setFontSize(15); doc.setTextColor(255, 255, 255);
-    doc.text("The Bullyproof Parent Playbook", 25, y + 14);
-    doc.setFontSize(10.5); doc.setTextColor(220, 225, 245);
-    doc.text("Personalized guidance that grows with your child.", 25, y + 23);
-    doc.setFontSize(9.5); doc.setTextColor(200, 210, 235);
-    doc.text(doc.splitTextToSize(PLAYBOOK_BLURB, 160), 25, y + 32);
-    doc.setFontSize(11); doc.setTextColor(255, 220, 130);
-    doc.textWithLink("Join Bullyproof.Support FREE today", 25, y + 65, { url: NETWORK_HOME_URL });
-    y += 84;
+  // Same layout as the email: Playbook picture on the RIGHT beside the intro
+  // and list, "Reserve my copy" under it, and again after the details.
+  function reserveBox(x, yy) {
+    doc.setDrawColor(16, 27, 51); doc.setLineWidth(0.5); doc.setFillColor(255, 255, 255);
+    doc.roundedRect(x, yy - 3.6, 4.2, 4.2, 0.7, 0.7, "FD");
+    doc.setFont(undefined, "bold"); doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
+    doc.text("Reserve my copy", x + 6.2, yy);
+    doc.link(x - 1, yy - 5, 40, 7, { url: playbookInviteUrl() });
+    doc.setFont(undefined, "normal");
   }
-  ensureRoom(60);
+  heading("What comes next:");
+  const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
+  const colW = playbookImg ? 124 : 180;
+  doc.setFontSize(11);
+  const introLines = doc.splitTextToSize(WHAT_COMES_NEXT_INTRO, colW);
+  const bulletBlocks = furtherStepsTeaser().map(t => doc.splitTextToSize(`• ${t}`, colW));
+  const LH = 5.2; // line spacing for this block
+  const textH = introLines.length * LH + 6 + bulletBlocks.reduce((h, l) => h + l.length * LH + 3.5, 0);
+  ensureRoom(Math.max(textH, 72) + 4); // keep the list and the picture together on one page
+  const topY = y;
+  if (playbookImg) {
+    try { doc.addImage(playbookImg, "JPEG", 150, topY - 4, 44, 53); } catch (err) { console.warn("Could not embed Playbook box image:", err); }
+    if (!state.marketingConsent) reserveBox(152, topY + 58);
+  }
+  doc.setFont(undefined, "normal"); doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+  doc.text(introLines, 15, y, { lineHeightFactor: 1.35 }); y += introLines.length * LH + 6;
+  bulletBlocks.forEach(l => { doc.text(l, 15, y, { lineHeightFactor: 1.35 }); y += l.length * LH + 3.5; });
+  y = Math.max(y, topY + 68) + 4;
+
+  ensureRoom(78); // the Playbook details card and the start of the benefits list stay together
+  doc.setFillColor(245, 246, 251); doc.setDrawColor(225, 228, 234); doc.setLineWidth(0.3);
+  doc.setFontSize(9.5);
+  const blurbLines = doc.splitTextToSize(PLAYBOOK_BLURB, 168);
+  const cardH = 42 + blurbLines.length * 4.6;
+  doc.roundedRect(15, y, 180, cardH, 3, 3, "FD");
+  doc.setFontSize(14); doc.setFont(undefined, "bold"); doc.setTextColor(16, 27, 51);
+  doc.text("The Bullyproof Parent Playbook", 21, y + 10);
+  doc.setFontSize(10); doc.setTextColor(60, 70, 100);
+  doc.text("Personalized guidance that grows with your child.", 21, y + 17);
+  doc.setFont(undefined, "normal"); doc.setFontSize(9.5); doc.setTextColor(90, 100, 120);
+  doc.text(blurbLines, 21, y + 25);
+  const afterBlurb = y + 25 + blurbLines.length * 4.6;
+  doc.setFontSize(9); doc.text(PLAYBOOK_SOON, 21, afterBlurb + 2);
+  doc.setFontSize(10.5); doc.setTextColor(66, 153, 225);
+  doc.textWithLink("Join Bullyproof.Support FREE today", 21, afterBlurb + 10, { url: NETWORK_HOME_URL });
+  y += cardH + 8;
   doc.setFontSize(10.5); doc.setFont(undefined, "bold"); doc.setTextColor(27, 42, 74);
   doc.text("What membership includes, starting today:", 15, y); y += 7;
   doc.setFont(undefined, "normal"); doc.setFontSize(10); doc.setTextColor(60, 70, 100);
@@ -1814,18 +1838,9 @@ async function generatePDF() {
     doc.text(ls, 17, y); y += ls.length * 5 + 2;
   });
   y += 4;
+  ensureRoom(34); // the trial note and the second reserve box stay together
   body("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", { color: [140, 140, 140] });
-  if (!state.marketingConsent) {
-    // Same "Yes, send me my invitation" button as the email, same destination.
-    ensureRoom(16);
-    doc.setFillColor(16, 27, 51);
-    doc.roundedRect(15, y - 1, 72, 11, 2, 2, "F");
-    doc.setFont(undefined, "bold"); doc.setFontSize(11); doc.setTextColor(255, 255, 255);
-    doc.text("Yes, send me my invitation", 51, y + 6, { align: "center" });
-    doc.link(15, y - 1, 72, 11, { url: playbookInviteUrl() });
-    doc.setFont(undefined, "normal");
-    y += 18;
-  }
+  if (!state.marketingConsent) { reserveBox(16, y + 2); y += 14; }
 
   heading("Prefer to talk to a licensed professional?");
   body("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:");

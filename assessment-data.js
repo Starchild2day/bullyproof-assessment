@@ -221,7 +221,7 @@ const QUESTIONS = [
     preventSub: "What's the one thing that would help you feel most prepared?",
     icon: ICONS.q12,
     title: "What do you most want help with right now?",
-    sub: "What's the one thing that would make you feel less alone in this?",
+    sub: "What would help you feel less alone in this?",
     type: "text"
   }
 ];

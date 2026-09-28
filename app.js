@@ -537,7 +537,7 @@ function buildEmailHtml() {
         ${sunbeamResource().introCaption.split("\n\n").map((para, i) => {
           if (i === 1) {
             return `<p style="color:${text};font-size:15px;line-height:1.7;margin:0 0 16px;">${para}</p>
-              <table role="presentation" style="width:100%;margin:0 0 18px;"><tr><td style="border-left:3px solid ${gold};padding:2px 0 2px 16px;"><p style="color:${navyDeep};font-size:17px;font-weight:700;line-height:1.5;margin:0;">Up to 70% of what a child absorbs, by Lipton's account, isn't empowering — it's limiting, fearful, self-doubting.</p></td></tr></table>`;
+              <table role="presentation" style="width:100%;margin:0 0 18px;"><tr><td style="border-left:3px solid ${gold};padding:2px 0 2px 16px;"><p style="color:${navyDeep};font-size:17px;font-weight:700;line-height:1.5;margin:0;">${sunbeamResource().pullQuote}</p></td></tr></table>`;
           }
           return `<p style="color:${text};font-size:15px;line-height:1.7;margin:0 0 18px;">${para}</p>`;
         }).join("")}
@@ -602,7 +602,7 @@ function buildEmailHtml() {
   `);
   sections.push(`
     ${sectionHeader("What comes next")}
-    <p style="color:${text};font-size:15px;margin:0 0 12px;">What you just read is real and complete on its own. But situations change — and when they do, here's the kind of support parents find most helpful on a consistent basis:</p>
+    <p style="color:${text};font-size:15px;margin:0 0 12px;">${WHAT_COMES_NEXT_INTRO}</p>
     <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0;">
       ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
     </ul>
@@ -615,16 +615,12 @@ function buildEmailHtml() {
       <td style="padding:20px 20px 20px 0;vertical-align:top;">
         <p style="color:${navyDeep};font-size:17px;font-weight:700;margin:0 0 8px;">The Bullyproof Parent Playbook</p>
         <p style="color:${muted};font-size:13.5px;margin:0 0 10px;font-weight:600;">Personalized guidance that grows with your child.</p>
-        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">The Bullyproof Parent Playbook is being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.</p>
-        <p style="color:${muted};font-size:13px;margin:0 0 10px;">Coming soon — and Bullyproof.Support members will be first in line.</p>
+        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">${PLAYBOOK_BLURB}</p>
+        <p style="color:${muted};font-size:13px;margin:0 0 10px;">${PLAYBOOK_SOON}</p>
         <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">Join Bullyproof.Support FREE today →</a>
         <p style="color:${muted};font-size:12.5px;margin:12px 0 4px;font-weight:700;">What membership includes, starting today:</p>
         <ul style="color:${muted};font-size:12.5px;padding-left:18px;margin:0;">
-          <li style="margin-bottom:4px;">First in line for the free Playbook trial the moment it launches</li>
-          <li style="margin-bottom:4px;">Search the professional directory anytime — not just this once</li>
-          <li style="margin-bottom:4px;">Real stories from other parents navigating situations like yours</li>
-          <li style="margin-bottom:4px;">Articles and a podcast focused specifically on kids and bullying</li>
-          <li style="margin-bottom:0;">Founding Member status while the community is still growing</li>
+          ${MEMBERSHIP_BENEFITS.map((b, i) => `<li style="margin-bottom:${i === MEMBERSHIP_BENEFITS.length - 1 ? 0 : 4}px;">${b}</li>`).join("")}
         </ul>
       </td>
     </tr></table>
@@ -633,8 +629,8 @@ function buildEmailHtml() {
   sections.push(`
     ${sectionHeader("Prefer to talk to a licensed professional?")}
     <p style="color:${text};font-size:15px;margin:0;">
-      That's always an option too — <a href="${NETWORK_MATCH_URL}" style="color:${navy};">get matched with one near you</a> through the Bullyproof Support network.<br>
-      If your area doesn't have a strong match yet, <a href="${FIND_SUPPORT_URL}" style="color:${navy};">Psychology Today's directory</a> is a good backup.
+      That's always an option too. <a href="${NETWORK_MATCH_URL}" style="color:${navy};">Search the Bullyproof Support network</a> to get matched with a professional near you — just enter your location, no cost to look.<br>
+      If your area doesn't have a strong match yet, <a href="${FIND_SUPPORT_URL}" style="color:${navy};">Psychology Today's broader directory</a> is a good backup.
     </p>
   `);
   sections.push(`
@@ -1080,21 +1076,27 @@ function sunbeamHeroImage() {
 
 function sunbeamResource() {
   if (!isPreventive() && !hasEmotionalChallengeSignals()) return null;
+  // The bridge line, the "award-winning" label, the badge and the title above
+  // this already say what and where the book is (and that it won the award),
+  // so this only adds what they don't: how to use the pages.
   const text = isPreventive()
-    ? `The "Shining Moments" pages in the back of The Adventures of the True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`
-    : `The Shining Moments pages live in the back of The Adventures of the True Sunbeam, the International Best Indie Book Award-winning children's book. At bedtime, try asking in the style of the prompting questions at the top of each page: "What happened today that helped you feel special or loved?" If you have more time, color a page together and make it a keepsake — your signed and dated artwork in their book is lasting proof of your love and care. Over time, these Shining Moments fill your child's "toolkit of protection" with tools they can carry for the rest of their life.`;
+    ? `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you feel special or loved?" A few minutes a night adds to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it.`
+    : `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you feel special or loved?" If you have more time, color a page together and make it a keepsake: your signed and dated artwork in their book is lasting proof of your love and care. Over time, these Shining Moments fill your child's "toolkit of protection" with tools they can carry for the rest of their life.`;
   // The opening framing — a real explanation of the mechanism and why it
   // matters, introduced before the Shining Moments pages themselves and
   // before the book reveal, since this concept has to be understood and
   // "sold" on its own merits first.
   const introCaption = `A child's mind can get stuck. Whatever's bothering them — a hard day, a hurtful moment, a worry with no easy answer — often loops the loudest right at bedtime, when there's nothing left to distract from it.
 
-Here's why that moment matters more than it seems. Cell biologist Bruce Lipton has spent decades studying how a child's subconscious mind forms — and by his account, up to 70% of what gets absorbed and carried forward isn't empowering. It's limiting, fearful, self-doubting. Every night, as your child drifts toward sleep, their mind passes through the same open, impressionable state that makes early childhood so absorbent in the first place. Call it dreamtime programming: whatever's on their mind in those last few minutes has an outsized chance of settling in.
+Here's why that moment matters more than it seems. Cellular biologist Bruce Lipton has spent decades studying how a child's subconscious mind forms. By his account:
+
+Every night, as your child drifts toward sleep, their mind passes through the same open, impressionable state that makes early childhood so absorbent in the first place. Call it dreamtime programming: whatever's on their mind in those last few minutes has an outsized chance of settling in.
 
 Which means every bedtime is also an opportunity — a nightly chance to interrupt that programming before it takes hold, and redirect it toward something that builds your child up instead. That's the entire idea behind Shining Moments.`;
   return {
     text,
     introCaption,
+    pullQuote: "By age 7, up to 70% of what a child's subconscious mind has been programmed with is self-sabotaging, negative, or limiting.",
     closeupCaption: `It only takes a few minutes: naming one good moment from the day, and letting that be the last thing on their mind before sleep. Do it most nights, and something happens beneath the surface — confidence builds, worry loosens its grip, and it happens so gradually your child may never notice it's working.`,
     setUrl: SUNBEAM_SET_URL,
     fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,
@@ -1125,6 +1127,22 @@ const NETWORK_MATCH_URL = "https://www.bullyproof.support/getmatched";
 // entirely, since every visitor arriving from this tool is a parent.
 const NETWORK_HOME_URL = "https://www.bullyproof.support/checkout/clarity-check";
 
+// What a free Bullyproof.Support account includes. One list, used by both
+// the email and the PDF so the two can't drift apart again.
+const MEMBERSHIP_BENEFITS = [
+  "Free access to the Bullyproof.Support community",
+  "A directory of professionals you can search anytime, not just this once",
+  "Real stories from other parents navigating situations like yours",
+  "Music, podcasts, and articles focused specifically on kids and bullying",
+  "A free trial of the Bullyproof Parent Playbook when it's available",
+  "Founding Member status while the community is still growing"
+];
+
+// Wording that appears in BOTH the email and the PDF lives here, once.
+const WHAT_COMES_NEXT_INTRO = "What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of support parents find most helpful on a consistent basis:";
+const PLAYBOOK_BLURB = "Being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.";
+const PLAYBOOK_SOON = "Coming soon — and Bullyproof.Support members will be first in line.";
+
 function playbookBoxImageUrl() {
   return `${window.location.origin}/assets/playbook-box.jpg`;
 }
@@ -1147,7 +1165,7 @@ function whyThisMattersNote() {
 function furtherStepsTeaser() {
   if (isPreventive()) {
     return [
-      "Knowing what to say so your child will listen — instead of getting one-word answers.",
+      "Knowing what to say so your child will communicate with you — instead of just giving one-word answers.",
       "How to talk about kindness and boundaries — before there's a problem.",
       "A simple weekly habit that builds your child's confidence over time",
       "How to know when kids can work it out — and when they need your help.",
@@ -1359,7 +1377,7 @@ async function generatePDF() {
     for (let pi = 0; pi < introParas.length; pi++) {
       body(introParas[pi], { color: [31, 36, 48] });
       if (pi === 1) {
-        const quoteText = "Up to 70% of what a child absorbs, by Lipton's account, isn't empowering — it's limiting, fearful, self-doubting.";
+        const quoteText = sunbeam.pullQuote;
         doc.setFontSize(13); doc.setFont(undefined, "bold");
         const quoteLines = doc.splitTextToSize(quoteText, 160);
         ensureRoom(quoteLines.length * 7 + 10);
@@ -1536,10 +1554,10 @@ async function generatePDF() {
   // "starting a tracked trial" isn't a thing that exists yet, so it's not
   // claimed here.
   heading("What comes next:");
-  body("What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of support parents find most helpful on a consistent basis:");
+  body(WHAT_COMES_NEXT_INTRO);
   furtherStepsTeaser().forEach(t => body(`• ${t}`));
 
-  ensureRoom(95);
+  ensureRoom(150); // the Playbook card, its benefits list and the trial note stay together on one page
   const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
   if (playbookImg) {
     try { doc.addImage(playbookImg, "JPEG", 15, y, 42, 50); } catch (err) { console.warn("Could not embed Playbook box image:", err); }
@@ -1548,9 +1566,9 @@ async function generatePDF() {
     doc.setFontSize(10); doc.setTextColor(60, 70, 100);
     doc.text("Personalized guidance that grows with your child.", 62, y + 18);
     doc.setFontSize(9.5); doc.setTextColor(90, 100, 120);
-    doc.text(doc.splitTextToSize("Being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.", 130), 62, y + 27);
+    doc.text(doc.splitTextToSize(PLAYBOOK_BLURB, 130), 62, y + 27);
     doc.setFontSize(9); doc.setTextColor(90, 100, 120);
-    doc.text("Coming soon — Bullyproof.Support members will be first in line.", 62, y + 52);
+    doc.text(PLAYBOOK_SOON, 62, y + 52);
     doc.setFontSize(10.5); doc.setTextColor(66, 153, 225);
     doc.textWithLink("Join Bullyproof.Support FREE today", 62, y + 62, { url: NETWORK_HOME_URL });
     y += 80;
@@ -1562,11 +1580,21 @@ async function generatePDF() {
     doc.setFontSize(10.5); doc.setTextColor(220, 225, 245);
     doc.text("Personalized guidance that grows with your child.", 25, y + 23);
     doc.setFontSize(9.5); doc.setTextColor(200, 210, 235);
-    doc.text(doc.splitTextToSize("Being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.", 160), 25, y + 32);
+    doc.text(doc.splitTextToSize(PLAYBOOK_BLURB, 160), 25, y + 32);
     doc.setFontSize(11); doc.setTextColor(255, 220, 130);
     doc.textWithLink("Join Bullyproof.Support FREE today", 25, y + 65, { url: NETWORK_HOME_URL });
     y += 84;
   }
+  ensureRoom(60);
+  doc.setFontSize(10.5); doc.setFont(undefined, "bold"); doc.setTextColor(27, 42, 74);
+  doc.text("What membership includes, starting today:", 15, y); y += 7;
+  doc.setFont(undefined, "normal"); doc.setFontSize(10); doc.setTextColor(60, 70, 100);
+  MEMBERSHIP_BENEFITS.forEach(b => {
+    const ls = doc.splitTextToSize("• " + b, 172);
+    ensureRoom(ls.length * 5 + 3);
+    doc.text(ls, 17, y); y += ls.length * 5 + 2;
+  });
+  y += 4;
   body("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", { color: [140, 140, 140] });
 
   heading("Prefer to talk to a licensed professional?");

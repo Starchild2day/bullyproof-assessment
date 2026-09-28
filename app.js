@@ -555,7 +555,7 @@ function buildEmailHtml() {
             </td>
             <td style="text-align:center;width:34%;vertical-align:bottom;">
               <img src="${sunbeamResource().rayImg}" alt="Ray the plush toy" width="65" style="display:block;margin:0 auto 8px;">
-              <span style="color:${muted};font-size:11.5px;">Meet Ray the Sunbeam- plush toy</span>
+              <span style="color:${muted};font-size:11.5px;">Meet Ray the Sunbeam plush toy</span>
             </td>
           </tr></table>
           <table role="presentation" style="width:100%;margin-top:14px;"><tr>
@@ -1391,6 +1391,12 @@ async function generatePDF() {
       y = smY + 39;
     }
 
+    ensureRoom(16);
+    doc.setFontSize(12.5); doc.setFont(undefined, "bold"); doc.setTextColor(31, 36, 48);
+    doc.text("The Adventures of the True Sunbeam", 15, y + 2);
+    doc.setFont(undefined, "normal");
+    y += 10;
+
     body(sunbeam.text, { color: [74, 109, 147] });
 
     // Proportional sizing based on real-world dimensions: books are 9in
@@ -1409,26 +1415,37 @@ async function generatePDF() {
     let ix = 15;
     if (fullColorImg) {
       try { doc.addImage(fullColorImg, "JPEG", ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
-      doc.setFontSize(9); doc.setTextColor(66, 153, 225);
-      doc.textWithLink("Full-color book", ix, rowBaseline + 6, { url: sunbeam.fullColorUrl });
+      doc.setFontSize(9); doc.setTextColor(90, 100, 120);
+      doc.text("Full-color book", ix, rowBaseline + 6);
       ix += BOOK_SIZE + 10;
     }
     if (coloringImg) {
       try { doc.addImage(coloringImg, "JPEG", ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
-      doc.setFontSize(9); doc.setTextColor(66, 153, 225);
-      doc.textWithLink("Coloring book", ix, rowBaseline + 6, { url: sunbeam.coloringUrl });
+      doc.setFontSize(9); doc.setTextColor(90, 100, 120);
+      doc.text("Coloring Book version", ix, rowBaseline + 6);
       ix += BOOK_SIZE + 10;
     }
     if (rayImg) {
       try { doc.addImage(rayImg, "JPEG", ix, rowBaseline - RAY_H, RAY_W, RAY_H); } catch (e) {}
-      doc.setFontSize(9); doc.setTextColor(100, 100, 100);
-      doc.text("Ray", ix, rowBaseline + 6);
+      doc.setFontSize(9); doc.setTextColor(90, 100, 120);
+      doc.text("Meet Ray the Sunbeam plush toy", ix, rowBaseline + 6);
     }
-    y = (fullColorImg || coloringImg || rayImg) ? rowBaseline + 12 : y;
-    doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-    ensureRoom(8);
-    doc.textWithLink("See the book + Ray plush set (coming soon)", 15, y, { url: sunbeam.setUrl });
-    y += 12;
+    y = (fullColorImg || coloringImg || rayImg) ? rowBaseline + 18 : y;
+    const buyLinks = [
+      ["Buy the full-color book", sunbeam.fullColorUrl, true],
+      ["Buy the coloring book", sunbeam.coloringUrl, true],
+      ["Book + Ray plush set (coming soon)", sunbeam.setUrl, false]
+    ];
+    ensureRoom(buyLinks.length * 7 + 6);
+    buyLinks.forEach(([label, url, strong]) => {
+      doc.setFontSize(strong ? 11 : 10); doc.setFont(undefined, strong ? "bold" : "normal"); doc.setTextColor(27, 42, 74);
+      const w = doc.getTextWidth(label);
+      doc.textWithLink(label, 195 - w, y, { url });
+      doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.25); doc.line(195 - w, y + 1.2, 195, y + 1.2);
+      y += 7;
+    });
+    doc.setFont(undefined, "normal");
+    y += 5;
 
     // Draw the card border last, using the recorded start/end range —
     // stroke only (no fill), so it frames the content instead of

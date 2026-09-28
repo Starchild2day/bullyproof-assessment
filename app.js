@@ -611,13 +611,13 @@ function buildEmailHtml() {
   sections.push(`
     ${sectionHeader("Your next 3 steps")}
     <table role="presentation" style="width:100%;">
-      ${actionSteps().map((s, i) => `
+      ${stepParts().map(([stepT, stepR], i) => `
         <tr>
           <td style="width:28px;vertical-align:top;padding:0 10px 14px 0;">
             <div style="width:24px;height:24px;border-radius:50%;background:${navy};color:#fff;font-size:13px;font-weight:700;text-align:center;line-height:24px;">${i + 1}</div>
           </td>
           <td style="vertical-align:top;padding:0 0 14px;">
-            <p style="color:${text};font-size:14.5px;margin:1px 0 0;">${s}</p>
+            ${stepT ? `<p style="color:${navyDeep};font-size:16px;font-weight:700;margin:1px 0 4px;">${stepT}</p>` : ""}<p style="color:${text};font-size:14.5px;margin:${stepT ? "0" : "1px 0 0"};">${stepR}</p>
           </td>
         </tr>
       `).join("")}
@@ -939,7 +939,7 @@ function needsProfessionalSupport() {
 function openingValidation() {
   const q2 = state.answers.q2 || "";
   if (q2.includes("not sure yet")) return "It's OK to feel worried even without proof. Many parents notice small changes before anything big happens.";
-  if (q2.includes("prevent")) return "Getting ready before a problem starts is a smart, caring move.";
+  if (q2.includes("prevent")) return "Focusing on prevention is one of the smartest, most caring things a parent can do.";
   if (q2.includes("treated badly")) return "It takes courage for a child to say they're being treated badly. It takes just as much courage for a parent to believe them right away.";
   if (q2.includes("Something happened online")) return "Things online can get bad fast. It's good that you're acting now instead of waiting.";
   if (q2.includes("concerning at school")) return "Trusting what you see at school, even before your child says anything, is the right thing to do.";
@@ -1431,11 +1431,31 @@ function furtherStepsTeaser() {
   return items.slice(0, 5);
 }
 
+// A step that opens with a short headline sentence (7 words or fewer) shows
+// that headline in bold on its own line, so a scanning parent sees the three
+// big ideas at a glance. Longer openings stay as plain paragraphs.
+function splitStepTitle(step) {
+  const m = step.match(/^(.{3,70}?[.!?]"?)\s+([\s\S]+)$/);
+  if (m && m[1].split(/\s+/).length <= 7) return [m[1], m[2]];
+  return [null, step];
+}
+// Headlines only when EVERY step in the set has one — a mix looks uneven.
+function stepParts() {
+  const steps = actionSteps();
+  const parts = steps.map(splitStepTitle);
+  return parts.every(([t]) => t) ? parts : steps.map(st => [null, st]);
+}
+
 function preventionSteps() {
+  // Each step leads with a real research finding, then one specific thing to do or say.
+  // Sources: Petrosino et al., U.S. Dept. of Education REL Northeast & Islands (2010) — 64% of bullied students did not report;
+  // Harvard Center on the Developing Child — at least one stable, supportive adult is the most common factor in resilience;
+  // Hodges, Boivin, Vitaro & Bukowski (1999), "The Power of Friendship" — a best friend protects against escalating victimization;
+  // Hawkins, Pepler & Craig (2001) — peers intervened in 19% of episodes; when they did, bullying stopped within 10 seconds 57% of the time.
   return [
-    "Build the habit of easy conversation now, before you'd ever need it. Try one low-stakes nightly question, like \"What was the best part of your day, the brightest moment when you felt the biggest smile in your heart?\" The goal isn't spotting a problem — it's making talking to you feel normal, so if something ever does happen, coming to you is already the default.",
-    "Introduce yourself to your child's teacher or school counselor now, before there's anything to report. Something as simple as \"Just wanted to say hello and let you know I'm around if anything ever comes up\" opens a door you might need later, without waiting for a reason to make first contact.",
-    "Practice a simple response together for handling unkindness, before they ever need it — a phrase like \"That's not okay, and I'm going to tell someone\" that they can fall back on automatically, the same way you'd practice a fire drill."
+    "Make the \"no-panic promise.\" Most bullied kids never tell an adult — a U.S. Department of Education study found 64% didn't report it. The biggest reason is fear that the grown-up will overreact and make things worse. So say this, once, on an ordinary day: \"You can tell me anything. I promise I won't freak out, and I won't go to the school without talking with you first.\" Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust. This promise is how you become that adult before it's ever needed.",
+    "Help grow one solid friendship. Having even one good friend is one of the strongest protections a child can have — researchers found a close friendship can stop a small problem from growing into a bigger one. Popularity doesn't matter here. One real friend does. This month, ask \"Who do you like sitting with at lunch?\" and invite that child over, even just for pizza and a movie.",
+    "Teach the 10-second rescue. When another kid steps in, bullying stops within about 10 seconds more than half the time — that's from researchers who watched real playgrounds. Yet kids step in less than one time in five, usually because they don't know what to say. Give your child one easy line: \"Hey, come hang out with us.\" Kids who stand up for others build courage and friendships, and they'll know exactly what to do if it's ever them."
   ];
 }
 
@@ -1558,15 +1578,20 @@ async function generatePDF() {
 
   heading("Your next 3 steps:");
   doc.setFontSize(11);
-  actionSteps().forEach((step, i) => {
+  stepParts().forEach(([stepTitle, stepRest], i) => {
     doc.setTextColor(40, 40, 40);
-    const lines = doc.splitTextToSize(step, 165);
-    ensureRoom(Math.max(lines.length * 6, 10) + 6);
+    const lines = doc.splitTextToSize(stepRest, 165);
+    ensureRoom(Math.max(lines.length * 6 + (stepTitle ? 7 : 0), 10) + 6);
     const stepTopY = y;
     doc.setFillColor(16, 27, 51);
     doc.circle(19, stepTopY - 2, 4, "F");
     doc.setFontSize(10); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold");
     doc.text(String(i + 1), 19, stepTopY - 0.5, { align: "center" });
+    if (stepTitle) {
+      doc.setFont(undefined, "bold"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
+      doc.text(stepTitle, 28, y);
+      y += 7;
+    }
     doc.setFont(undefined, "normal"); doc.setFontSize(11); doc.setTextColor(40, 40, 40);
     doc.text(lines, 28, y);
     y += Math.max(lines.length * 6, 10) + 6;

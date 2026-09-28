@@ -98,7 +98,7 @@ const QUESTIONS = [
   },
   {
     id: "q4",
-    preventTitle: "In your own words, what would you like to be ready for?",
+    preventTitle: "In your own words, what would you most like to strengthen in your child?",
     icon: ICONS.q4,
     title: "In your own words, what's going on with your child right now?",
     sub: "Write whatever feels true to you — there's no wrong answer here.",
@@ -107,7 +107,7 @@ const QUESTIONS = [
   {
     id: "q5",
     preventTitle: "How long has anything been going on?",
-    preventExtra: ["Nothing has happened — I'm preparing ahead"],
+    preventExtra: ["Nothing's going on — I'm focused on prevention"],
     icon: ICONS.q5,
     title: "How long has this been happening?",
     type: "choice",
@@ -130,7 +130,7 @@ const QUESTIONS = [
     id: "q7",
     preventTitle: "Where are you most concerned it could happen?",
     preventSub: "Check all that apply — this helps us point you to the right things to watch for.",
-    preventExtra: ["No particular place — I'm just being proactive"],
+    preventExtra: ["Nowhere in particular — I'm thinking prevention first"],
     preventReplace: { "I'm not sure where it's happening": "I'm not sure yet — anywhere could matter" },
     icon: ICONS.q7,
     title: "Where is this happening?",
@@ -186,7 +186,7 @@ const QUESTIONS = [
   {
     id: "q10",
     preventTitle: "Have you connected with anyone at school yet?",
-    preventExtra: ["No — I haven't reached out yet because I'm all about prevention here"],
+    preventExtra: ["Not yet — nothing to report; I'm building strengths early"],
     icon: ICONS.q10,
     title: "Have you talked to anyone at school about this yet?",
     sub: "Teachers, counselors, principal — anyone in a school role.",
@@ -203,7 +203,7 @@ const QUESTIONS = [
     id: "q11",
     preventTitle: "Is anything happening online or through screens?",
     preventSub: "Even if it's also happening in person — or if nothing is, just say so.",
-    preventExtra: ["No — nothing is happening; I'm preparing ahead"],
+    preventExtra: ["No — nothing's happening; prevention is my focus"],
     icon: ICONS.q11,
     title: "Is this happening online or through screens at all?",
     sub: "Even if it's also happening in person.",
@@ -218,7 +218,7 @@ const QUESTIONS = [
   },
   {
     id: "q12",
-    preventSub: "What's the one thing that would help you feel most prepared?",
+    preventSub: "What's the one thing you'd most like to learn?",
     icon: ICONS.q12,
     title: "What do you most want help with right now?",
     sub: "What would help you feel less alone in this?",

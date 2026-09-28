@@ -426,7 +426,7 @@ function buildEmailHtml() {
 
   // One consistent section-header treatment used everywhere below —
   // this is the single biggest visual-hierarchy fix: previously every
-  // section (You told us, Why this matters, Recommended reading, etc.)
+  // section (You told us, What actually helps, Recommended reading, etc.)
   // used the exact same flat inline-bold text with no real distinction
   // from body copy, so nothing stood out and the whole plan read as one
   // undifferentiated block.
@@ -473,7 +473,7 @@ function buildEmailHtml() {
   if (selfReflectionNote()) {
     sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${selfReflectionNote()}</p>`);
   }
-  sections.push(`${sectionHeader("Why this matters")}<p style="color:${text};font-size:15px;margin:0;">${whyThisMattersNote()}</p>`);
+  sections.push(`${sectionHeader("What actually helps")}<p style="color:${text};font-size:15px;margin:0;">${whyThisMattersNote()}</p>`);
   sections.push(`
     ${sectionHeader("Your next 3 steps")}
     <table role="presentation" style="width:100%;">
@@ -514,7 +514,7 @@ function buildEmailHtml() {
   // card treatment at all, which made it feel like an afterthought.
   if (sunbeamResource()) {
     sections.push(`
-    ${sectionHeader("The bedtime window")}
+    ${sectionHeader("A nightly opportunity")}
       <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0;overflow:hidden;"><tr><td style="padding:22px 24px 4px;">
         ${sunbeamResource().introCaption.split("\n\n").map((para, i) => {
           if (i === 1) {
@@ -529,7 +529,7 @@ function buildEmailHtml() {
           <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 6px;text-transform:uppercase;">How it works</p>
           <p style="color:${navyDeep};font-size:14px;line-height:1.6;margin:0;">${sunbeamResource().closeupCaption}</p>
         </td></tr></table>
-        <p style="color:${muted};font-size:13.5px;font-style:italic;margin:0 0 20px;">You'll find these pages ready to use in the back of The Adventures of the True Sunbeam, our first recommendation below.</p>
+        <p style="color:${muted};font-size:13.5px;font-style:italic;margin:0 0 20px;">You'll find these pages waiting in the back of the award-winning children's book — The Adventures of the True Sunbeam.</p>
       </td></tr></table>
     `);
   }
@@ -1281,7 +1281,7 @@ async function generatePDF() {
   if (multiChildNote()) body(multiChildNote(), { color: [74, 109, 147] });
   if (selfReflectionNote()) body(selfReflectionNote(), { color: [74, 109, 147] });
 
-  heading("Why this matters:");
+  heading("What actually helps:");
   body(whyThisMattersNote());
 
   heading("Your next 3 steps:");
@@ -1316,7 +1316,7 @@ async function generatePDF() {
   // Two books now, each pointing at a specific chapter for their situation.
   const sunbeam = sunbeamResource();
   if (sunbeam) {
-    heading("The bedtime window");
+    heading("A nightly opportunity");
 
     const introParas = sunbeam.introCaption.split("\n\n");
     for (let pi = 0; pi < introParas.length; pi++) {
@@ -1366,7 +1366,7 @@ async function generatePDF() {
     doc.text(howItWorksLines, 21, y + 16);
     y += cardH + 10;
 
-    body("You'll find these pages ready to use in the back of The Adventures of the True Sunbeam, our first recommendation below.", { color: [90, 100, 120], italic: true });
+    body("You'll find these pages waiting in the back of the award-winning children's book — The Adventures of the True Sunbeam.", { color: [90, 100, 120], italic: true });
   }
 
   heading("Recommended reading:");
@@ -1427,7 +1427,7 @@ async function generatePDF() {
     y = (fullColorImg || coloringImg || rayImg) ? rowBaseline + 12 : y;
     doc.setFontSize(11); doc.setTextColor(66, 153, 225);
     ensureRoom(8);
-    doc.textWithLink("See the book + Ray plush set (coming soon) →", 15, y, { url: sunbeam.setUrl });
+    doc.textWithLink("See the book + Ray plush set (coming soon)", 15, y, { url: sunbeam.setUrl });
     y += 12;
 
     // Draw the card border last, using the recorded start/end range —
@@ -1458,7 +1458,7 @@ async function generatePDF() {
       const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
       doc.text(doc.splitTextToSize(chapterText, 140), 52, by + 20);
       doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-      doc.textWithLink("View this book →", 52, by + 38, { url: b.url });
+      doc.textWithLink("View this book", 52, by + 38, { url: b.url });
       y = by + 50;
     } else {
       ensureRoom(20);
@@ -1468,7 +1468,7 @@ async function generatePDF() {
       const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
       doc.text(doc.splitTextToSize(chapterText, 180), 15, y); y += 6;
       doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-      doc.textWithLink("View this book →", 15, y, { url: b.url });
+      doc.textWithLink("View this book", 15, y, { url: b.url });
       y += 10;
     }
   }
@@ -1483,7 +1483,7 @@ async function generatePDF() {
   // claimed here.
   heading("What comes next:");
   body("What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of support parents find most helpful on a consistent basis:");
-  furtherStepsTeaser().forEach((t, i) => body(`${i + 4}. ${t}`));
+  furtherStepsTeaser().forEach(t => body(`• ${t}`));
 
   ensureRoom(95);
   const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
@@ -1498,7 +1498,7 @@ async function generatePDF() {
     doc.setFontSize(9); doc.setTextColor(90, 100, 120);
     doc.text("Coming soon — Bullyproof.Support members will be first in line.", 62, y + 52);
     doc.setFontSize(10.5); doc.setTextColor(66, 153, 225);
-    doc.textWithLink("Join Bullyproof.Support FREE today →", 62, y + 62, { url: NETWORK_HOME_URL });
+    doc.textWithLink("Join Bullyproof.Support FREE today", 62, y + 62, { url: NETWORK_HOME_URL });
     y += 80;
   } else {
     doc.setFillColor(27, 42, 74);
@@ -1510,7 +1510,7 @@ async function generatePDF() {
     doc.setFontSize(9.5); doc.setTextColor(200, 210, 235);
     doc.text(doc.splitTextToSize("Being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.", 160), 25, y + 32);
     doc.setFontSize(11); doc.setTextColor(255, 220, 130);
-    doc.textWithLink("Join Bullyproof.Support FREE today →", 25, y + 65, { url: NETWORK_HOME_URL });
+    doc.textWithLink("Join Bullyproof.Support FREE today", 25, y + 65, { url: NETWORK_HOME_URL });
     y += 84;
   }
   body("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", { color: [140, 140, 140] });

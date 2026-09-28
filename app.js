@@ -74,10 +74,11 @@ function renderLanding() {
   let returningNotice = "";
   try {
     const prior = JSON.parse(localStorage.getItem("bp_completions") || "[]");
-    if (prior.length >= 2) {
+    const preview = new URLSearchParams(window.location.search).get("returning") === "1";
+    if (prior.length >= 1 || preview) {
       returningNotice = `
         <div style="background:var(--gold-soft);border-left:4px solid var(--gold);border-radius:10px;padding:14px 16px;margin:0 0 18px;">
-          <p style="margin:0;font-size:14px;color:var(--navy-deep);">Looks like you've done this a few times before. If your situation has genuinely changed, go ahead and retake it — but for ongoing, personalized support as things keep evolving, that's exactly what <a href="${NETWORK_HOME_URL}" style="color:var(--navy);font-weight:600;">Bullyproof.Support</a> and the upcoming Parent Playbook are built for, rather than re-running this each time.</p>
+          <p style="margin:0;font-size:14px;color:var(--navy-deep);"><strong>Welcome back.</strong> It looks like you've already taken this check-in. If your situation has changed, go ahead and take it again. For ongoing, personalized support as things keep changing, that's exactly what <a href="${NETWORK_HOME_URL}" style="color:var(--navy);font-weight:600;">Bullyproof.Support</a> and the upcoming Parent Playbook are built for.</p>
         </div>`;
     }
   } catch (e) { /* storage unavailable — just skip the notice */ }
@@ -192,13 +193,13 @@ const CHECKMARK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke-linecap="roun
 // Prevention-path wording: a parent who chose "I'm trying to prevent
 // problems before they start" should never be asked questions that
 // assume something is already happening, so questions can carry their own
-// prevention title/subtitle and extra options (listed first for them).
+// prevention title/subtitle and extra options (listed last, so they read every option first).
 function qTitle(q) { return (isPreventive() && q.preventTitle) || q.title; }
 function qSub(q) { return (isPreventive() && q.preventSub) || q.sub; }
 function qOptions(q) {
   if (!isPreventive()) return q.options;
   const base = q.preventReplace ? q.options.map(o => q.preventReplace[o] || o) : q.options;
-  return q.preventExtra ? [...q.preventExtra, ...base] : base;
+  return q.preventExtra ? [...base, ...q.preventExtra] : base;
 }
 
 function renderChoice(q) {
@@ -305,11 +306,14 @@ function renderResults() {
   progressTrack.style.display = "none";
   track("assessment_completed");
   saveProgressToFirebase();
-  try {
-    const prior = JSON.parse(localStorage.getItem("bp_completions") || "[]");
-    prior.push(Date.now());
-    localStorage.setItem("bp_completions", JSON.stringify(prior.slice(-10)));
-  } catch (e) { /* storage unavailable — not critical, just skip the nudge later */ }
+  if (!state.completionRecorded) {
+    state.completionRecorded = true;
+    try {
+      const prior = JSON.parse(localStorage.getItem("bp_completions") || "[]");
+      prior.push(Date.now());
+      localStorage.setItem("bp_completions", JSON.stringify(prior.slice(-10)));
+    } catch (e) { /* storage unavailable — not critical, just skip the nudge later */ }
+  }
   const summary = deriveSummary();
   const q2Answer = state.answers.q2 || "your situation";
   const reflection = [communicationReflection(), openingValidation()].filter(Boolean).join(" ");
@@ -381,16 +385,30 @@ function hasEmotionalChallengeSignals() {
   return false;
 }
 
+// The Q2 choices are worded in the parent's own first-person voice ("My
+// child told me..."), which clashed with the rest of the plan speaking TO
+// them ("Your child hasn't said anything..."). Restate them in second person.
+function q2Statement() {
+  const q2 = state.answers.q2 || "";
+  if (q2.includes("not sure yet")) return "You have a feeling something's off, but you're not sure what yet.";
+  if (q2.includes("concerning at school")) return "You've noticed something concerning at school.";
+  if (q2.includes("Something happened online")) return "Something happened online or on social media.";
+  if (q2.includes("treated badly")) return "Your child told you they're being treated badly by other kids.";
+  return q2 ? q2.replace(/\.$/, "") + "." : "You're working through a bullying situation.";
+}
+
 function deriveSummary() {
-  const q2 = state.answers.q2 || "a bullying situation you're working through";
-  if (isPreventive()) return `${q2}.`;
+  if (isPreventive()) return "Nothing has gone wrong that you know of, and you're getting ahead of it. That's the best time to build the habits that protect kids.";
+  const status = communicationStatus();
   const statusText = {
     "clear": "Your child has spoken with you directly about it.",
     "hints": "Your child has shared pieces of it, but not the full picture yet.",
     "behavior-only": "Your child hasn't said anything directly, but their behavior is telling you something.",
     "no-signals": "Nothing concrete yet — you're going on instinct."
-  }[communicationStatus()] || "";
-  return `${q2}.${statusText ? " " + statusText : ""}`;
+  }[status] || "";
+  // Don't say the same thing twice when Q2 already says the child told them.
+  const redundant = (state.answers.q2 || "").includes("treated badly") && status === "clear";
+  return `${q2Statement()}${statusText && !redundant ? " " + statusText : ""}`;
 }
 
 // Same underlying observation as deriveSummary(), but returned separately
@@ -452,7 +470,7 @@ function buildEmailHtml() {
   if (openingValidation()) {
     sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${openingValidation()}</p>`);
   }
-  sections.push(`${sectionHeader("What's happening")}<p style="color:${text};font-size:15px;margin:0;">${deriveSummary()}</p>`);
+  sections.push(`${sectionHeader(isPreventive() ? "Where you're starting" : "What's happening")}<p style="color:${text};font-size:15px;margin:0;">${deriveSummary()}</p>`);
   if (focusLine()) {
     sections.push(`<p style="color:${text};font-size:14.5px;font-style:italic;margin:10px 0 0;">${focusLine()}</p>`);
   }
@@ -757,28 +775,47 @@ function multiChildNote() {
 // actual words — not echo the request and move on to generic advice.
 function askedForWords() {
   const t = `${state.answers.q12 || ""} ${state.answers.q4 || ""}`.toLowerCase();
-  return /\b(say|saying|tell|telling|words|talk to|talk with|encourage|speak|sound)\b/.test(t);
+  // Explicit asks for words only. A bare "tell" or "sound" is not enough
+  // ("how do I tell if my child is being bullied" is not a request for a script).
+  return [
+    /\bwhat (do|should|can|could|would|to) (i |we )?(say|tell)\b/,
+    /\b(something|anything|one thing|the right thing|the right words?|words?)\b[^.?!]{0,20}\b(say|tell)\b/,
+    /\b(say|tell|talk to|talk with|speak to|speak with) (them|him|her|my (son|daughter|child|kid|kids|teen|children))\b/,
+    /\bencourage (them|him|her)\b/,
+    /\bhow (do|can|should|could) (i|we) (talk|speak)\b/,
+    /\bsound like i\b/
+  ].some(re => re.test(t));
 }
 function wordsAnswer() {
   if (state.safetyFlags.length || !askedForWords()) return null;
   const age = state.answers.q1 || "";
   const young = age === "Under 5" || age === "5–7";
   const teen = age === "11–14" || age === "15–18";
-  const quote = young
-    ? "I love you. You did nothing wrong. I'm going to help."
-    : teen
-      ? "I'm on your side. Whatever is going on, it's not your fault, and you don't have to handle it alone. You don't have to tell me everything right now. I'm here when you're ready."
-      : "I'm on your side, always. Whatever happened is not your fault, and you are not in trouble. We'll figure it out together.";
-  const reframe = young
-    ? "When someone is unkind, that's a choice they made. It's not about you."
-    : "What someone does to you tells you about them. It doesn't tell you who you are.";
+  const prevent = isPreventive();
+  // Someone getting ready ahead of time has no incident to talk about, so
+  // their words open the door instead of repairing one ("You did nothing
+  // wrong" would make no sense to a child nothing has happened to).
+  const quote = prevent
+    ? (young ? "If anyone is ever unkind to you, or something feels yucky, tell me. I will always listen, and you will never be in trouble."
+      : teen ? "You can tell me anything, anytime — even the stuff that's embarrassing. I won't freak out. I'm on your side."
+      : "If anything ever happens that feels wrong, big or small, come tell me. You will never be in trouble for telling me, and I'll always be on your side.")
+    : (young ? "I love you. You did nothing wrong. I'm going to help."
+      : teen ? "I'm on your side. Whatever is going on, it's not your fault, and you don't have to handle it alone. You don't have to tell me everything right now. I'm here when you're ready."
+      : "I'm on your side, always. Whatever happened is not your fault, and you are not in trouble. We'll figure it out together.");
+  const reframe = prevent
+    ? "If someone is ever unkind to you, that says something about them. It doesn't say anything about you."
+    : (young ? "When someone is unkind, that's a choice they made. It's not about you."
+      : "What someone does to you tells you about them. It doesn't tell you who you are.");
+  const why = prevent
+    ? "Kids often stay quiet because they're afraid of getting in trouble or upsetting their parent. Saying this ahead of time answers both worries before they ever have to ask."
+    : "Kids who are hurting usually wonder two things first: \"Am I in trouble?\" and \"Is my parent upset with me?\" These words answer both, so they can breathe and start to talk.";
   return {
     title: "You asked what to say. Here it is.",
     lead: "You don't have to sound like an expert. Calm and simple works better than clever. If you only say one thing, say this:",
     quote,
     reframeLead: "Then, to help them see it a different way:",
     reframe,
-    why: "Kids who are hurting usually wonder two things first: \"Am I in trouble?\" and \"Is my parent upset with me?\" These words answer both, so they can breathe and start to talk.",
+    why,
     teaser: "The Bullyproof Parent Playbook will give you words like these matched to your child's age, your child's name, and exactly what happened, so you're never left wondering what to say."
   };
 }
@@ -1256,7 +1293,7 @@ async function generatePDF() {
 
   if (openingValidation()) body(openingValidation(), { color: [74, 109, 147] });
 
-  heading("What's happening:");
+  heading(isPreventive() ? "Where you're starting:" : "What's happening:");
   body(deriveSummary());
 
   if (focusLine()) body(focusLine(), { italic: true });

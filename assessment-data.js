@@ -186,7 +186,7 @@ const QUESTIONS = [
   {
     id: "q10",
     preventTitle: "Have you connected with anyone at school yet?",
-    preventExtra: ["No — I haven't reached out yet because I'm all about prevention here!"],
+    preventExtra: ["No — I haven't reached out yet because I'm all about prevention here"],
     icon: ICONS.q10,
     title: "Have you talked to anyone at school about this yet?",
     sub: "Teachers, counselors, principal — anyone in a school role.",

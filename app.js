@@ -934,6 +934,13 @@ function topicLabel() {
 // line below starts appearing automatically too.
 const AMAZON_ASSOCIATE_TAG = "bullyproof20-20";
 
+// Direct Amazon product page (ASIN) — clean link, no search-session tracking.
+// Carries the Associate tag automatically whenever one is configured.
+function amazonProductUrl(asin, slug) {
+  const base = `https://www.amazon.com/${slug}/dp/${asin}`;
+  return AMAZON_ASSOCIATE_TAG ? `${base}?tag=${encodeURIComponent(AMAZON_ASSOCIATE_TAG)}` : base;
+}
+
 function bookSearchUrl(title, author) {
   const base = `https://www.amazon.com/s?k=${encodeURIComponent(title + " " + author)}`;
   return AMAZON_ASSOCIATE_TAG ? `${base}&tag=${encodeURIComponent(AMAZON_ASSOCIATE_TAG)}` : base;
@@ -1026,8 +1033,8 @@ async function fetchImageAsDataUrl(url) {
 // SUNBEAM_SET_URL is still a placeholder — swap for the real bundle page
 // on Bullyproof.Support the moment it's live ("soon").
 const SUNBEAM_SET_URL = "https://www.bullyproof.support";
-const SUNBEAM_FULLCOLOR_AMAZON_URL = bookSearchUrl("The Adventures of the True Sunbeam", "Mark Olmstead");
-const SUNBEAM_COLORING_AMAZON_URL = bookSearchUrl("The Adventures of the True Sunbeam coloring book", "Mark Olmstead");
+const SUNBEAM_FULLCOLOR_AMAZON_URL = amazonProductUrl("0999371800", "Adventures-True-Sunbeam-Family-Keepsake");
+const SUNBEAM_COLORING_AMAZON_URL = amazonProductUrl("1616113324", "Adventures-True-Sunbeam-Keepsake-Coloring");
 
 function assetUrl(name) {
   return `${window.location.origin}/assets/${name}`;

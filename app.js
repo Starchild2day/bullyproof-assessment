@@ -564,12 +564,14 @@ function buildEmailHtml() {
           <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
           <table role="presentation" style="width:100%;margin-top:18px;border-top:1px solid #E1E4EA;padding-top:20px;"><tr>
             <td style="text-align:center;width:33%;vertical-align:bottom;">
-              <img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="80" style="border-radius:4px;display:block;margin:0 auto 8px;">
-              <span style="color:${muted};font-size:11.5px;">Full-color book</span>
+              <a href="${sunbeamResource().animatedCoverUrl}" style="text-decoration:none;border:0;"><img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="80" border="0" style="border-radius:4px;display:block;margin:0 auto 8px;border:0;"></a>
+              <span style="color:${muted};font-size:11.5px;">Full-color book</span><br>
+              <a href="${sunbeamResource().animatedCoverUrl}" style="color:${navy};font-size:11px;text-decoration:underline;">${sunbeamResource().fullColorHint}</a>
             </td>
             <td style="text-align:center;width:33%;vertical-align:bottom;">
-              <img src="${sunbeamResource().coloringImg}" alt="The Adventures of the True Sunbeam Coloring Book" width="80" style="border-radius:4px;display:block;margin:0 auto 8px;">
-              <span style="color:${muted};font-size:11.5px;">Coloring Book version</span>
+              <a href="${sunbeamResource().coloringPagesUrl}" style="text-decoration:none;border:0;"><img src="${sunbeamResource().coloringImg}" alt="The Adventures of the True Sunbeam Coloring Book" width="80" border="0" style="border-radius:4px;display:block;margin:0 auto 8px;border:0;"></a>
+              <span style="color:${muted};font-size:11.5px;">Coloring Book version</span><br>
+              <a href="${sunbeamResource().coloringPagesUrl}" style="color:${navy};font-size:11px;text-decoration:underline;">${sunbeamResource().coloringHint}</a>
             </td>
             <td style="text-align:center;width:34%;vertical-align:bottom;">
               <img src="${sunbeamResource().rayImg}" alt="Ray the plush toy" width="65" style="display:block;margin:0 auto 8px;">
@@ -1122,6 +1124,10 @@ Which means every bedtime is also an opportunity — a nightly chance to interru
     closeupCaption: `It only takes a few minutes: naming one good moment from the day, and letting that be the last thing on their mind before sleep. Do it most nights, and something happens beneath the surface — confidence builds, worry loosens its grip, and it happens so gradually your child may never notice it's working.`,
     setUrl: SUNBEAM_SET_URL,
     bothBooksUrl: amazonBothBooksUrl(),
+    animatedCoverUrl: assetUrl("sunbeam-cover-animated-full.gif"),
+    coloringPagesUrl: assetUrl("true-sunbeam-coloring-pages.pdf"),
+    fullColorHint: "See it animated",
+    coloringHint: "Print free coloring pages",
     rayPreorderUrl: RAY_PREORDER_URL,
     rayPreorderLabel: RAY_PREORDER_LABEL,
     rayPreorderNote: RAY_PREORDER_NOTE,
@@ -1488,6 +1494,11 @@ async function generatePDF() {
     const BOOK_SIZE = 45, RAY_H = 60, RAY_W = 37;
     ensureRoom(RAY_H + 12);
     const rowBaseline = y + RAY_H;
+    const hintLink = (label, x, url) => {
+      doc.setFontSize(8.5); doc.setFont(undefined, "normal"); doc.setTextColor(27, 42, 74);
+      doc.textWithLink(label, x, rowBaseline + 11, { url });
+      doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.2); doc.line(x, rowBaseline + 12, x + doc.getTextWidth(label), rowBaseline + 12);
+    };
     const [fullColorImg, coloringImg, rayImg] = await Promise.all([
       fetchImageAsDataUrl(sunbeam.fullColorImg),
       fetchImageAsDataUrl(sunbeam.coloringImg),
@@ -1498,12 +1509,16 @@ async function generatePDF() {
       try { doc.addImage(fullColorImg, "JPEG", ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
       doc.setFontSize(9); doc.setTextColor(90, 100, 120);
       doc.text("Full-color book", ix, rowBaseline + 6);
+      doc.link(ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.animatedCoverUrl });
+      hintLink(sunbeam.fullColorHint, ix, sunbeam.animatedCoverUrl);
       ix += BOOK_SIZE + 10;
     }
     if (coloringImg) {
       try { doc.addImage(coloringImg, "JPEG", ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
       doc.setFontSize(9); doc.setTextColor(90, 100, 120);
       doc.text("Coloring Book version", ix, rowBaseline + 6);
+      doc.link(ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.coloringPagesUrl });
+      hintLink(sunbeam.coloringHint, ix, sunbeam.coloringPagesUrl);
       ix += BOOK_SIZE + 10;
     }
     if (rayImg) {

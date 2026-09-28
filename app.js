@@ -649,21 +649,28 @@ function buildEmailHtml() {
   if (sunbeamResource()) {
     sections.push(`
     ${sectionHeader("A nightly opportunity")}
-      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0;overflow:hidden;"><tr><td style="padding:22px 24px 4px;">
+      <table role="presentation" style="width:100%;background:#FFFBF3;border:1px solid #EADFC6;border-top:4px solid ${gold};border-radius:12px;margin:0;overflow:hidden;"><tr><td style="padding:28px 26px 26px;">
         ${sunbeamResource().introCaption.split("\n\n").map((para, i) => {
+          if (i === 0) return `<p style="color:${navyDeep};font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1.6;margin:0 0 18px;">${para}</p>`;
           if (i === 1) {
-            return `<p style="color:${text};font-size:15px;line-height:1.7;margin:0 0 16px;">${para}</p>
-              <table role="presentation" style="width:100%;margin:0 0 18px;"><tr><td style="border-left:3px solid ${gold};padding:2px 0 2px 16px;"><p style="color:${navyDeep};font-size:17px;font-weight:700;line-height:1.5;margin:0;">${sunbeamResource().pullQuote}</p></td></tr></table>`;
+            return `<p style="color:${text};font-size:15.5px;line-height:1.75;margin:0 0 18px;">${para}</p>
+              <table role="presentation" style="width:100%;margin:0 0 22px;"><tr><td style="border-left:4px solid ${gold};padding:6px 0 6px 18px;"><p style="color:${navyDeep};font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:21px;font-weight:700;line-height:1.45;margin:0;">${sunbeamResource().pullQuote}</p></td></tr></table>`;
           }
-          return `<p style="color:${text};font-size:15px;line-height:1.7;margin:0 0 18px;">${para}</p>`;
+          return `<p style="color:${text};font-size:15.5px;line-height:1.75;margin:0 0 18px;">${para}</p>`;
         }).join("")}
-        <p style="color:${navyDeep};font-size:12.5px;font-weight:700;letter-spacing:0.02em;margin:0 0 8px;">Start collecting your child's Shining Moments:</p>
-        <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:6px;display:block;max-width:100%;">
-        <table role="presentation" style="width:100%;background:#EEF2F7;border-radius:8px;margin:16px 0 24px;"><tr><td style="padding:16px 18px;">
-          <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 6px;text-transform:uppercase;">How it works</p>
-          <p style="color:${navyDeep};font-size:14px;line-height:1.6;margin:0;">${sunbeamResource().closeupCaption}</p>
+        <p style="color:#A87C2A;font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;text-align:center;margin:26px 0 12px;">Start collecting your child's Shining Moments</p>
+        <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:8px;display:block;max-width:100%;">
+        <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #EADFC6;border-radius:8px;margin:16px 0 24px;"><tr><td style="padding:16px 18px;">
+          <p style="color:#A87C2A;font-size:11px;font-weight:800;letter-spacing:0.12em;margin:0 0 6px;text-transform:uppercase;">How it works</p>
+          <p style="color:${navyDeep};font-size:15px;line-height:1.65;margin:0;">${sunbeamResource().closeupCaption}</p>
         </td></tr></table>
-        <p style="color:${muted};font-size:13.5px;font-style:italic;margin:0 0 20px;">You'll find these pages waiting in the back of the award-winning children's book — The Adventures of the True Sunbeam.</p>
+        <table role="presentation" style="width:100%;background:${navyDeep};border-radius:10px;"><tr><td style="padding:30px 22px 32px;text-align:center;">
+          <table role="presentation" style="margin:0 auto 16px;"><tr><td style="width:44px;border-top:2px solid ${gold};font-size:0;line-height:0;">&nbsp;</td></tr></table>
+          <p style="color:#DCE3F2;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:16px;line-height:1.55;margin:0 0 14px;">You'll find these pages waiting in the back of the award-winning children's book</p>
+          <p style="color:#ffffff;font-family:Georgia,'Times New Roman',serif;font-size:18px;letter-spacing:0.04em;margin:0 0 2px;">The Adventures of the</p>
+          <p style="color:#E3B85A;font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:700;letter-spacing:0.03em;line-height:1.15;margin:0;">True Sunbeam</p>
+          <table role="presentation" style="margin:16px auto 0;"><tr><td style="width:44px;border-top:2px solid ${gold};font-size:0;line-height:0;">&nbsp;</td></tr></table>
+        </td></tr></table>
       </td></tr></table>
     `);
   }
@@ -674,10 +681,8 @@ function buildEmailHtml() {
       <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:10px 10px 0;">
         <img src="${sunbeamResource().heroImg}" alt="A child writing in the Shining Moments pages with Ray" width="100%" style="display:block;max-width:100%;border-radius:6px;">
         <div style="padding:18px 10px 20px;">
-          <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 10px;text-transform:uppercase;">Award-winning children's book</p>
           <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="260" style="display:block;margin:0 0 14px;max-width:100%;">
-          <p style="color:${text};font-size:15px;font-weight:700;margin:14px 0 6px;">The Adventures of the True Sunbeam</p>
-          <p style="color:${muted};font-size:13.5px;margin:0 0 4px;">${sunbeamResource().text}</p>
+          <p style="color:${navyDeep};font-size:15px;line-height:1.7;margin:0 0 4px;">${sunbeamResource().text.replace(/"(What happened today[^"]*)"/, `<span style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:700;color:#8A6420;">&ldquo;$1&rdquo;</span>`)}</p>
           <table role="presentation" style="width:100%;margin-top:18px;border-top:1px solid #E1E4EA;padding-top:20px;"><tr>
             <td style="text-align:center;width:33%;vertical-align:bottom;">
               <a href="${sunbeamResource().animatedCoverUrl}" style="text-decoration:none;border:0;"><img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="80" border="0" style="border-radius:4px;display:block;margin:0 auto 8px;border:0;"></a>
@@ -998,7 +1003,7 @@ function wordsAnswer() {
     reframeLead: "Then, to help them see it a different way:",
     reframe,
     why,
-    teaser: "The Bullyproof Parent Playbook will give you words like these matched to your child's age, your child's name, and exactly what happened, so you're never left wondering what to say."
+    teaser: "The Bullyproof Parent Playbook will give you words like these matched to your child's age, personality, and exactly what happened, so you're never left wondering what to say."
   };
 }
 
@@ -1352,7 +1357,7 @@ const MEMBERSHIP_BENEFITS = [
 
 // Wording that appears in BOTH the email and the PDF lives here, once.
 const WHAT_COMES_NEXT_INTRO = "What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of support parents find most helpful on a consistent basis:";
-const PLAYBOOK_BLURB = "Being built to give you practical, personalized guidance based on your child's name, age, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.";
+const PLAYBOOK_BLURB = "Being built to give you practical, personalized guidance based on your child's age, personality, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.";
 const PLAYBOOK_SOON = "Coming soon — and Bullyproof.Support members will be first in line.";
 
 function playbookBoxImageUrl() {
@@ -1587,53 +1592,74 @@ async function generatePDF() {
 
     const introParas = sunbeam.introCaption.split("\n\n");
     for (let pi = 0; pi < introParas.length; pi++) {
+      if (pi === 0) {
+        // lead paragraph, in the same serif voice as the email
+        doc.setFont("times", "normal"); doc.setFontSize(14); doc.setTextColor(16, 27, 51);
+        const lead = doc.splitTextToSize(introParas[pi], 180);
+        ensureRoom(lead.length * 6.4 + 6);
+        doc.text(lead, 15, y, { lineHeightFactor: 1.35 }); y += lead.length * 6.4 + 6;
+        doc.setFont("helvetica", "normal");
+        continue;
+      }
       body(introParas[pi], { color: [31, 36, 48] });
       if (pi === 1) {
-        const quoteText = sunbeam.pullQuote;
-        doc.setFontSize(13); doc.setFont(undefined, "bold");
-        const quoteLines = doc.splitTextToSize(quoteText, 160);
-        ensureRoom(quoteLines.length * 7 + 10);
-        const qBarTopY = y;
+        doc.setFont("times", "bolditalic"); doc.setFontSize(15.5);
+        const quoteLines = doc.splitTextToSize(sunbeam.pullQuote, 162);
+        ensureRoom(quoteLines.length * 7.2 + 12);
+        const qBarTopY = y - 2;
         doc.setTextColor(16, 27, 51);
-        doc.text(quoteLines, 24, y + 4);
-        const qBarHeight = quoteLines.length * 7 + 4;
+        doc.text(quoteLines, 23, y + 4, { lineHeightFactor: 1.3 });
+        const qBarHeight = quoteLines.length * 7.2 + 4;
         doc.setFillColor(200, 155, 60);
-        doc.rect(15, qBarTopY, 1.2, qBarHeight, "F");
-        doc.setFont(undefined, "normal");
+        doc.rect(15, qBarTopY, 1.6, qBarHeight, "F");
+        doc.setFont("helvetica", "normal");
         y = qBarTopY + qBarHeight + 10;
       }
     }
 
-    doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
-    ensureRoom(70); // label + spread image travel together, never split across pages
-    doc.text("Start collecting your child's Shining Moments:", 15, y);
+    ensureRoom(72); // label + spread image travel together, never split across pages
+    doc.setFontSize(9.5); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
+    doc.setCharSpace(0.6);
+    doc.text("START COLLECTING YOUR CHILD'S SHINING MOMENTS", 105, y, { align: "center" });
+    doc.setCharSpace(0);
     doc.setFont(undefined, "normal");
     y += 6;
 
-    ensureRoom(58);
     const introSpreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
     if (introSpreadImg) {
       try { doc.addImage(introSpreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
       y += 58;
     }
 
-    // "How it works" as a tinted card, not italic text tacked below the
-    // image — gives it the same visual weight as an intentional design
-    // element rather than a caption.
-    doc.setFontSize(10);
-    const howItWorksLines = doc.splitTextToSize(sunbeam.closeupCaption, 172);
-    const cardH = howItWorksLines.length * 5.5 + 16;
+    doc.setFontSize(10.5);
+    const howItWorksLines = doc.splitTextToSize(sunbeam.closeupCaption, 170);
+    const cardH = howItWorksLines.length * 5.6 + 13;
     ensureRoom(cardH + 8);
-    doc.setFillColor(238, 242, 247);
-    doc.roundedRect(15, y, 180, cardH, 2, 2, "F");
-    doc.setFontSize(9); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
+    doc.setFillColor(255, 251, 243); doc.setDrawColor(234, 223, 198); doc.setLineWidth(0.3);
+    doc.roundedRect(15, y, 180, cardH, 2, 2, "FD");
+    doc.setFontSize(9); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
     doc.text("HOW IT WORKS", 21, y + 9);
     doc.setFont(undefined, "normal");
-    doc.setFontSize(10); doc.setTextColor(16, 27, 51);
+    doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
     doc.text(howItWorksLines, 21, y + 16);
-    y += cardH + 10;
+    y += cardH + 8;
 
-    body("You'll find these pages waiting in the back of the award-winning children's book — The Adventures of the True Sunbeam.", { color: [90, 100, 120], italic: true });
+    // The reveal: a centered navy band with the book title set as a title lockup.
+    const bandH = 50;
+    ensureRoom(bandH + 6);
+    doc.setFillColor(16, 27, 51);
+    doc.roundedRect(15, y, 180, bandH, 3, 3, "F");
+    doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.6);
+    doc.line(99, y + 7, 111, y + 7);
+    doc.setFont("times", "italic"); doc.setFontSize(12); doc.setTextColor(220, 227, 242);
+    doc.text("You'll find these pages waiting in the back of the award-winning children's book", 105, y + 15, { align: "center" });
+    doc.setFont("times", "normal"); doc.setFontSize(13); doc.setTextColor(255, 255, 255);
+    doc.text("The Adventures of the", 105, y + 24, { align: "center" });
+    doc.setFont("times", "bold"); doc.setFontSize(24); doc.setTextColor(227, 184, 90);
+    doc.text("True Sunbeam", 105, y + 35, { align: "center" });
+    doc.line(99, y + 42, 111, y + 42);
+    doc.setFont("helvetica", "normal");
+    y += bandH + 10;
   }
 
   heading("Recommended reading:");
@@ -1658,13 +1684,26 @@ async function generatePDF() {
       y = smY + 39;
     }
 
-    ensureRoom(16);
-    doc.setFontSize(12.5); doc.setFont(undefined, "bold"); doc.setTextColor(31, 36, 48);
-    doc.text("The Adventures of the True Sunbeam", 15, y + 2);
-    doc.setFont(undefined, "normal");
-    y += 10;
+    y += 2;
 
-    body(sunbeam.text, { color: [74, 109, 147] });
+    {
+      // Same treatment as the email: navy body text, prompting question in serif italic gold.
+      const parts = sunbeam.text.split(/"(What happened today[^"]*)"/);
+      const words = [];
+      parts.forEach((part, i) => part.split(/\s+/).filter(Boolean).forEach(w => words.push({ w: i === 1 ? w : w, q: i === 1 })));
+      if (words.length) { const f = words.find(x => x.q); if (f) f.w = "\u201C" + f.w; const l = [...words].reverse().find(x => x.q); if (l) l.w = l.w + "\u201D"; }
+      const fontFor = (q) => { if (q) { doc.setFont("times", "bolditalic"); doc.setFontSize(12); doc.setTextColor(138, 100, 32); } else { doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(16, 27, 51); } };
+      const lineH = 6.2, maxX = 195;
+      let x = 15; ensureRoom(lineH * 2);
+      words.forEach(({ w, q }) => {
+        fontFor(q);
+        const ww = doc.getTextWidth(w), sp = doc.getTextWidth(" ");
+        if (x > 15 && x + ww > maxX) { x = 15; y += lineH; ensureRoom(lineH); }
+        doc.text(w, x, y); x += ww + sp;
+      });
+      doc.setFont("helvetica", "normal");
+      y += lineH + 6;
+    }
 
     // Proportional sizing based on real-world dimensions: books are 9in
     // square, Ray is 12in tall — at 5mm/in that's 45mm for books and

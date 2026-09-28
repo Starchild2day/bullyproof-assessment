@@ -1038,10 +1038,10 @@ function selfReflectionNote() {
 function stepOpening() {
   const status = communicationStatus();
   if (status === "clear") {
-    return "Write down what your child told you. Use their own words. Add the date. Keep this note — you can show it to a counselor or the school later.";
+    return "Write it down today. Use your child's own words, and add the date. Keep this note — you can show it to a counselor or the school later. StopBullying.gov, the U.S. government's bullying resource, recommends keeping exactly this kind of record: the date, what happened, and who was involved.";
   }
   if (status === "hints") {
-    return `Talk about what they already shared. Try saying: "You told me something was bothering you. I've been thinking about it. I'm here if you want to say more." Don't push for the whole story yet — let them go at their own pace.`;
+    return `Keep the door open. Try saying: "You told me something was bothering you. I've been thinking about it. I'm here if you want to say more." Don't push for the whole story yet — let them go at their own pace. That patience matters: a U.S. Department of Education study found 64% of bullied kids never tell an adult at all, so a child who has hinted is already trusting you more than most.`;
   }
   if (status === "behavior-only") {
     const named = (state.answers.q6 || []).filter(b => b !== "No noticeable changes");
@@ -1057,32 +1057,32 @@ function stepOpening() {
       "Avoiding certain places, people, or activities they used to like": "you've been staying away from some places or people you used to like being around"
     };
     const behavior = named.length ? (secondPerson[named[0]] || named[0].toLowerCase()) : "a little different lately";
-    return `Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: "Want to build something with me?" or "Want to go for a walk?" — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face.`;
+    return `Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: "Want to build something with me?" or "Want to go for a walk?" — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: a U.S. Department of Education study found 64% of bullied kids never tell an adult.`;
   }
   if (status === "no-signals") {
-    return "Nothing has been said yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you.";
+    return "Start with easy time together. Nothing has been said yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — and ordinary time like this is how that trust gets built.";
   }
-  return "Find an easy, low-pressure time to check in with your child this week. Talking side by side, not face to face, often works better than a direct sit-down.";
+  return "Check in, side by side. Find an easy, low-pressure time to check in with your child this week. Talking side by side, not face to face, often works better than a direct sit-down. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — these small check-ins are how you stay that adult.";
 }
 
 function stepSchool() {
   const map = {
-    "helping": "Check in with the school contact again this week. Ask what they're seeing, and if there's a follow-up plan.",
-    "no-change": `Nothing has changed yet, so ask for a new meeting. Get a clear plan with a real date — not just "we'll keep an eye on it."`,
-    "dismissed": "If the school said this isn't bullying, you can still push back. Ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes.",
-    "not-reached-out": `Contact the school counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in."`,
-    "child-doesnt-want": "Ask your child what they're afraid will happen if you talk to the school. Their answer will help you decide how — or whether — to bring the school in without it feeling like a betrayal."
+    "helping": "Keep the school in the loop. Check in with the school contact again this week. Ask what they're seeing, and if there's a follow-up plan. It's worth the effort: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that when schools take real action, bullying drops by about 20%.",
+    "no-change": `Ask for a real plan. Nothing has changed yet, so ask for a new meeting. Get a clear plan with a real date — not just "we'll keep an eye on it." Research is on your side: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that meetings with parents were one of the parts linked to the biggest drops in bullying.`,
+    "dismissed": "You can still push back. If the school said this isn't bullying, ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes. It's worth pressing for: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that when schools take real action, bullying drops by about 20%.",
+    "not-reached-out": `Loop in the school counselor. Contact the counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in." Parents and schools working together makes a real difference: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that meetings with parents were one of the parts linked to the biggest drops in bullying.`,
+    "child-doesnt-want": "Ask what they're afraid of. Ask your child what they're afraid will happen if you talk to the school. Their answer will help you decide how — or whether — to bring the school in without it feeling like a betrayal."
   };
-  return map[schoolStatus()] || "Reach out to a counselor or trusted adult at school this week, just to get another set of eyes on it.";
+  return map[schoolStatus()] || "Get another set of eyes on it. Reach out to a counselor or trusted adult at school this week. Adults at school often see things you can't — especially in the busy, crowded parts of the day.";
 }
 
 function stepContext() {
   const weight = onlineWeight();
   if (weight === "online" || weight === "both") {
-    return "Save screenshots and dates before anything gets deleted. Sit down with your child and look at the app's report and block settings together — as a team, not as spying.";
+    return `Save the evidence first. Take screenshots and note the dates before anything gets deleted. Then sit down with your child and look at the app's report and block settings together — as a team, not as spying. That's exactly the order ${communicationStatus() === "clear" ? "StopBullying.gov also" : "StopBullying.gov, the U.S. government's bullying resource,"} recommends: keep the evidence, then report and block.`;
   }
   if (weight === "in-person") {
-    return "Ask your child if certain times or places feel worse — recess, lunch, the bus. This helps the school watch the right spots instead of everywhere.";
+    return "Find the hot spots. Ask your child if certain times or places feel worse — recess, lunch, the bus. This helps the school watch the right spots instead of everywhere. U.S. Department of Education surveys find bullying happens most in hallways, classrooms, and the cafeteria — busy places where adults can't see everything at once.";
   }
   return "Keep a short daily note. Just one line, no pressure — write down your child's mood and anything small they say. Patterns often show up after a week or two.";
 }
@@ -1369,14 +1369,17 @@ function playbookBoxImageUrl() {
 const FIND_SUPPORT_URL = "https://www.psychologytoday.com/us/therapists";
 
 function whyThisMattersNote() {
+  if (isPreventive()) {
+    return "Prevention works. A major review of school-wide anti-bullying programs (Ttofi & Farrington, 2011) found they cut bullying by about 20% — and the parts that brought parents in were linked to some of the biggest drops. What you do at home is part of that.";
+  }
   const status = communicationStatus();
   if (status === "behavior-only" || status === "no-signals") {
-    return "Here's something worth knowing: kids who feel confident talking to a trusted adult are less likely to be targeted in the first place. That's a skill that can be built at any age. If it feels like a gap right now, that's not a failure on your part — it's simply the next thing to work on together.";
+    return "Here's something worth knowing: a child's relationships are one of their strongest protections. Researchers found that having even one close friend can stop a small problem from growing into a bigger one (Hodges and colleagues, 1999). Confidence and friendships can be built at any age. If it feels like a gap right now, that's not a failure on your part — it's simply the next thing to work on together.";
   }
   if (onlineWeight() === "online") {
-    return "One thing that often helps: kids who know how to manage their online presence, and who to tell when something feels wrong, are far more resilient. That's a learned skill, not something they're born knowing.";
+    return "You're far from alone: Pew Research Center found that nearly half of U.S. teens (46%) have been bullied or harassed online. Knowing how to handle it — what to save, what to block, and who to tell — is a learned skill, not something kids are born knowing. That means it can be taught.";
   }
-  return "Confidence and social skills can be built at any age. Working on that together is often the biggest thing a parent can do — even more than any single talk with the school.";
+  return "Confidence and social skills can be built at any age — and they matter. Researchers found that having even one close friend can stop a small problem from growing into a bigger one (Hodges and colleagues, 1999). Working on that together is one of the most powerful things a parent can do.";
 }
 
 function furtherStepsTeaser() {
@@ -1472,7 +1475,7 @@ function preventionWatchForNote() {
       "Sleep or appetite: trouble falling asleep, nightmares, or a real change in how much they're eating",
       "Behavior: pulling back from things they used to enjoy, seeming more irritable or tearful than usual, or suddenly not wanting to go to school"
     ],
-    outro: "None of these mean something is definitely wrong — kids go through phases for all kinds of reasons. They're just the kind of thing worth a gentle check-in if you notice a few of them together."
+    outro: "These are the same warning signs StopBullying.gov, the U.S. government's bullying resource, shares with parents. None of them mean something is definitely wrong — kids go through phases for all kinds of reasons. They're just the kind of thing worth a gentle check-in if you notice a few of them together."
   };
 }
 

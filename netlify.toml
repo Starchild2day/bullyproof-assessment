@@ -1,0 +1,25 @@
+# Netlify settings for the Bullyproof assessment tool.
+
+[build]
+  # Rebuilds the server-side copy of the plan builder from the site's own files on every deploy,
+  # so the email the server sends can never drift out of date with the on-screen plan and the PDF.
+  command = "node scripts/build-plan-bundle.js"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# The landing-page draft lives in /landing so Coen can copy it to bullyproof.guide/assessment/.
+# Keep this staging copy out of search engines.
+[[headers]]
+  for = "/landing/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+
+# Basic browser-safety headers on every page.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

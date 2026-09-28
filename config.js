@@ -34,5 +34,13 @@ const CONFIG = {
   SITE_URL: "https://bullyproof.guide",
 
   // --- 5. WHERE "RESERVE MY TRIAL" EMAIL LINKS SHOULD GO ---
-  CONTACT_EMAIL: "mark@bullyproof.guide"
+  CONTACT_EMAIL: "mark@bullyproof.guide",
+
+  // --- 6. ANTI-SPAM CHECK (optional, free) — Cloudflare Turnstile SITE key ---
+  // Create a free Turnstile widget at dash.cloudflare.com, paste the SITE key here,
+  // and put the SECRET key in Netlify as TURNSTILE_SECRET_KEY. Blank = check is off.
+  TURNSTILE_SITE_KEY: "",
+
+  // --- 7. MAILING ADDRESS shown at the bottom of every email (good practice / required for marketing email) ---
+  MAILING_ADDRESS: ""
 };

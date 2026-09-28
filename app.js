@@ -218,6 +218,8 @@ function renderText(q) {
 }
 
 function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
+// Free-text answers (Q4, Q12) come from the parent's keyboard — always escape them before they go inside email HTML.
+function escapeHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
 function banner(svgInner, opts) {
   opts = opts || {};
@@ -331,10 +333,17 @@ function renderResults() {
       <h2 class="question">Where should we send your action plan?</h2>
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
+      <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this empty<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
+      <div class="checkbox-row" style="margin-top:14px;">
+        <input type="checkbox" id="marketingConsent">
+        <label for="marketingConsent">Yes, please send me the invitation to try the Bullyproof Parent Playbook, plus occasional updates. I can unsubscribe any time.</label>
+      </div>
+      <div id="turnstileBox" style="margin-top:12px;"></div>
       <div class="nav-row">
         <button class="ghost" id="backToQ">Back</button>
         <button class="primary" id="getPlanBtn">Get My Action Plan</button>
       </div>
+      <p id="planStatus" role="status" aria-live="polite" style="display:none;margin:12px 0 0;font-size:14.5px;line-height:1.5;"></p>
       <div class="results-summary" style="margin-top:18px;">
         <p style="margin:0;font-size:14.5px;">Included in your complimentary Action Plan:</p>
         <ul style="margin:6px 0 0;padding-left:20px;font-size:14px;">
@@ -351,15 +360,25 @@ function renderResults() {
   `;
   document.getElementById("backToQ").addEventListener("click", () => { state.screen = "question"; state.qIndex = visibleQuestions().length - 1; render(); });
   wireSafetyBanner();
+  initTurnstile();
   document.getElementById("getPlanBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("getPlanBtn");
     const emailInput = document.getElementById("finalEmail");
     const email = emailInput.value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailInput.style.borderColor = "#C53030"; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailInput.style.borderColor = "#C53030"; setPlanStatus("Please enter a valid email address.", "error"); return; }
+    if (CONFIG.TURNSTILE_SITE_KEY && !state.turnstileToken) { setPlanStatus("Please complete the quick check above so we know you're a person.", "error"); return; }
+    emailInput.style.borderColor = "";
     state.email = email;
+    state.marketingConsent = !!document.getElementById("marketingConsent").checked;
+    state.honeypot = document.getElementById("hpWebsite").value;
+    btn.disabled = true; btn.textContent = "Sending…";
+    setPlanStatus("Sending your plan…", "info");
     await submitToFormspree();
-    await sendPlanByEmail();
-    await generatePDF();
-    track("pdf_downloaded");
+    const sent = await sendPlanByEmail();
+    let pdfOk = true;
+    try { await generatePDF(); track("pdf_downloaded"); } catch (err) { pdfOk = false; console.warn("PDF creation failed:", err); }
+    btn.disabled = false; btn.textContent = sent.ok ? "Send it again" : "Try again";
+    setPlanStatus(planStatusMessage(sent, pdfOk, email), sent.ok ? "success" : "error");
   });
 }
 
@@ -465,14 +484,14 @@ function buildEmailHtml() {
   }
 
   if (state.answers.q4) {
-    sections.push(`${sectionHeader("You told us")}<p style="color:${text};font-size:15.5px;font-style:italic;margin:0;">"${state.answers.q4}"</p>`);
+    sections.push(`${sectionHeader("You told us")}<p style="color:${text};font-size:15.5px;font-style:italic;margin:0;">"${escapeHtml(state.answers.q4)}"</p>`);
   }
   if (openingValidation()) {
     sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${openingValidation()}</p>`);
   }
   sections.push(`${sectionHeader(isPreventive() ? "Where you're starting" : "What's happening")}<p style="color:${text};font-size:15px;margin:0;">${deriveSummary()}</p>`);
   if (focusLine()) {
-    sections.push(`<p style="color:${text};font-size:14.5px;font-style:italic;margin:10px 0 0;">${focusLine()}</p>`);
+    sections.push(`<p style="color:${text};font-size:14.5px;font-style:italic;margin:10px 0 0;">${escapeHtml(focusLine())}</p>`);
   }
   if (wordsAnswer()) {
     const w = wordsAnswer();
@@ -646,6 +665,17 @@ function buildEmailHtml() {
     </p>
   `);
 
+  const footContact = (typeof CONFIG !== "undefined" && CONFIG.CONTACT_EMAIL) || "";
+  const footAddress = (typeof CONFIG !== "undefined" && CONFIG.MAILING_ADDRESS) || "";
+  sections.push(`
+    <p style="color:#8896B8;font-size:12px;line-height:1.6;margin:10px 0 0;">
+      You're receiving this email because this address was entered at Bullyproof.Guide to get an action plan.
+      ${state.marketingConsent ? `You also asked to hear about the Bullyproof Parent Playbook and occasional updates. To stop them, just reply with the word "unsubscribe".` : ""}
+      ${footContact ? `Want your answers deleted? <a href="mailto:${escapeAttr(footContact)}?subject=Delete%20my%20data" style="color:#8896B8;">Delete my data</a>.` : ""}
+      ${footAddress ? `<br>${escapeHtml(footAddress)}` : ""}
+    </p>
+  `);
+
   return `
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;">
       <table role="presentation" style="width:100%;background-color:${navyDeep};border-bottom:3px solid ${gold};"><tr><td style="padding:36px 30px 32px;text-align:center;">
@@ -660,19 +690,58 @@ function buildEmailHtml() {
   `;
 }
 
+function setPlanStatus(msg, kind) {
+  const el = document.getElementById("planStatus"); if (!el) return;
+  el.style.display = "block"; el.textContent = msg;   // textContent, never innerHTML: the message contains the parent's email address
+  el.style.color = kind === "success" ? "#276749" : kind === "error" ? "#C53030" : "#4A5568";
+}
+
+function planStatusMessage(sent, pdfOk, email) {
+  if (sent.ok) {
+    return pdfOk
+      ? `Your plan is on its way to ${email}. It usually arrives within a minute. If you don't see it, check your spam or promotions folder. Your PDF copy also just downloaded.`
+      : `Your plan is on its way to ${email}. We couldn't create the PDF copy this time; tap the button to try again.`;
+  }
+  if (sent.status === 429) return "We're getting a lot of requests right now. Please wait a few minutes and tap the button to try again." + (pdfOk ? " Your PDF copy did download, so you still have your plan." : "");
+  return "We couldn't send the email just now." + (pdfOk ? " Your PDF copy did download, so you still have your plan. You can tap the button to try the email again in a minute." : " Please tap the button to try again in a minute.");
+}
+
+// Optional bot check (Cloudflare Turnstile). Does nothing until CONFIG.TURNSTILE_SITE_KEY is filled in.
+function initTurnstile() {
+  if (!CONFIG.TURNSTILE_SITE_KEY || !document.getElementById("turnstileBox")) return;
+  const mount = () => window.turnstile.render("#turnstileBox", {
+    sitekey: CONFIG.TURNSTILE_SITE_KEY,
+    callback: (token) => { state.turnstileToken = token; },
+    "expired-callback": () => { state.turnstileToken = ""; }
+  });
+  if (window.turnstile) { mount(); return; }
+  const s = document.createElement("script");
+  s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; s.async = true; s.onload = mount;
+  document.head.appendChild(s);
+}
+
+// The browser sends the parent's ANSWERS. The server checks them and builds the email itself from our
+// approved template — so this endpoint can't be used to send arbitrary content from our domain.
 async function sendPlanByEmail() {
   try {
-    await fetch("/.netlify/functions/send-plan", {
+    const res = await fetch("/.netlify/functions/send-plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         to: state.email,
-        subject: state.safetyFlags.length ? "Your Bullyproof.Guide Action Plan (please read)" : "Your Bullyproof.Guide Action Plan",
-        html: buildEmailHtml()
+        answers: state.answers,
+        safetyFlags: state.safetyFlags,
+        marketingConsent: !!state.marketingConsent,
+        website: state.honeypot || "",
+        turnstileToken: state.turnstileToken || ""
       })
     });
+    if (res.ok) { track("plan_email_sent"); return { ok: true, status: res.status }; }
+    console.warn("Email delivery failed with status", res.status);
+    return { ok: false, status: res.status };
   } catch (err) {
-    console.warn("Email delivery failed (non-blocking, PDF download still works):", err);
+    console.warn("Email delivery failed (network):", err);
+    return { ok: false, status: 0 };
   }
 }
 
@@ -692,6 +761,7 @@ async function submitToFormspree() {
         _subject: subject,
         safety_flags: flagged ? state.safetyFlags.join(", ") : "none",
         consent_given: state.consentGiven ? "yes" : "no",
+        marketing_consent: state.marketingConsent ? "yes" : "no",
         safety_resources_acknowledged: state.safetyFlags.length ? (state.safetyAcknowledged ? "yes" : "no") : "n/a",
         summary: buildReadableSummary()
       })

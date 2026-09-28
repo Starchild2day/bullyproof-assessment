@@ -135,8 +135,8 @@ function renderQuestion() {
       ${q.icon ? banner(q.icon, { imageSrc: questionIconUrl(q.id) }) : ""}
       <div class="card-body">
       <div class="card-fixed">
-        <h2 class="question">${q.title}</h2>
-        ${q.sub ? `<p class="sub">${q.sub}</p>` : ""}
+        <h2 class="question">${qTitle(q)}</h2>
+        ${qSub(q) ? `<p class="sub">${qSub(q)}</p>` : ""}
       </div>
       <div class="options-scroll">
         ${bodyHTML}
@@ -189,14 +189,26 @@ function wireSafetyBanner() {
 
 const CHECKMARK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
 
+// Prevention-path wording: a parent who chose "I'm trying to prevent
+// problems before they start" should never be asked questions that
+// assume something is already happening, so questions can carry their own
+// prevention title/subtitle and extra options (listed first for them).
+function qTitle(q) { return (isPreventive() && q.preventTitle) || q.title; }
+function qSub(q) { return (isPreventive() && q.preventSub) || q.sub; }
+function qOptions(q) {
+  if (!isPreventive()) return q.options;
+  const base = q.preventReplace ? q.options.map(o => q.preventReplace[o] || o) : q.options;
+  return q.preventExtra ? [...q.preventExtra, ...base] : base;
+}
+
 function renderChoice(q) {
   const selected = state.answers[q.id];
-  return `<div class="options" role="radiogroup">${q.options.map(opt => `<button type="button" class="option-btn ${selected === opt ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="radio" aria-checked="${selected === opt}"><span class="check">${CHECKMARK_SVG}</span><span>${opt}</span></button>`).join("")}</div>`;
+  return `<div class="options" role="radiogroup">${qOptions(q).map(opt => `<button type="button" class="option-btn ${selected === opt ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="radio" aria-checked="${selected === opt}"><span class="check">${CHECKMARK_SVG}</span><span>${opt}</span></button>`).join("")}</div>`;
 }
 
 function renderMulti(q) {
   const selected = state.answers[q.id] || [];
-  return `<div class="options" role="group">${q.options.map(opt => `<button type="button" class="option-btn multi-opt ${selected.includes(opt) ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="checkbox" aria-checked="${selected.includes(opt)}"><span class="check">${CHECKMARK_SVG}</span><span>${opt}</span></button>`).join("")}</div>`;
+  return `<div class="options" role="group">${qOptions(q).map(opt => `<button type="button" class="option-btn multi-opt ${selected.includes(opt) ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="checkbox" aria-checked="${selected.includes(opt)}"><span class="check">${CHECKMARK_SVG}</span><span>${opt}</span></button>`).join("")}</div>`;
 }
 
 function renderText(q) {
@@ -444,6 +456,20 @@ function buildEmailHtml() {
   if (focusLine()) {
     sections.push(`<p style="color:${text};font-size:14.5px;font-style:italic;margin:10px 0 0;">${focusLine()}</p>`);
   }
+  if (wordsAnswer()) {
+    const w = wordsAnswer();
+    sections.push(`
+      ${sectionHeader(w.title)}
+      <p style="color:${text};font-size:15px;line-height:1.6;margin:0 0 14px;">${w.lead}</p>
+      <table role="presentation" style="width:100%;margin:0 0 16px;"><tr><td style="background:#EEF2F7;border-left:4px solid ${gold};border-radius:6px;padding:16px 18px;"><p style="color:${navyDeep};font-size:18px;font-weight:700;line-height:1.5;margin:0;">“${w.quote}”</p></td></tr></table>
+      <p style="color:${muted};font-size:13px;font-weight:700;margin:0 0 4px;">${w.reframeLead}</p>
+      <p style="color:${text};font-size:15px;font-style:italic;margin:0 0 14px;">“${w.reframe}”</p>
+      <p style="color:${muted};font-size:14px;margin:0 0 10px;"><strong style="color:${navy};">Why it works:</strong> ${w.why}</p>
+      <p style="color:${muted};font-size:13.5px;margin:0;">${w.teaser}</p>`);
+  }
+  if (multiChildNote()) {
+    sections.push(`<p style="color:${text};background:#F9FAFC;border:1px solid #E1E4EA;border-radius:8px;padding:12px 14px;font-size:14.5px;margin:14px 0 0;">${multiChildNote()}</p>`);
+  }
   if (selfReflectionNote()) {
     sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${selfReflectionNote()}</p>`);
   }
@@ -486,12 +512,10 @@ function buildEmailHtml() {
   // consistent card, matching the visual weight the Playbook section
   // already had — previously this was the one major section with no
   // card treatment at all, which made it feel like an afterthought.
-  sections.push(`
-    ${sectionHeader("Recommended reading")}
-    <table role="presentation" style="width:100%;background:#F9FAFC;border:1px solid #E1E4EA;border-radius:12px;"><tr><td style="padding:20px 22px;">
-    ${sunbeamResource() ? `
-      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:26px 24px 4px;">
-        <p style="color:${gold};font-size:11px;font-weight:800;letter-spacing:0.1em;margin:0 0 14px;text-transform:uppercase;">Why this matters</p>
+  if (sunbeamResource()) {
+    sections.push(`
+    ${sectionHeader("The bedtime window")}
+      <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0;overflow:hidden;"><tr><td style="padding:22px 24px 4px;">
         ${sunbeamResource().introCaption.split("\n\n").map((para, i) => {
           if (i === 1) {
             return `<p style="color:${text};font-size:15px;line-height:1.7;margin:0 0 16px;">${para}</p>
@@ -505,8 +529,14 @@ function buildEmailHtml() {
           <p style="color:${navy};font-size:11px;font-weight:800;letter-spacing:0.08em;margin:0 0 6px;text-transform:uppercase;">How it works</p>
           <p style="color:${navyDeep};font-size:14px;line-height:1.6;margin:0;">${sunbeamResource().closeupCaption}</p>
         </td></tr></table>
-        <p style="color:${muted};font-size:13.5px;font-style:italic;margin:0 0 20px;">You'll find these pages waiting in the back of the book —</p>
+        <p style="color:${muted};font-size:13.5px;font-style:italic;margin:0 0 20px;">You'll find these pages ready to use in the back of The Adventures of the True Sunbeam, our first recommendation below.</p>
       </td></tr></table>
+    `);
+  }
+  sections.push(`
+    ${sectionHeader("Recommended reading")}
+    <table role="presentation" style="width:100%;background:#F9FAFC;border:1px solid #E1E4EA;border-radius:12px;"><tr><td style="padding:20px 22px;">
+    ${sunbeamResource() ? `
       <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #E1E4EA;border-radius:10px;margin:0 0 16px;overflow:hidden;"><tr><td style="padding:10px 10px 0;">
         <img src="${sunbeamResource().heroImg}" alt="A child writing in the Shining Moments pages with Ray" width="100%" style="display:block;max-width:100%;border-radius:6px;">
         <div style="padding:18px 10px 20px;">
@@ -685,6 +715,7 @@ function onlineWeight() {
   const inPersonCount = q7.filter(l => l.includes("At school") || l.includes("school bus") || l.includes("after-school") || l.includes("neighborhood")).length;
   if (onlineCount > inPersonCount) return "online";
   if (inPersonCount > 0) return "in-person";
+  if (/online|social media/i.test(state.answers.q2 || "")) return "online";
   return "unclear";
 }
 
@@ -710,13 +741,56 @@ function openingValidation() {
   return "";
 }
 
+// A parent who writes "both kids" (or "my two", "twins", etc.) is telling us
+// more than one child is involved, but this check-in follows one child at a
+// time. Acknowledge that out loud instead of silently treating it as one.
+function mentionsMultipleChildren() {
+  const t = `${state.answers.q4 || ""} ${state.answers.q12 || ""}`.toLowerCase();
+  return /\b(both|two|three|all)\s+(of\s+)?(my\s+|our\s+)?(kids|children|boys|girls|sons|daughters)\b|\bboth\s+of\s+(them|my)\b|\bmy\s+(two|three|2|3)\s+(kids|children|boys|girls)\b|\b(twins|siblings)\b|\bmy\s+(kids|children)\b/.test(t);
+}
+function multiChildNote() {
+  if (!mentionsMultipleChildren()) return null;
+  return "You mentioned more than one child. Each child's situation can look a little different, so this plan is written for one child at a time. Start with the child you're most worried about, then come back and take this check-in again for the other, so their plan fits them, too. When it's more than one, it also helps to talk with each child alone first, so neither one has to speak for the other.";
+}
+
+// When a parent asks for something to say, the plan should hand them
+// actual words — not echo the request and move on to generic advice.
+function askedForWords() {
+  const t = `${state.answers.q12 || ""} ${state.answers.q4 || ""}`.toLowerCase();
+  return /\b(say|saying|tell|telling|words|talk to|talk with|encourage|speak|sound)\b/.test(t);
+}
+function wordsAnswer() {
+  if (state.safetyFlags.length || !askedForWords()) return null;
+  const age = state.answers.q1 || "";
+  const young = age === "Under 5" || age === "5–7";
+  const teen = age === "11–14" || age === "15–18";
+  const quote = young
+    ? "I love you. You did nothing wrong. I'm going to help."
+    : teen
+      ? "I'm on your side. Whatever is going on, it's not your fault, and you don't have to handle it alone. You don't have to tell me everything right now. I'm here when you're ready."
+      : "I'm on your side, always. Whatever happened is not your fault, and you are not in trouble. We'll figure it out together.";
+  const reframe = young
+    ? "When someone is unkind, that's a choice they made. It's not about you."
+    : "What someone does to you tells you about them. It doesn't tell you who you are.";
+  return {
+    title: "You asked what to say. Here it is.",
+    lead: "You don't have to sound like an expert. Calm and simple works better than clever. If you only say one thing, say this:",
+    quote,
+    reframeLead: "Then, to help them see it a different way:",
+    reframe,
+    why: "Kids who are hurting usually wonder two things first: \"Am I in trouble?\" and \"Is my parent upset with me?\" These words answer both, so they can breathe and start to talk.",
+    teaser: "The Bullyproof Parent Playbook will give you words like these matched to your child's age, your child's name, and exactly what happened, so you're never left wondering what to say."
+  };
+}
+
 function focusLine() {
   const q12 = (state.answers.q12 || "").trim();
   if (!q12) return null;
   if (state.safetyFlags.length) {
     return `You told us: "${q12}" — please reach out to the resources above first. Everything below is still here when you're ready.`;
   }
-  return `You told us you want help with: "${q12}" — that's exactly where we start below.`;
+  if (wordsAnswer()) return null;
+  return `You told us what you most want help with: "${q12}" — that's what we kept in mind as we built this plan.`;
 }
 
 // Detects when a parent has asked, in their own words, whether they
@@ -971,7 +1045,7 @@ function sunbeamResource() {
   if (!isPreventive() && !hasEmotionalChallengeSignals()) return null;
   const text = isPreventive()
     ? `The "Shining Moments" pages in the back of The Adventures of the True Sunbeam turn a simple bedtime routine into real connection-building — a few minutes each night, capturing a moment worth remembering, adds it to your child's resilience toolkit. Every night offers another potential tool for their toolbox of protection, if they choose to claim it. The effectiveness of these tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`
-    : `Try asking, in the style of the prompting questions at the top of each Shining Moments page: What happened today that helped you feel special or loved? If you have more time, coloring a page together and creating a "keepsake" moment can provide lasting comfort — the evidence of your love and care recorded there, in your signed and dated artwork, in their book. Creating and recording these Shining Moments can be instrumental in filling your child's "toolkit of protection," collecting tools they may use for the rest of their life. The impact of these same tools is what earned The Adventures of the True Sunbeam the International Best Indie Book Award in the Children's category.`;
+    : `The Shining Moments pages live in the back of The Adventures of the True Sunbeam, the International Best Indie Book Award-winning children's book. At bedtime, try asking in the style of the prompting questions at the top of each page: "What happened today that helped you feel special or loved?" If you have more time, color a page together and make it a keepsake — your signed and dated artwork in their book is lasting proof of your love and care. Over time, these Shining Moments fill your child's "toolkit of protection" with tools they can carry for the rest of their life.`;
   // The opening framing — a real explanation of the mechanism and why it
   // matters, introduced before the Shining Moments pages themselves and
   // before the book reveal, since this concept has to be understood and
@@ -1124,7 +1198,7 @@ async function generatePDF() {
     if (y + needed > 280) { doc.addPage(); y = 20; }
   }
   function heading(text) {
-    ensureRoom(16);
+    ensureRoom(34); // a heading always keeps at least a few lines of its own content with it
     doc.setFontSize(11); doc.setFont(undefined, "bold"); doc.setTextColor(27, 42, 74);
     doc.text(text.toUpperCase(), 15, y);
     y += 3;
@@ -1186,6 +1260,25 @@ async function generatePDF() {
   body(deriveSummary());
 
   if (focusLine()) body(focusLine(), { italic: true });
+  if (wordsAnswer()) {
+    const w = wordsAnswer();
+    heading(w.title);
+    body(w.lead);
+    doc.setFontSize(13); doc.setFont(undefined, "bold");
+    const ql = doc.splitTextToSize("“" + w.quote + "”", 160);
+    ensureRoom(ql.length * 7 + 14);
+    const qTop = y;
+    doc.setFillColor(238, 242, 247); doc.rect(15, qTop - 5, 180, ql.length * 7 + 8, "F");
+    doc.setFillColor(200, 155, 60); doc.rect(15, qTop - 5, 1.4, ql.length * 7 + 8, "F");
+    doc.setTextColor(16, 27, 51); doc.text(ql, 22, qTop + 1);
+    doc.setFont(undefined, "normal");
+    y = qTop + ql.length * 7 + 8;
+    body(w.reframeLead, { color: [90, 100, 120] });
+    body("“" + w.reframe + "”", { italic: true });
+    body("Why it works: " + w.why, { color: [90, 100, 120] });
+    body(w.teaser, { color: [90, 100, 120] });
+  }
+  if (multiChildNote()) body(multiChildNote(), { color: [74, 109, 147] });
   if (selfReflectionNote()) body(selfReflectionNote(), { color: [74, 109, 147] });
 
   heading("Why this matters:");
@@ -1221,19 +1314,9 @@ async function generatePDF() {
   // Recommended reading comes after the steps now — a natural answer to
   // "okay, now what do I actually go read," rather than a cold opener.
   // Two books now, each pointing at a specific chapter for their situation.
-  heading("Recommended reading:");
-
   const sunbeam = sunbeamResource();
   if (sunbeam) {
-    ensureRoom(20);
-    const cardStartY = y - 4;
-    const cardStartPage = doc.internal.getNumberOfPages();
-
-    doc.setFontSize(10); doc.setTextColor(200, 155, 60); doc.setFont(undefined, "bold");
-    ensureRoom(8);
-    doc.text("WHY THIS MATTERS", 15, y);
-    doc.setFont(undefined, "normal");
-    y += 8;
+    heading("The bedtime window");
 
     const introParas = sunbeam.introCaption.split("\n\n");
     for (let pi = 0; pi < introParas.length; pi++) {
@@ -1255,7 +1338,7 @@ async function generatePDF() {
     }
 
     doc.setFontSize(9.5); doc.setTextColor(27, 42, 74); doc.setFont(undefined, "bold");
-    ensureRoom(8);
+    ensureRoom(70); // label + spread image travel together, never split across pages
     doc.text("Start collecting your child's Shining Moments:", 15, y);
     doc.setFont(undefined, "normal");
     y += 6;
@@ -1283,12 +1366,15 @@ async function generatePDF() {
     doc.text(howItWorksLines, 21, y + 16);
     y += cardH + 10;
 
-    body("You'll find these pages waiting in the back of the book —", { color: [90, 100, 120], italic: true });
-    ensureRoom(6);
-    doc.setDrawColor(225, 228, 234);
-    doc.setLineWidth(0.3);
-    doc.line(15, y, 195, y);
-    y += 12;
+    body("You'll find these pages ready to use in the back of The Adventures of the True Sunbeam, our first recommendation below.", { color: [90, 100, 120], italic: true });
+  }
+
+  heading("Recommended reading:");
+
+  if (sunbeam) {
+    ensureRoom(20);
+    const cardStartY = y - 4;
+    const cardStartPage = doc.internal.getNumberOfPages();
 
     ensureRoom(105);
     const heroImg = await fetchImageAsDataUrl(sunbeam.heroImg);

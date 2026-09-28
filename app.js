@@ -341,8 +341,7 @@ function renderResults() {
         <button class="primary" id="getPlanBtn">Get My Action Plan</button>
       </div>
       <p id="planStatus" role="status" aria-live="polite" style="display:none;margin:12px 0 0;font-size:14.5px;line-height:1.5;"></p>
-      <div id="playbookInviteBox" style="display:none;"></div>
-      <div class="results-summary" style="margin-top:18px;">
+      <div class="results-summary" id="includedPreview" style="margin-top:18px;">
         <p style="margin:0;font-size:14.5px;">Included in your complimentary Action Plan:</p>
         <ul style="margin:6px 0 0;padding-left:20px;font-size:14px;">
           <li>Top 3 next steps for your specific situation</li>
@@ -376,16 +375,18 @@ function renderResults() {
     try { await generatePDF(); track("pdf_downloaded"); } catch (err) { pdfOk = false; console.warn("PDF creation failed:", err); }
     btn.disabled = false; btn.textContent = sent.ok ? "Send it again" : "Try again";
     setPlanStatus(planStatusMessage(sent, pdfOk, email), sent.ok ? "success" : "error");
-    if (sent.ok || pdfOk) showPlaybookInvite(document.getElementById("playbookInviteBox"));
+    // Once the plan is on its way, the "what's included" preview has done its job — hide it.
+    if (sent.ok || pdfOk) { const inc = document.getElementById("includedPreview"); if (inc) inc.style.display = "none"; }
   });
 }
 
 // ============================================================
 // PLAYBOOK INVITATION (opt-in)
-// The invitation checkbox now appears only AFTER the Playbook has been
-// introduced, so parents know what they're saying yes to: right after their
-// plan is sent (on screen), and from the "Yes, send me my invitation" link
-// in the Playbook section of the email and the PDF (?invite=1).
+// The invitation checkbox appears only AFTER the Playbook has been
+// introduced, so parents know what they're saying yes to: from the
+// "Yes, send me my invitation" button in the Playbook section of the
+// email and the PDF, which opens ?invite=1. (Per Mark: not on the
+// email-entry screen, before or after sending.)
 // ============================================================
 const PLAYBOOK_INVITE_LABEL = "Yes, please send me the invitation to try the Bullyproof Parent Playbook, plus occasional updates. I can unsubscribe any time.";
 
@@ -442,13 +443,6 @@ function wirePlaybookInvite(askEmail) {
     btn.disabled = ok;
     if (ok) { state.marketingConsent = true; box.disabled = true; }
   });
-}
-
-function showPlaybookInvite(container) {
-  if (!container || state.marketingConsent) return;
-  container.innerHTML = playbookInviteHtml(false);
-  container.style.display = "block";
-  wirePlaybookInvite(false);
 }
 
 async function submitPlaybookInvite(email) {

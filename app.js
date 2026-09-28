@@ -580,9 +580,14 @@ function buildEmailHtml() {
             <td style="text-align:right;padding-right:6px;">
               <a href="${sunbeamResource().fullColorUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the full-color book →</a><br>
               <a href="${sunbeamResource().coloringUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the coloring book →</a><br>
+              <a href="${sunbeamResource().bothBooksUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy both books →</a><br>
               <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
             </td>
           </tr></table>
+          <table role="presentation" style="width:100%;margin-top:18px;border-top:1px solid #E1E4EA;"><tr><td style="text-align:center;padding-top:18px;">
+            <a href="${sunbeamResource().rayPreorderUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:14.5px;font-weight:700;padding:13px 24px;border-radius:8px;text-decoration:none;">${sunbeamResource().rayPreorderLabel}</a>
+            <p style="color:${muted};font-size:12.5px;margin:9px 0 0;">${sunbeamResource().rayPreorderNote}</p>
+          </td></tr></table>
         </div>
       </td></tr></table>
     ` : ""}
@@ -1033,6 +1038,16 @@ async function fetchImageAsDataUrl(url) {
 // SUNBEAM_SET_URL is still a placeholder — swap for the real bundle page
 // on Bullyproof.Support the moment it's live ("soon").
 const SUNBEAM_SET_URL = "https://www.bullyproof.support";
+// TODO (Mark asked to be reminded): point this at the Ray pre-order landing page once it exists.
+// For now it goes to the Bullyproof.Support store.
+const RAY_PREORDER_URL = "https://www.bullyproof.support";
+const RAY_PREORDER_LABEL = "Pre-order Ray, the Sunbeam Plush Toy";
+const RAY_PREORDER_NOTE = "Available to ship in January 2027.";
+// One tap puts BOTH books in the parent's Amazon cart (Amazon Associates "Add to Cart" link), tagged with our Associate ID.
+function amazonBothBooksUrl() {
+  const tag = AMAZON_ASSOCIATE_TAG ? `AssociateTag=${encodeURIComponent(AMAZON_ASSOCIATE_TAG)}&` : "";
+  return `https://www.amazon.com/gp/aws/cart/add.html?${tag}ASIN.1=0999371800&Quantity.1=1&ASIN.2=1616113324&Quantity.2=1`;
+}
 const SUNBEAM_FULLCOLOR_AMAZON_URL = amazonProductUrl("0999371800", "Adventures-True-Sunbeam-Family-Keepsake");
 const SUNBEAM_COLORING_AMAZON_URL = amazonProductUrl("1616113324", "Adventures-True-Sunbeam-Keepsake-Coloring");
 
@@ -1106,6 +1121,10 @@ Which means every bedtime is also an opportunity — a nightly chance to interru
     pullQuote: "By age 7, up to 70% of what a child's subconscious mind has been programmed with is self-sabotaging, negative, or limiting.",
     closeupCaption: `It only takes a few minutes: naming one good moment from the day, and letting that be the last thing on their mind before sleep. Do it most nights, and something happens beneath the surface — confidence builds, worry loosens its grip, and it happens so gradually your child may never notice it's working.`,
     setUrl: SUNBEAM_SET_URL,
+    bothBooksUrl: amazonBothBooksUrl(),
+    rayPreorderUrl: RAY_PREORDER_URL,
+    rayPreorderLabel: RAY_PREORDER_LABEL,
+    rayPreorderNote: RAY_PREORDER_NOTE,
     fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,
     coloringUrl: SUNBEAM_COLORING_AMAZON_URL,
     fullColorImg: assetUrl("sunbeam-fullcolor.jpg"),
@@ -1496,9 +1515,10 @@ async function generatePDF() {
     const buyLinks = [
       ["Buy the full-color book", sunbeam.fullColorUrl, true],
       ["Buy the coloring book", sunbeam.coloringUrl, true],
+      ["Buy both books", sunbeam.bothBooksUrl, true],
       ["Book + Ray plush set (coming soon)", sunbeam.setUrl, false]
     ];
-    ensureRoom(buyLinks.length * 7 + 6);
+    ensureRoom(buyLinks.length * 7 + 6 + 30); // links and the pre-order button stay together
     buyLinks.forEach(([label, url, strong]) => {
       doc.setFontSize(strong ? 11 : 10); doc.setFont(undefined, strong ? "bold" : "normal"); doc.setTextColor(27, 42, 74);
       const w = doc.getTextWidth(label);
@@ -1507,7 +1527,15 @@ async function generatePDF() {
       y += 7;
     });
     doc.setFont(undefined, "normal");
-    y += 5;
+    y += 6;
+    const btnW = 104, btnH = 10.5, btnX = 105 - btnW / 2;
+    doc.setFillColor(16, 27, 51); doc.roundedRect(btnX, y, btnW, btnH, 2, 2, "F");
+    doc.setFontSize(10.5); doc.setFont(undefined, "bold"); doc.setTextColor(255, 255, 255);
+    doc.text(sunbeam.rayPreorderLabel, 105, y + 6.8, { align: "center" });
+    doc.link(btnX, y, btnW, btnH, { url: sunbeam.rayPreorderUrl });
+    doc.setFont(undefined, "normal"); doc.setFontSize(9.5); doc.setTextColor(90, 100, 120);
+    doc.text(sunbeam.rayPreorderNote, 105, y + btnH + 5.5, { align: "center" });
+    y += btnH + 13;
 
     // Draw the card border last, using the recorded start/end range —
     // stroke only (no fill), so it frames the content instead of

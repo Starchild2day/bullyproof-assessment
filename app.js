@@ -67,6 +67,7 @@ function render() {
   if (state.screen === "landing") return renderLanding();
   if (state.screen === "question") return renderQuestion();
   if (state.screen === "results") return renderResults();
+  if (state.screen === "invite") return renderInvite();
 }
 
 function renderLanding() {
@@ -334,16 +335,13 @@ function renderResults() {
       <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
       <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this empty<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
-      <div class="checkbox-row" style="margin-top:14px;">
-        <input type="checkbox" id="marketingConsent">
-        <label for="marketingConsent">Yes, please send me the invitation to try the Bullyproof Parent Playbook, plus occasional updates. I can unsubscribe any time.</label>
-      </div>
       <div id="turnstileBox" style="margin-top:12px;"></div>
       <div class="nav-row">
         <button class="ghost" id="backToQ">Back</button>
         <button class="primary" id="getPlanBtn">Get My Action Plan</button>
       </div>
       <p id="planStatus" role="status" aria-live="polite" style="display:none;margin:12px 0 0;font-size:14.5px;line-height:1.5;"></p>
+      <div id="playbookInviteBox" style="display:none;"></div>
       <div class="results-summary" style="margin-top:18px;">
         <p style="margin:0;font-size:14.5px;">Included in your complimentary Action Plan:</p>
         <ul style="margin:6px 0 0;padding-left:20px;font-size:14px;">
@@ -369,7 +367,6 @@ function renderResults() {
     if (CONFIG.TURNSTILE_SITE_KEY && !state.turnstileToken) { setPlanStatus("Please complete the quick check above so we know you're a person.", "error"); return; }
     emailInput.style.borderColor = "";
     state.email = email;
-    state.marketingConsent = !!document.getElementById("marketingConsent").checked;
     state.honeypot = document.getElementById("hpWebsite").value;
     btn.disabled = true; btn.textContent = "Sending…";
     setPlanStatus("Sending your plan…", "info");
@@ -379,7 +376,113 @@ function renderResults() {
     try { await generatePDF(); track("pdf_downloaded"); } catch (err) { pdfOk = false; console.warn("PDF creation failed:", err); }
     btn.disabled = false; btn.textContent = sent.ok ? "Send it again" : "Try again";
     setPlanStatus(planStatusMessage(sent, pdfOk, email), sent.ok ? "success" : "error");
+    if (sent.ok || pdfOk) showPlaybookInvite(document.getElementById("playbookInviteBox"));
   });
+}
+
+// ============================================================
+// PLAYBOOK INVITATION (opt-in)
+// The invitation checkbox now appears only AFTER the Playbook has been
+// introduced, so parents know what they're saying yes to: right after their
+// plan is sent (on screen), and from the "Yes, send me my invitation" link
+// in the Playbook section of the email and the PDF (?invite=1).
+// ============================================================
+const PLAYBOOK_INVITE_LABEL = "Yes, please send me the invitation to try the Bullyproof Parent Playbook, plus occasional updates. I can unsubscribe any time.";
+
+function playbookInviteUrl() {
+  return `${window.location.origin}/?invite=1`;
+}
+
+function playbookInviteHtml(askEmail) {
+  return `
+    <div style="background:#F5F6FB;border:1px solid #E1E4EA;border-radius:12px;padding:18px;margin:18px 0 0;">
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+        <img src="${playbookBoxImageUrl()}" alt="The Bullyproof Parent Playbook" style="width:96px;border-radius:6px;flex-shrink:0;">
+        <div style="flex:1;min-width:200px;">
+          <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:var(--navy-deep);">The Bullyproof Parent Playbook</p>
+          <p style="margin:0 0 8px;font-size:14.5px;font-weight:600;color:var(--navy-deep);">Personalized guidance that grows with your child.</p>
+          <p style="margin:0 0 8px;font-size:14.5px;color:var(--text);">${PLAYBOOK_BLURB}</p>
+          <p style="margin:0;font-size:14px;color:var(--text);">When it launches, you can try it FREE for one week.</p>
+        </div>
+      </div>
+      ${askEmail ? `<input type="email" id="inviteEmail" placeholder="you@email.com" style="margin-top:14px;">` : ""}
+      <div class="checkbox-row" style="margin-top:14px;">
+        <input type="checkbox" id="marketingConsent">
+        <label for="marketingConsent">${PLAYBOOK_INVITE_LABEL}</label>
+      </div>
+      <div class="nav-row" style="justify-content:flex-start;margin-top:10px;">
+        <button class="primary" id="saveInviteBtn" disabled>Send me the invitation</button>
+      </div>
+      <p id="inviteStatus" role="status" aria-live="polite" style="display:none;margin:10px 0 0;font-size:14.5px;line-height:1.5;"></p>
+    </div>`;
+}
+
+function wirePlaybookInvite(askEmail) {
+  const box = document.getElementById("marketingConsent");
+  const btn = document.getElementById("saveInviteBtn");
+  const status = document.getElementById("inviteStatus");
+  box.addEventListener("change", () => { btn.disabled = !box.checked; });
+  btn.addEventListener("click", async () => {
+    if (!box.checked) return;
+    let email = state.email;
+    if (askEmail) {
+      const input = document.getElementById("inviteEmail");
+      email = input.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { input.style.borderColor = "#C53030"; status.style.display = "block"; status.style.color = "#C53030"; status.textContent = "Please enter a valid email address."; return; }
+      input.style.borderColor = "";
+    }
+    btn.disabled = true; btn.textContent = "Saving…";
+    const ok = await submitPlaybookInvite(email);
+    status.style.display = "block";
+    status.style.color = ok ? "#276749" : "#C53030";
+    status.textContent = ok
+      ? `You're on the list. We'll send your invitation to ${email} when the Playbook launches.`
+      : "We couldn't save that just now. Please try again in a minute.";
+    btn.textContent = ok ? "Saved" : "Send me the invitation";
+    btn.disabled = ok;
+    if (ok) { state.marketingConsent = true; box.disabled = true; }
+  });
+}
+
+function showPlaybookInvite(container) {
+  if (!container || state.marketingConsent) return;
+  container.innerHTML = playbookInviteHtml(false);
+  container.style.display = "block";
+  wirePlaybookInvite(false);
+}
+
+async function submitPlaybookInvite(email) {
+  if (!CONFIG.FORMSPREE_ENDPOINT) { console.warn("Formspree endpoint not configured."); return false; }
+  try {
+    const res = await fetch(CONFIG.FORMSPREE_ENDPOINT, {
+      method: "POST",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        _replyto: email,
+        _subject: "Playbook invitation request",
+        marketing_consent: "yes",
+        source: "Playbook invitation opt-in"
+      })
+    });
+    if (res.ok) track("playbook_invite_optin");
+    return res.ok;
+  } catch (err) { console.warn("Playbook invite submission failed:", err); return false; }
+}
+
+function renderInvite() {
+  progressTrack.style.display = "none";
+  appEl.innerHTML = `
+    <div class="card">
+      ${banner(RESULTS_ICON, { imageSrc: assetUrl("icon-results.png") })}
+      <div class="card-body">
+        <h2 class="question">Get your Playbook invitation</h2>
+        <p class="sub">Enter the email where you received your action plan.</p>
+        ${playbookInviteHtml(true)}
+        <p class="privacy-note">We never share your data. Every email includes a way to unsubscribe.</p>
+      </div>
+    </div>`;
+  wirePlaybookInvite(true);
 }
 
 function isPreventive() {
@@ -650,7 +753,8 @@ function buildEmailHtml() {
         </ul>
       </td>
     </tr></table>
-    <p style="color:${muted};font-size:13.5px;margin:0;">Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
+    <p style="color:${muted};font-size:13.5px;margin:0 0 14px;">Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
+    ${state.marketingConsent ? "" : `<p style="margin:0;"><a href="${playbookInviteUrl()}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:14.5px;font-weight:700;padding:13px 24px;border-radius:8px;text-decoration:none;">Yes, send me my invitation</a></p>`}
   `);
   sections.push(`
     ${sectionHeader("Prefer to talk to a licensed professional?")}
@@ -1168,8 +1272,9 @@ function sunbeamHeroImage() {
   return bracket.default;
 }
 
+// Shining Moments / "A nightly opportunity" is ALWAYS part of the Action Plan,
+// in every situation (per Mark). Only the wording varies by situation.
 function sunbeamResource() {
-  if (!isPreventive() && !hasEmotionalChallengeSignals()) return null;
   // The bridge line, the "award-winning" label, the badge and the title above
   // this already say what and where the book is (and that it won the award),
   // so this only adds what they don't: how to use the pages.
@@ -1448,7 +1553,7 @@ async function generatePDF() {
     const lines = doc.splitTextToSize(step, 165);
     ensureRoom(Math.max(lines.length * 6, 10) + 6);
     const stepTopY = y;
-    doc.setFillColor(27, 42, 74);
+    doc.setFillColor(16, 27, 51);
     doc.circle(19, stepTopY - 2, 4, "F");
     doc.setFontSize(10); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold");
     doc.text(String(i + 1), 19, stepTopY - 0.5, { align: "center" });
@@ -1677,7 +1782,7 @@ async function generatePDF() {
   body(WHAT_COMES_NEXT_INTRO);
   furtherStepsTeaser().forEach(t => body(`• ${t}`));
 
-  ensureRoom(150); // the Playbook card, its benefits list and the trial note stay together on one page
+  ensureRoom(172); // the Playbook card, its benefits list, the trial note and the invitation button stay together on one page
   const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
   if (playbookImg) {
     try { doc.addImage(playbookImg, "JPEG", 15, y, 42, 50); } catch (err) { console.warn("Could not embed Playbook box image:", err); }
@@ -1693,7 +1798,7 @@ async function generatePDF() {
     doc.textWithLink("Join Bullyproof.Support FREE today", 62, y + 62, { url: NETWORK_HOME_URL });
     y += 80;
   } else {
-    doc.setFillColor(27, 42, 74);
+    doc.setFillColor(16, 27, 51);
     doc.roundedRect(15, y, 180, 74, 3, 3, "F");
     doc.setFontSize(15); doc.setTextColor(255, 255, 255);
     doc.text("The Bullyproof Parent Playbook", 25, y + 14);
@@ -1716,6 +1821,17 @@ async function generatePDF() {
   });
   y += 4;
   body("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", { color: [140, 140, 140] });
+  if (!state.marketingConsent) {
+    // Same "Yes, send me my invitation" button as the email, same destination.
+    ensureRoom(16);
+    doc.setFillColor(16, 27, 51);
+    doc.roundedRect(15, y - 1, 72, 11, 2, 2, "F");
+    doc.setFont(undefined, "bold"); doc.setFontSize(11); doc.setTextColor(255, 255, 255);
+    doc.text("Yes, send me my invitation", 51, y + 6, { align: "center" });
+    doc.link(15, y - 1, 72, 11, { url: playbookInviteUrl() });
+    doc.setFont(undefined, "normal");
+    y += 18;
+  }
 
   heading("Prefer to talk to a licensed professional?");
   body("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:");
@@ -1738,4 +1854,5 @@ async function generatePDF() {
   doc.save("bullyproof-action-plan.pdf");
 }
 
+try { if (new URLSearchParams(window.location.search).get("invite") === "1") state.screen = "invite"; } catch (e) { /* no URL params — start normally */ }
 render();

@@ -1073,9 +1073,9 @@ function stepOpening() {
 
 function stepSchool() {
   const map = {
-    "helping": "Keep the school in the loop. Check in with the school contact again this week. Ask what they're seeing, and if there's a follow-up plan. It's worth the effort: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that when schools take real action, bullying drops by about 20%.",
+    "helping": "Keep the school in the loop. Check in with the school contact again this week. Ask what they're seeing, and if there's a follow-up plan. It's worth the effort: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.",
     "no-change": `Ask for a real plan. Nothing has changed yet, so ask for a new meeting. Get a clear plan with a real date — not just "we'll keep an eye on it." Research is on your side: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that meetings with parents were one of the parts linked to the biggest drops in bullying.`,
-    "dismissed": "You can still push back. If the school said this isn't bullying, ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes. It's worth pressing for: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that when schools take real action, bullying drops by about 20%.",
+    "dismissed": "You can still push back. If the school said this isn't bullying, ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes. It's worth pressing for: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.",
     "not-reached-out": `Loop in the school counselor. Contact the counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in." Parents and schools working together makes a real difference: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that meetings with parents were one of the parts linked to the biggest drops in bullying.`,
     "child-doesnt-want": "Ask what they're afraid of. Ask your child what they're afraid will happen if you talk to the school. Their answer will help you decide how — or whether — to bring the school in without it feeling like a betrayal."
   };
@@ -1376,7 +1376,7 @@ const FIND_SUPPORT_URL = "https://www.psychologytoday.com/us/therapists";
 
 function whyThisMattersNote() {
   if (isPreventive()) {
-    return "Prevention works. A major review of school-wide anti-bullying programs (Ttofi & Farrington, 2011) found they cut bullying by about 20% — and the parts that brought parents in were linked to some of the biggest drops. What you do at home is part of that.";
+    return "Prevention works. A 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found they cut bullying by about 20%. What you do at home builds those same skills — right where your child spends the most time.";
   }
   const status = communicationStatus();
   if (status === "behavior-only" || status === "no-signals") {

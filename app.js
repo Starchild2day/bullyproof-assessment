@@ -671,35 +671,45 @@ function buildEmailHtml() {
           <p style="color:#E3B85A;font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:700;letter-spacing:0.03em;line-height:1.15;margin:0;">True Sunbeam</p>
           <table role="presentation" style="margin:16px auto 0;"><tr><td style="width:44px;border-top:2px solid ${gold};font-size:0;line-height:0;">&nbsp;</td></tr></table>
         </td></tr></table>
-          <table role="presentation" style="width:100%;margin:22px 0 0;"><tr>
-            <td style="text-align:center;width:33%;vertical-align:bottom;">
-              <a href="${sunbeamResource().animatedCoverUrl}" style="text-decoration:none;border:0;"><img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="92" border="0" style="border-radius:4px;display:block;margin:0 auto 8px;border:0;"></a>
-              <span style="color:${muted};font-size:11.5px;">Full-color book</span><br>
-              <a href="${sunbeamResource().animatedCoverUrl}" style="color:${navy};font-size:11px;text-decoration:underline;">${sunbeamResource().fullColorHint}</a>
-            </td>
-            <td style="text-align:center;width:33%;vertical-align:bottom;">
-              <a href="${sunbeamResource().coloringPagesUrl}" style="text-decoration:none;border:0;"><img src="${sunbeamResource().coloringImg}" alt="The Adventures of the True Sunbeam Coloring Book" width="92" border="0" style="border-radius:4px;display:block;margin:0 auto 8px;border:0;"></a>
-              <span style="color:${muted};font-size:11.5px;">Coloring Book version</span><br>
-              <a href="${sunbeamResource().coloringPagesUrl}" style="color:${navy};font-size:11px;text-decoration:underline;">${sunbeamResource().coloringHint}</a>
-            </td>
-            <td style="text-align:center;width:34%;vertical-align:bottom;">
-              <img src="${sunbeamResource().rayImg}" alt="Ray the plush toy" width="75" style="display:block;margin:0 auto 8px;">
-              <span style="color:${muted};font-size:11.5px;">Meet Ray the Sunbeam plush toy</span>
-            </td>
-          </tr></table>
+          <!-- Coloring book (left) · Ray (center) · Story book (right), each with its own caption, link and button -->
+          <table role="presentation" style="width:100%;margin:22px 0 0;border-collapse:collapse;">
+            <tr>
+              <td style="text-align:center;width:33%;vertical-align:bottom;padding:0 4px;">
+                <a href="${sunbeamResource().coloringPagesUrl}" style="text-decoration:none;border:0;"><img src="${sunbeamResource().coloringImg}" alt="The Adventures of the True Sunbeam Coloring Book" width="92" border="0" style="border-radius:4px;display:block;margin:0 auto;border:0;"></a>
+              </td>
+              <td style="text-align:center;width:34%;vertical-align:bottom;padding:0 4px;">
+                <img src="${sunbeamResource().rayImg}" alt="Ray the Sunbeam plush toy" width="80" style="display:block;margin:0 auto;">
+              </td>
+              <td style="text-align:center;width:33%;vertical-align:bottom;padding:0 4px;">
+                <a href="${sunbeamResource().animatedCoverUrl}" style="text-decoration:none;border:0;"><img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="92" border="0" style="border-radius:4px;display:block;margin:0 auto;border:0;"></a>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;vertical-align:top;padding:8px 4px 0;line-height:1.35;">
+                <span style="color:${muted};font-size:11.5px;">Coloring book</span><br>
+                <a href="${sunbeamResource().coloringPagesUrl}" style="color:${navy};font-size:11px;text-decoration:underline;">${sunbeamResource().coloringHint}</a>
+              </td>
+              <td style="text-align:center;vertical-align:top;padding:8px 4px 0;line-height:1.35;">
+                <span style="color:${muted};font-size:11.5px;">Meet Ray, the Sunbeam plush toy</span>
+              </td>
+              <td style="text-align:center;vertical-align:top;padding:8px 4px 0;line-height:1.35;">
+                <span style="color:${muted};font-size:11.5px;">Full-color story book</span><br>
+                <a href="${sunbeamResource().animatedCoverUrl}" style="color:${navy};font-size:11px;text-decoration:underline;">${sunbeamResource().fullColorHint}</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;vertical-align:top;padding:10px 4px 0;"><a href="${sunbeamResource().coloringUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;white-space:nowrap;">Buy now</a></td>
+              <td style="text-align:center;vertical-align:top;padding:10px 4px 0;"><a href="${sunbeamResource().rayPreorderUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;white-space:nowrap;">${sunbeamResource().rayPreorderLabel}</a><br><span style="color:${muted};font-size:11px;line-height:2;">${sunbeamResource().rayPreorderNote}</span></td>
+              <td style="text-align:center;vertical-align:top;padding:10px 4px 0;"><a href="${sunbeamResource().fullColorUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;white-space:nowrap;">Buy now</a></td>
+            </tr>
+          </table>
         <table role="presentation" style="width:100%;margin-top:18px;"><tr>
           <td style="text-align:center;line-height:1.8;white-space:nowrap;">
-            <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="170" style="display:block;margin:0 auto 10px;max-width:100%;">
-              <a href="${sunbeamResource().fullColorUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the full-color book →</a><br>
-              <a href="${sunbeamResource().coloringUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy the coloring book →</a><br>
-              <a href="${sunbeamResource().bothBooksUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy both books →</a><br>
-              <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
+            <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="170" style="display:block;margin:0 auto 8px;max-width:100%;">
+            <a href="${sunbeamResource().bothBooksUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy both books →</a><br>
+            <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
           </td>
         </tr></table>
-          <table role="presentation" style="width:100%;margin-top:18px;border-top:1px solid #E1E4EA;"><tr><td style="text-align:center;padding-top:18px;">
-            <a href="${sunbeamResource().rayPreorderUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:14.5px;font-weight:700;padding:13px 24px;border-radius:8px;text-decoration:none;">${sunbeamResource().rayPreorderLabel}</a>
-            <p style="color:${muted};font-size:12.5px;margin:9px 0 0;">${sunbeamResource().rayPreorderNote}</p>
-          </td></tr></table>
         <div style="margin-top:20px;">
           <p style="color:${navyDeep};font-size:15px;line-height:1.7;margin:0 0 4px;">${sunbeamResource().text.replace(/"(What happened today[^"]*)"/, `<span style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:700;color:#8A6420;">&ldquo;$1&rdquo;</span>`)}</p>
         </div>
@@ -1223,8 +1233,8 @@ const SUNBEAM_SET_URL = "https://www.bullyproof.support";
 // TODO (Mark asked to be reminded): point this at the Ray pre-order landing page once it exists.
 // For now it goes to the Bullyproof.Support store.
 const RAY_PREORDER_URL = "https://www.bullyproof.support";
-const RAY_PREORDER_LABEL = "Pre-order Ray, the Sunbeam Plush Toy";
-const RAY_PREORDER_NOTE = "Available to ship in January 2027.";
+const RAY_PREORDER_LABEL = "Pre-order Ray";
+const RAY_PREORDER_NOTE = "Ships January 2027";
 // One tap puts BOTH books in the parent's Amazon cart (Amazon Associates "Add to Cart" link), tagged with our Associate ID.
 function amazonBothBooksUrl() {
   const tag = AMAZON_ASSOCIATE_TAG ? `AssociateTag=${encodeURIComponent(AMAZON_ASSOCIATE_TAG)}&` : "";
@@ -1670,7 +1680,7 @@ async function generatePDF() {
 
     // The reveal: a centered navy band with the book title set as a title lockup.
     const bandH = 46;
-    ensureRoom(bandH + 8 + 66); // the reveal always stays on the same page as the books under it
+    ensureRoom(bandH + 8 + 90); // the reveal always stays on the same page as the books under it
     doc.setFillColor(16, 27, 51);
     doc.roundedRect(15, y, 180, bandH, 3, 3, "F");
     doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.6);
@@ -1684,80 +1694,71 @@ async function generatePDF() {
     doc.line(99, y + 39.5, 111, y + 39.5);
     doc.setFont("helvetica", "normal");
     y += bandH + 8;
-    // Right under the reveal: the books themselves, then the award badge with
-    // the buy links, the Ray pre-order, the how-to, and the section ends on the
-    // picture of a child writing in the book (per Mark).
+    // Right under the reveal: coloring book (left), Ray (center), story book
+    // (right) — each with its caption, link and its own button underneath —
+    // then the award badge with "buy both" and the set, the how-to, and the
+    // section ends on the picture of a child writing in the book (per Mark).
     y += 2;
-    // Proportional sizing based on real-world dimensions: books are 9in
-    // square, Ray is 12in tall — at 5mm/in that's 45mm for books and
-    // 60mm tall for Ray (its own image aspect ratio gives the width).
-    // Bottom-aligned on a common baseline so they read as a real product
-    // lineup sitting together, not three same-height boxes in a row.
+    // Real-world proportions: the books are 9in square, Ray is 12in tall.
+    // Bottom-aligned on one baseline so they read as a product lineup.
     const BOOK_SIZE = 40, RAY_H = 52, RAY_W = 32;
-    ensureRoom(RAY_H + 12);
+    ensureRoom(RAY_H + 34);
     const rowBaseline = y + RAY_H;
-    const hintLink = (label, x, url) => {
-      doc.setFontSize(8.5); doc.setFont(undefined, "normal"); doc.setTextColor(27, 42, 74);
-      doc.textWithLink(label, x, rowBaseline + 11, { url });
-      doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.2); doc.line(x, rowBaseline + 12, x + doc.getTextWidth(label), rowBaseline + 12);
-    };
     const [fullColorImg, coloringImg, rayImg] = await Promise.all([
       fetchImageAsDataUrl(sunbeam.fullColorImg),
       fetchImageAsDataUrl(sunbeam.coloringImg),
       fetchImageAsDataUrl(sunbeam.rayImg)
     ]);
-    let ix = 15;
-    if (fullColorImg) {
-      try { doc.addImage(fullColorImg, "JPEG", ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
-      doc.setFontSize(9); doc.setTextColor(90, 100, 120);
-      doc.text("Full-color book", ix, rowBaseline + 6);
-      doc.link(ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.animatedCoverUrl });
-      hintLink(sunbeam.fullColorHint, ix, sunbeam.animatedCoverUrl);
-      ix += BOOK_SIZE + 10;
-    }
+    const centeredLink = (label, cx, yy, url) => {
+      doc.setFontSize(8.5); doc.setFont(undefined, "normal"); doc.setTextColor(27, 42, 74);
+      const w = doc.getTextWidth(label);
+      doc.textWithLink(label, cx - w / 2, yy, { url });
+      doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.2); doc.line(cx - w / 2, yy + 1, cx + w / 2, yy + 1);
+    };
+    const smallButton = (label, cx, yy, url) => {
+      doc.setFontSize(9); doc.setFont(undefined, "bold");
+      const bw = doc.getTextWidth(label) + 10, bh = 7.5;
+      doc.setFillColor(16, 27, 51); doc.roundedRect(cx - bw / 2, yy, bw, bh, 1.6, 1.6, "F");
+      doc.setTextColor(255, 255, 255); doc.text(label, cx, yy + 5, { align: "center" });
+      doc.link(cx - bw / 2, yy, bw, bh, { url });
+      doc.setFont(undefined, "normal");
+    };
+    const caption = (label, cx) => { doc.setFontSize(9); doc.setFont(undefined, "normal"); doc.setTextColor(90, 100, 120); doc.text(label, cx, rowBaseline + 6, { align: "center" }); };
+    const colX = [45, 105, 165];
     if (coloringImg) {
-      try { doc.addImage(coloringImg, "JPEG", ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
-      doc.setFontSize(9); doc.setTextColor(90, 100, 120);
-      doc.text("Coloring Book version", ix, rowBaseline + 6);
-      doc.link(ix, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.coloringPagesUrl });
-      hintLink(sunbeam.coloringHint, ix, sunbeam.coloringPagesUrl);
-      ix += BOOK_SIZE + 10;
+      try { doc.addImage(coloringImg, "JPEG", colX[0] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
+      doc.link(colX[0] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.coloringPagesUrl });
+      caption("Coloring book", colX[0]);
+      centeredLink(sunbeam.coloringHint, colX[0], rowBaseline + 11, sunbeam.coloringPagesUrl);
+      smallButton("Buy now", colX[0], rowBaseline + 15, sunbeam.coloringUrl);
     }
     if (rayImg) {
-      try { doc.addImage(rayImg, "JPEG", ix, rowBaseline - RAY_H, RAY_W, RAY_H); } catch (e) {}
-      doc.setFontSize(9); doc.setTextColor(90, 100, 120);
-      doc.text("Meet Ray the Sunbeam plush toy", ix, rowBaseline + 6);
+      try { doc.addImage(rayImg, "JPEG", colX[1] - RAY_W / 2, rowBaseline - RAY_H, RAY_W, RAY_H); } catch (e) {}
+      caption("Meet Ray, the Sunbeam plush toy", colX[1]);
+      smallButton(sunbeam.rayPreorderLabel, colX[1], rowBaseline + 15, sunbeam.rayPreorderUrl);
+      doc.setFontSize(8.5); doc.setTextColor(90, 100, 120); doc.text(sunbeam.rayPreorderNote, colX[1], rowBaseline + 27, { align: "center" });
     }
-    y = (fullColorImg || coloringImg || rayImg) ? rowBaseline + 18 : y;
-    ensureRoom(62); // badge + buy links + pre-order button stay together
+    if (fullColorImg) {
+      try { doc.addImage(fullColorImg, "JPEG", colX[2] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
+      doc.link(colX[2] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.animatedCoverUrl });
+      caption("Full-color story book", colX[2]);
+      centeredLink(sunbeam.fullColorHint, colX[2], rowBaseline + 11, sunbeam.animatedCoverUrl);
+      smallButton("Buy now", colX[2], rowBaseline + 15, sunbeam.fullColorUrl);
+    }
+    y = (fullColorImg || coloringImg || rayImg) ? rowBaseline + 34 : y;
+
+    ensureRoom(30); // badge + "buy both" + set link stay together
     const blY = y;
     const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);
-    if (bibaImg) {
-      try { doc.addImage(bibaImg, "PNG", 15, blY - 5, 72, 30); } catch (e) {}
-    }
-    const buyLinks = [
-      ["Buy the full-color book", sunbeam.fullColorUrl, true],
-      ["Buy the coloring book", sunbeam.coloringUrl, true],
-      ["Buy both books", sunbeam.bothBooksUrl, true],
-      ["Book + Ray plush set (coming soon)", sunbeam.setUrl, false]
-    ];
-    buyLinks.forEach(([label, url, strong]) => {
+    if (bibaImg) { try { doc.addImage(bibaImg, "PNG", 15, blY - 3, 60, 25); } catch (e) {} }
+    [["Buy both books", sunbeam.bothBooksUrl, true], ["Book + Ray plush set (coming soon)", sunbeam.setUrl, false]].forEach(([label, url, strong], i) => {
       doc.setFontSize(strong ? 11 : 10); doc.setFont(undefined, strong ? "bold" : "normal"); doc.setTextColor(27, 42, 74);
-      const w = doc.getTextWidth(label);
-      doc.textWithLink(label, 195 - w, y, { url });
-      doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.25); doc.line(195 - w, y + 1.2, 195, y + 1.2);
-      y += 7;
+      const w = doc.getTextWidth(label), ly = blY + 7 + i * 8;
+      doc.textWithLink(label, 195 - w, ly, { url });
+      doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.25); doc.line(195 - w, ly + 1.2, 195, ly + 1.2);
     });
     doc.setFont(undefined, "normal");
-    y = Math.max(y, blY + 28) + 4;
-    const btnW = 104, btnH = 10.5, btnX = 105 - btnW / 2;
-    doc.setFillColor(16, 27, 51); doc.roundedRect(btnX, y, btnW, btnH, 2, 2, "F");
-    doc.setFontSize(10.5); doc.setFont(undefined, "bold"); doc.setTextColor(255, 255, 255);
-    doc.text(sunbeam.rayPreorderLabel, 105, y + 6.8, { align: "center" });
-    doc.link(btnX, y, btnW, btnH, { url: sunbeam.rayPreorderUrl });
-    doc.setFont(undefined, "normal"); doc.setFontSize(9.5); doc.setTextColor(90, 100, 120);
-    doc.text(sunbeam.rayPreorderNote, 105, y + btnH + 5.5, { align: "center" });
-    y += btnH + 13;
+    y = blY + 28;
     {
       // How-to text on the left, the picture of a child writing in the book on
       // the right — the section ends on that picture (per Mark), and sharing the

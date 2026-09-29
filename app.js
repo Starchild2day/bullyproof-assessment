@@ -1047,7 +1047,7 @@ function stepOpening() {
     return "Write it down today. Use your child's own words, and add the date. Keep this note — you can show it to a counselor or the school later. StopBullying.gov, the U.S. government's bullying resource, recommends keeping exactly this kind of record: the date, what happened, and who was involved.";
   }
   if (status === "hints") {
-    return `Keep the door open. Try saying: "You told me something was bothering you. I've been thinking about it. I'm here if you want to say more." Don't push for the whole story yet — let them go at their own pace. That patience matters: a U.S. Department of Education study found 64% of bullied kids never tell an adult at all, so a child who has hinted is already trusting you more than most.`;
+    return `Keep the door open. Try saying: "You told me something was bothering you. I've been thinking about it. I'm here if you want to say more." Don't push for the whole story yet — let them go at their own pace. That patience matters: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school, so a child who has hinted is already trusting you more than most.`;
   }
   if (status === "behavior-only") {
     const named = (state.answers.q6 || []).filter(b => b !== "No noticeable changes");
@@ -1063,7 +1063,7 @@ function stepOpening() {
       "Avoiding certain places, people, or activities they used to like": "you've been staying away from some places or people you used to like being around"
     };
     const behavior = named.length ? (secondPerson[named[0]] || named[0].toLowerCase()) : "a little different lately";
-    return `Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: "Want to build something with me?" or "Want to go for a walk?" — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: a U.S. Department of Education study found 64% of bullied kids never tell an adult.`;
+    return `Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: "Want to build something with me?" or "Want to go for a walk?" — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school.`;
   }
   if (status === "no-signals") {
     return "Start with easy time together. Nothing has been said yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — and ordinary time like this is how that trust gets built.";
@@ -1074,9 +1074,9 @@ function stepOpening() {
 function stepSchool() {
   const map = {
     "helping": "Keep the school in the loop. Check in with the school contact again this week. Ask what they're seeing, and if there's a follow-up plan. It's worth the effort: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.",
-    "no-change": `Ask for a real plan. Nothing has changed yet, so ask for a new meeting. Get a clear plan with a real date — not just "we'll keep an eye on it." Research is on your side: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that meetings with parents were one of the parts linked to the biggest drops in bullying.`,
+    "no-change": `Ask for a real plan. Nothing has changed yet, so ask for a new meeting. Get a clear plan with a real date — not just "we'll keep an eye on it." Research is on your side: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.`,
     "dismissed": "You can still push back. If the school said this isn't bullying, ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes. It's worth pressing for: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.",
-    "not-reached-out": `Loop in the school counselor. Contact the counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in." Parents and schools working together makes a real difference: a major review of school anti-bullying programs (Ttofi & Farrington, 2011) found that meetings with parents were one of the parts linked to the biggest drops in bullying.`,
+    "not-reached-out": `Loop in the school counselor. Contact the counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in." It's worth that small step: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20% — and a short note from you can be how that action starts.`,
     "child-doesnt-want": "Ask what they're afraid of. Ask your child what they're afraid will happen if you talk to the school. Their answer will help you decide how — or whether — to bring the school in without it feeling like a betrayal."
   };
   return map[schoolStatus()] || "Get another set of eyes on it. Reach out to a counselor or trusted adult at school this week. Adults at school often see things you can't — especially in the busy, crowded parts of the day.";
@@ -1088,7 +1088,7 @@ function stepContext() {
     return `Save the evidence first. Take screenshots and note the dates before anything gets deleted. Then sit down with your child and look at the app's report and block settings together — as a team, not as spying. That's exactly the order ${communicationStatus() === "clear" ? "StopBullying.gov also" : "StopBullying.gov, the U.S. government's bullying resource,"} recommends: keep the evidence, then report and block.`;
   }
   if (weight === "in-person") {
-    return "Find the hot spots. Ask your child if certain times or places feel worse — recess, lunch, the bus. This helps the school watch the right spots instead of everywhere. U.S. Department of Education surveys find bullying happens most in hallways, classrooms, and the cafeteria — busy places where adults can't see everything at once.";
+    return "Find the hot spots. Ask your child if certain times or places feel worse — recess, lunch, the bus. This helps the school watch the right spots instead of everywhere. The most recent federal data (2019–20) show bullying at school happens most in classrooms, then hallways and the cafeteria — busy places where adults can't see everything at once.";
   }
   return "Keep a short daily note. Just one line, no pressure — write down your child's mood and anything small they say. Patterns often show up after a week or two.";
 }
@@ -1380,12 +1380,12 @@ function whyThisMattersNote() {
   }
   const status = communicationStatus();
   if (status === "behavior-only" || status === "no-signals") {
-    return "Here's something worth knowing: a child's relationships are one of their strongest protections. Researchers found that having even one close friend can stop a small problem from growing into a bigger one (Hodges and colleagues, 1999). Confidence and friendships can be built at any age. If it feels like a gap right now, that's not a failure on your part — it's simply the next thing to work on together.";
+    return "Here's something worth knowing: a child's relationships are one of their strongest protections. A 2022 study that followed nearly 500 teens for several years found that support from friends helped cushion the emotional hurt of being bullied. Confidence and friendships can be built at any age. If it feels like a gap right now, that's not a failure on your part — it's simply the next thing to work on together.";
   }
   if (onlineWeight() === "online") {
     return "You're far from alone: Pew Research Center found that nearly half of U.S. teens (46%) have been bullied or harassed online. Knowing how to handle it — what to save, what to block, and who to tell — is a learned skill, not something kids are born knowing. That means it can be taught.";
   }
-  return "Confidence and social skills can be built at any age — and they matter. Researchers found that having even one close friend can stop a small problem from growing into a bigger one (Hodges and colleagues, 1999). Working on that together is one of the most powerful things a parent can do.";
+  return "Confidence and social skills can be built at any age — and they matter. A 2022 study that followed nearly 500 teens for several years found that support from friends helped cushion the emotional hurt of being bullied. Working on that together is one of the most powerful things a parent can do.";
 }
 
 function furtherStepsTeaser() {
@@ -1457,13 +1457,13 @@ function stepParts() {
 
 function preventionSteps() {
   // Each step leads with a real research finding, then one specific thing to do or say.
-  // Sources: Petrosino et al., U.S. Dept. of Education REL Northeast & Islands (2010) — 64% of bullied students did not report;
+  // Sources: NCES/BJS School Crime Supplement 2021–22 — 44.2% of bullied students notified an adult at school;
   // Harvard Center on the Developing Child — at least one stable, supportive adult is the most common factor in resilience;
-  // Hodges, Boivin, Vitaro & Bukowski (1999), "The Power of Friendship" — a best friend protects against escalating victimization;
+  // Friend support: 2022 longitudinal study, Journal of Youth and Adolescence (497 Dutch teens, 6 yearly waves) — friend support buffered the link between victimization and depression/anxiety;
   // Hawkins, Pepler & Craig (2001) — peers intervened in 19% of episodes; when they did, bullying stopped within 10 seconds 57% of the time.
   return [
-    "Make the \"no-panic promise.\" Most bullied kids never tell an adult — a U.S. Department of Education study found 64% didn't report it. The biggest reason is fear that the grown-up will overreact and make things worse. So say this, once, on an ordinary day: \"You can tell me anything. I promise I won't freak out, and I won't go to the school without talking with you first.\" Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust. This promise is how you become that adult before it's ever needed.",
-    "Help grow one solid friendship. Having even one good friend is one of the strongest protections a child can have — researchers found a close friendship can stop a small problem from growing into a bigger one. Popularity doesn't matter here. One real friend does. This month, ask \"Who do you like sitting with at lunch?\" and invite that child over, even just for pizza and a movie.",
+    "Make the \"no-panic promise.\" Most bullied kids never tell an adult at school — the U.S. Department of Education's most recent survey (2022) found only 44% did. The biggest reason is fear that the grown-up will overreact and make things worse. So say this, once, on an ordinary day: \"You can tell me anything. I promise I won't freak out, and I won't go to the school without talking with you first.\" Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust. This promise is how you become that adult before it's ever needed.",
+    "Help grow one solid friendship. Friends matter more than most parents realize — support from friends is real protection: a 2022 study that followed nearly 500 teens for several years found it helped cushion the emotional hurt of being bullied. Popularity doesn't matter here. One real friend does. This month, ask \"Who do you like sitting with at lunch?\" and invite that child over, even just for pizza and a movie.",
     "Teach the 10-second rescue. When another kid steps in, bullying stops within about 10 seconds more than half the time — that's from researchers who watched real playgrounds. Yet kids step in less than one time in five, usually because they don't know what to say. Give your child one easy line: \"Hey, come hang out with us.\" Kids who stand up for others build courage and friendships, and they'll know exactly what to do if it's ever them."
   ];
 }

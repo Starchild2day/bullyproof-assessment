@@ -514,7 +514,7 @@ function q2Statement() {
 }
 
 function deriveSummary() {
-  if (isPreventive()) return "Nothing has gone wrong that you know of, and you're getting ahead of it. That's the best time to build the habits that protect kids.";
+  if (isPreventive()) return "You're focused on prevention — and that's the best time to build the habits that keep kids strong, confident and connected.";
   const status = communicationStatus();
   const statusText = {
     "clear": "Your child has spoken with you directly about it.",
@@ -989,15 +989,15 @@ function wordsAnswer() {
   // their words open the door instead of repairing one ("You did nothing
   // wrong" would make no sense to a child nothing has happened to).
   const quote = prevent
-    ? (young ? "If anyone is ever unkind to you, or something feels yucky, tell me. I will always listen, and you will never be in trouble."
+    ? (young ? "If anyone is ever mean to you, or something feels yucky, tell me. I will always listen, and you will never be in trouble."
       : teen ? "You can tell me anything, anytime — even the stuff that's embarrassing. I won't freak out. I'm on your side."
       : "If anything ever happens that feels wrong, big or small, come tell me. You will never be in trouble for telling me, and I'll always be on your side.")
     : (young ? "I love you. You did nothing wrong. I'm going to help."
       : teen ? "I'm on your side. Whatever is going on, it's not your fault, and you don't have to handle it alone. You don't have to tell me everything right now. I'm here when you're ready."
       : "I'm on your side, always. Whatever happened is not your fault, and you are not in trouble. We'll figure it out together.");
   const reframe = prevent
-    ? "If someone is ever unkind to you, that says something about them. It doesn't say anything about you."
-    : (young ? "When someone is unkind, that's a choice they made. It's not about you."
+    ? "If someone is ever mean to you, that says something about them. It doesn't say anything about you."
+    : (young ? "When someone is mean, that's a choice they made. It's not about you."
       : "What someone does to you tells you about them. It doesn't tell you who you are.");
   const why = prevent
     ? "Kids often stay quiet because they're afraid of getting in trouble or upsetting their parent. Saying this ahead of time answers both worries before they ever have to ask."
@@ -1476,7 +1476,7 @@ function preventionSteps() {
 function preventionWatchForNote() {
   if (!isPreventive()) return null;
   return {
-    intro: "Since nothing's happened yet, here's what's actually worth keeping half an eye on — not to worry over, just to notice:",
+    intro: "Here's what's worth keeping half an eye on — not to worry over, just to notice:",
     items: [
       "Physical: unexplained scratches or bruises, a sudden switch to long sleeves in warm weather, or frequent headaches/stomachaches with no clear cause",
       "Sleep or appetite: trouble falling asleep, nightmares, or a real change in how much they're eating",

@@ -17,10 +17,17 @@
 //   REPLY_TO               optional; defaults to CONTACT_EMAIL from config.js
 //   ALLOWED_ORIGINS        optional, comma-separated extra sites allowed to call this function
 //   TURNSTILE_SECRET_KEY   optional; when set, every request must carry a valid Turnstile token
+//   ALERT_EMAIL            optional; where "⚠️ safety flag" alerts go (defaults to CONTACT_EMAIL in config.js)
+//
+// LEADS: every plan request is saved to Netlify Blobs (store "leads") — this replaced Formspree, so there
+// is no monthly submission limit. When answers raise a safety flag, an alert email goes straight to
+// ALERT_EMAIL through Resend. Download or delete records with the leads-admin function.
 //
 // NOTE on rate limits: they are kept in memory, so each warm function instance counts separately. That
 // blocks casual abuse; for a hard limit also add a Netlify/Cloudflare rate-limiting rule on this path.
 "use strict";
+
+const { saveRecord, sendEmail, escapeHtml, alertAddress } = require("../lib/records.js");
 
 let createPlanBuilder = null;
 let bundleError = null;
@@ -161,7 +168,8 @@ exports.handler = async function (event) {
   const subject = builder.state.safetyFlags.length ? "Your Bullyproof.Guide Action Plan (please read)" : "Your Bullyproof.Guide Action Plan";
   const replyTo = process.env.REPLY_TO || builder.CONFIG.CONTACT_EMAIL || undefined;
 
-  // 9. Send.
+  // 9. Send the parent's plan.
+  let emailSent = false;
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -174,16 +182,46 @@ exports.handler = async function (event) {
         ...(replyTo ? { reply_to: replyTo, headers: { "List-Unsubscribe": `<mailto:${replyTo}?subject=unsubscribe>` } } : {})
       })
     });
-    if (!res.ok) {
+    if (res.ok) emailSent = true;
+    else {
       let detail = ""; try { detail = JSON.stringify(await res.json()); } catch (e) { /* ignore */ }
       console.error("Resend rejected the email:", res.status, detail);   // detail never contains the parent's answers
-      return respond(502, { error: "We couldn't send the email." });
     }
-    return respond(200, { success: true });
   } catch (err) {
     console.error("Could not reach Resend:", err && err.message);
-    return respond(502, { error: "We couldn't send the email." });
   }
+
+  // 10. Save the lead (always — even if the email failed, so no family is ever lost).
+  const flags = builder.state.safetyFlags.slice();
+  let summary = "";
+  try { summary = builder.buildReadableSummary(); } catch (e) { /* summary is optional */ }
+  await saveRecord(event, "leads", {
+    createdAt: new Date().toISOString(),
+    email: to,
+    safetyFlags: flags,
+    safetyResourcesAcknowledged: flags.length ? payload.safetyAcknowledged === true : null,
+    consentGiven: payload.consentGiven === true,
+    emailDelivered: emailSent,
+    answers,
+    summary
+  });
+
+  // 11. Safety alert straight to Mark's inbox (does not depend on any form service).
+  if (flags.length) {
+    const alertTo = alertAddress(builder.CONFIG);
+    const html = `
+      <div style="font-family:Arial,Helvetica,sans-serif;max-width:640px;">
+        <h2 style="color:#B23A48;margin:0 0 10px;">⚠️ Safety flag on a Parent Clarity Check</h2>
+        <p><strong>Flags:</strong> ${escapeHtml(flags.join(", "))}<br>
+        <strong>Parent saw and acknowledged the safety resources:</strong> ${payload.safetyAcknowledged === true ? "yes" : "no"}<br>
+        <strong>Parent's plan email delivered:</strong> ${emailSent ? "yes" : "NO — the parent may not have received their plan"}<br>
+        <strong>Parent's email:</strong> ${escapeHtml(to)} (reply to this message to write to them)</p>
+        <pre style="white-space:pre-wrap;font-family:Arial,Helvetica,sans-serif;background:#F5F6F8;border-radius:8px;padding:14px;font-size:14px;line-height:1.5;">${escapeHtml(summary)}</pre>
+      </div>`;
+    await sendEmail({ to: alertTo, subject: "⚠️ Bullyproof Assessment — safety flag triggered", html, replyTo: to });
+  }
+
+  return emailSent ? respond(200, { success: true }) : respond(502, { error: "We couldn't send the email." });
 };
 
 exports.__test = { hits };   // lets the test script reset the rate-limit counters

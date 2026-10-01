@@ -369,7 +369,6 @@ function renderResults() {
     state.honeypot = document.getElementById("hpWebsite").value;
     btn.disabled = true; btn.textContent = "Sending…";
     setPlanStatus("Sending your plan…", "info");
-    await submitToFormspree();
     const sent = await sendPlanByEmail();
     let pdfOk = true;
     try { await generatePDF(); track("pdf_downloaded"); } catch (err) { pdfOk = false; console.warn("PDF creation failed:", err); }
@@ -446,22 +445,16 @@ function wirePlaybookInvite(askEmail) {
 }
 
 async function submitPlaybookInvite(email) {
-  if (!CONFIG.FORMSPREE_ENDPOINT) { console.warn("Formspree endpoint not configured."); return false; }
+  // Saved by our own Netlify function (no Formspree, no monthly limit).
   try {
-    const res = await fetch(CONFIG.FORMSPREE_ENDPOINT, {
+    const res = await fetch("/.netlify/functions/reserve", {
       method: "POST",
-      headers: { "Accept": "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        _replyto: email,
-        _subject: "Playbook invitation request",
-        marketing_consent: "yes",
-        source: "Playbook invitation opt-in"
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, consent: true, website: "" })
     });
     if (res.ok) track("playbook_invite_optin");
     return res.ok;
-  } catch (err) { console.warn("Playbook invite submission failed:", err); return false; }
+  } catch (err) { console.warn("Playbook reservation failed:", err); return false; }
 }
 
 function renderInvite() {
@@ -852,6 +845,8 @@ async function sendPlanByEmail() {
         to: state.email,
         answers: state.answers,
         safetyFlags: state.safetyFlags,
+        safetyAcknowledged: !!state.safetyAcknowledged,
+        consentGiven: !!state.consentGiven,
         marketingConsent: !!state.marketingConsent,
         website: state.honeypot || "",
         turnstileToken: state.turnstileToken || ""
@@ -864,31 +859,6 @@ async function sendPlanByEmail() {
     console.warn("Email delivery failed (network):", err);
     return { ok: false, status: 0 };
   }
-}
-
-async function submitToFormspree() {
-  if (!CONFIG.FORMSPREE_ENDPOINT) { console.warn("Formspree endpoint not configured."); return; }
-  const flagged = state.safetyFlags.length > 0;
-  const subject = flagged
-    ? "⚠️ Bullyproof Assessment — safety flag triggered"
-    : "New Bullyproof Assessment submission";
-  try {
-    await fetch(CONFIG.FORMSPREE_ENDPOINT, {
-      method: "POST",
-      headers: { "Accept": "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: state.email,
-        _replyto: state.email,
-        _subject: subject,
-        safety_flags: flagged ? state.safetyFlags.join(", ") : "none",
-        consent_given: state.consentGiven ? "yes" : "no",
-        marketing_consent: state.marketingConsent ? "yes" : "no",
-        safety_resources_acknowledged: state.safetyFlags.length ? (state.safetyAcknowledged ? "yes" : "no") : "n/a",
-        summary: buildReadableSummary()
-      })
-    });
-    track("email_captured");
-  } catch (err) { console.warn("Formspree submission failed (non-blocking):", err); }
 }
 
 // ============================================================

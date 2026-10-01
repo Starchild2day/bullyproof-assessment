@@ -24,7 +24,7 @@ module.exports = function createPlanBuilder(ORIGIN) {
   const console = { log() {}, info() {}, warn: globalThis.console.warn.bind(globalThis.console), error: globalThis.console.error.bind(globalThis.console) };
 `;
 const footer = `
-  return { CONFIG, state, QUESTIONS, SAFETY_VARIANTS, buildEmailHtml, checkSafety, checkTextSafety };
+  return { CONFIG, state, QUESTIONS, SAFETY_VARIANTS, buildEmailHtml, buildReadableSummary, checkSafety, checkTextSafety };
 };
 `;
 const out = header + config + "\n" + data + "\n" + app + "\n" + footer;

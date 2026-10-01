@@ -9,11 +9,9 @@
 
 const CONFIG = {
 
-  // --- 1. FORMSPREE (sends you the email + all 12 answers) ---
-  // Sign up free at https://formspree.io  → create a new form
-  // → copy the "Form endpoint" URL it gives you (looks like
-  // https://formspree.io/f/abcd1234) and paste it below.
-  FORMSPREE_ENDPOINT: "https://formspree.io/f/mzezzyrz",
+  // --- 1. LEADS: no longer Formspree. Every plan request is saved by the send-plan function to
+  // Netlify Blobs, and safety alerts are emailed straight to you through Resend. Download leads
+  // with the leads-admin function (see netlify/functions/leads-admin.js). ---
 
   // --- 2. FIREBASE (lets a parent resume on another device) ---
   // Sign up free at https://firebase.google.com → create a project

@@ -332,7 +332,7 @@ function renderResults() {
         ${reflection ? `<p class="summary-reflection">${reflection}</p>` : ""}
       </div>
       <h2 class="question">Where should we send your action plan?</h2>
-      <p class="sub">One email. Your personalized plan, plus a copy you can keep.</p>
+      <p class="sub">One email with your personalized plan, easy to read on your phone — plus a printable copy to keep.</p>
       <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
       <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this empty<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
       <div id="turnstileBox" style="margin-top:12px;"></div>
@@ -819,7 +819,7 @@ function setPlanStatus(msg, kind) {
 function planStatusMessage(sent, pdfOk, email) {
   if (sent.ok) {
     return pdfOk
-      ? `Your plan is on its way to ${email}. It usually arrives within a minute. If you don't see it, check your spam or promotions folder. Your PDF copy also just downloaded.`
+      ? `Your plan is on its way to ${email}. It usually arrives within a minute — if you don't see it, check your spam or promotions folder. The email is the easiest version to read on your phone. The PDF that just downloaded is your printable copy.`
       : `Your plan is on its way to ${email}. We couldn't create the PDF copy this time; tap the button to try again.`;
   }
   if (sent.status === 429) return "We're getting a lot of requests right now. Please wait a few minutes and tap the button to try again." + (pdfOk ? " Your PDF copy did download, so you still have your plan." : "");

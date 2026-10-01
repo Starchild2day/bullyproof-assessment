@@ -1151,36 +1151,37 @@ function affiliateDisclosure() {
 // (Coloroso and Faber & Mazlish) — not invented. Where a specific chapter
 // couldn't be verified for a book, "chapter" is left null and the copy
 // says so honestly rather than guessing at a section title.
-const BOOKS = {
-  power: [
-    { title: "Protecting the Gift", author: "Gavin de Becker", coverImg: "book-debecker.jpg", chapter: null },
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "Is There a Bullied Kid in the House?"` }
-  ],
-  physical: [
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapters "The Bullied" and "Is There a Bullied Kid in the House?"` },
-    { title: "Protecting the Gift", author: "Gavin de Becker", coverImg: "book-debecker.jpg", chapter: null }
-  ],
-  exclusion: [
-    { title: "Queen Bees and Wannabes", author: "Rosalind Wiseman", coverImg: "book-wiseman.jpg", chapter: "the core \"Queen Bee\" framework on social hierarchies and exclusion — use the roles to understand the group, not to label any child" },
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "The Bystander"` }
-  ],
-  namecalling: [
-    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", coverImg: "book-fabermazlish.jpg", chapter: `Chapter 1, "Helping Children Deal with Their Feelings"` },
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "The Bullied"` }
-  ],
-  online: [
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "Cyberbullying: High-Tech Harassment in the Net Neighborhood"` },
-    { title: "Cyberbullying: Bullying in the Digital Age", author: "Robin Kowalski, Susan Limber & Patricia Agatston", coverImg: "book-kowalski.jpg", chapter: null }
-  ],
-  prevent: [
-    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", coverImg: "book-fabermazlish.jpg", chapter: `Chapters 1 and 2, "Helping Children Deal with Their Feelings" and "Engaging Cooperation"` },
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "Breaking the Cycle of Violence: Creating Circles of Caring"` }
-  ],
-  default: [
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "Is There a Bullied Kid in the House?" for the signs and first steps` },
-    { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", coverImg: "book-fabermazlish.jpg", chapter: `Chapter 1, "Helping Children Deal with Their Feelings"` }
-  ]
+const B = {
+  coloroso: (chapter) => ({ title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter }),
+  faber: (chapter) => ({ title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", coverImg: "book-fabermazlish.jpg", chapter }),
+  showingUp: { title: "The Power of Showing Up", author: "Daniel J. Siegel & Tina Payne Bryson", isbn: "9781524797713", year: 2020,
+    chapter: `the chapters on the "Four S's" — helping a child feel safe, seen, soothed, and secure` },
+  screens: { title: "Behind Their Screens", author: "Emily Weinstein & Carrie James", isbn: "9780262047357", year: 2022,
+    chapter: `Chapter 3, "Friendship Dilemmas," and Chapter 4, "Small Slights, Big Fights"` },
+  middleSchool: { title: "Middle School Matters", author: "Phyllis L. Fagell", isbn: "9780738235080", year: 2019,
+    chapter: `the sections "Managing shifting friendships" and "Coping with gossip and social turmoil"` },
+  kidConfidence: { title: "Kid Confidence", author: "Eileen Kennedy-Moore", isbn: "9781684030491", year: 2019, chapter: null },
+  thrivers: { title: "Thrivers", author: "Michele Borba", isbn: "9780593085271", year: 2021,
+    chapter: `Chapter 1, "Self-Confidence," and Chapter 2, "Empathy"` }
 };
+// Book choices (Oct 2026 refresh, per Mark): newer, research-grounded books
+// that match the plan's approach, with chapters verified against published
+// tables of contents. Older or off-tone picks (1999, 2012, label-based) were
+// retired. Friendship pick depends on age: middle-school book for 11+.
+const BOOKS = {
+  power: [B.showingUp, B.coloroso(`the chapter "Is There a Bullied Kid in the House?"`)],
+  physical: [B.coloroso(`the chapters "The Bullied" and "Is There a Bullied Kid in the House?"`), B.showingUp],
+  exclusion: [null /* age-based friendship book, filled in below */, B.faber(`Chapter 1, "Helping Children Deal with Their Feelings"`)],
+  namecalling: [B.faber(`Chapter 1, "Helping Children Deal with Their Feelings"`), B.coloroso(`the chapter "The Bullied"`)],
+  online: [B.screens, B.faber(`Chapter 1, "Helping Children Deal with Their Feelings"`)],
+  prevent: [B.thrivers, B.faber(`Chapters 1 and 2, "Helping Children Deal with Their Feelings" and "Engaging Cooperation"`)],
+  default: [B.coloroso(`the chapter "Is There a Bullied Kid in the House?" for the signs and first steps`), B.faber(`Chapter 1, "Helping Children Deal with Their Feelings"`)]
+};
+
+function friendshipBook() {
+  const age = state.answers.q1 || "";
+  return (age === "11–14" || age === "15–18") ? B.middleSchool : B.kidConfidence;
+}
 
 function bookCoverUrl(isbn) {
   return `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`;
@@ -1191,13 +1192,17 @@ function bookCoverUrl(isbn) {
 // in the back are a direct, purpose-built tool for the self-esteem habit
 // already recommended in that path's step 1.
 
+function bookCoverSrc(b) {
+  return b.isbn ? `${window.location.origin}/.netlify/functions/book-cover?isbn=${b.isbn}` : assetUrl(b.coverImg);
+}
+
 function recommendedBooks() {
-  return BOOKS[topicBranch()].map(b => ({
+  return BOOKS[topicBranch()].map(b => b || friendshipBook()).map(b => ({
     title: b.title,
     author: b.author,
     display: `"${b.title}" by ${b.author}`,
     url: bookSearchUrl(b.title, b.author),
-    coverUrl: assetUrl(b.coverImg),
+    coverUrl: bookCoverSrc(b),
     chapter: b.chapter
   }));
 }

@@ -42,5 +42,9 @@ const CONFIG = {
   TURNSTILE_SITE_KEY: "",
 
   // --- 7. MAILING ADDRESS shown at the bottom of every email (good practice / required for marketing email) ---
-  MAILING_ADDRESS: ""
+  MAILING_ADDRESS: "Bullyproof.Guide, 11720 S. Foothills Blvd, Suite 234, Yuma, AZ 85367",
+
+  // --- 8. PRIVACY POLICY address. Blank = the copy hosted with this tool (/privacy/).
+  // When the policy is also posted on bullyproof.guide, put that full address here. ---
+  PRIVACY_URL: ""
 };

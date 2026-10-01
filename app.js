@@ -90,7 +90,7 @@ function renderLanding() {
       <h1>You don't have to figure this out alone.</h1>
       <p class="body-text">Twelve quick questions — about 3 minutes — and you'll have a personalized action plan for your exact situation, sent straight to your inbox tonight.</p>
       ${returningNotice}
-      <p class="privacy-note">Your responses are saved securely and only used to generate your action plan. We never share your data.</p>
+      <p class="privacy-note">Your answers are only used to build your action plan, and we never sell your information. <a href="${privacyUrl()}" target="_blank" rel="noopener">Privacy policy</a></p>
       <div class="checkbox-row">
         <input type="checkbox" id="consentCheck">
         <label for="consentCheck">I understand this tool gives general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. If my child is in immediate danger, I'll call 911 or a crisis line right away instead of relying on this tool. I agree to the <a href="https://www.bullyproof.support/about/terms" target="_blank">Terms of Use</a> and <a href="https://www.bullyproof.support/about/privacy" target="_blank">Privacy Policy</a>.</label>
@@ -351,7 +351,7 @@ function renderResults() {
           <li>...and more!</li>
         </ul>
       </div>
-      <p class="privacy-note">Your responses are saved securely and only used to generate your action plan. We never share your data. Every follow-up email includes a "Delete my data" link.</p>
+      <p class="privacy-note">Your answers are only used to build your action plan, and we never sell your information. Every email includes a "Delete my data" link. <a href="${privacyUrl()}" target="_blank" rel="noopener">Privacy policy</a></p>
       </div>
     </div>
   `;
@@ -473,7 +473,7 @@ function renderInvite() {
         <h2 class="question">Reserve your copy of the Playbook</h2>
         <p class="sub">Enter the email where you received your action plan.</p>
         ${playbookInviteHtml(true)}
-        <p class="privacy-note">We never share your data. Every email includes a way to unsubscribe.</p>
+        <p class="privacy-note">We never sell your information. Every email includes a way to unsubscribe. <a href="${privacyUrl()}" target="_blank" rel="noopener">Privacy policy</a></p>
       </div>
     </div>`;
   wirePlaybookInvite(true);
@@ -792,6 +792,7 @@ function buildEmailHtml() {
       You're receiving this email because this address was entered at Bullyproof.Guide to get an action plan.
       ${state.marketingConsent ? `You also asked to hear about the Bullyproof Parent Playbook and occasional updates. To stop them, just reply with the word "unsubscribe".` : ""}
       ${footContact ? `Want your answers deleted? <a href="mailto:${escapeAttr(footContact)}?subject=Delete%20my%20data" style="color:#8896B8;">Delete my data</a>.` : ""}
+      <a href="${escapeAttr(privacyUrl())}" style="color:#8896B8;">Privacy policy</a>.
       ${footAddress ? `<br>${escapeHtml(footAddress)}` : ""}
     </p>
   `);
@@ -1263,6 +1264,10 @@ function amazonBothBooksUrl() {
 }
 const SUNBEAM_FULLCOLOR_AMAZON_URL = amazonProductUrl("0999371800", "Adventures-True-Sunbeam-Family-Keepsake");
 const SUNBEAM_COLORING_AMAZON_URL = amazonProductUrl("1616113324", "Adventures-True-Sunbeam-Keepsake-Coloring");
+
+function privacyUrl() {
+  return (typeof CONFIG !== "undefined" && CONFIG.PRIVACY_URL) || `${window.location.origin}/privacy/`;
+}
 
 function assetUrl(name) {
   return `${window.location.origin}/assets/${name}`;
@@ -1941,6 +1946,10 @@ async function generatePDF() {
   body("This plan is for general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. Please use your own judgment and talk to a licensed professional about your specific situation. If your child is in immediate danger, call 911.", { color: [130, 130, 130] });
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);
   doc.text("If you need more help finding a vetted professional in your area, visit " + (CONFIG.SITE_URL || "bullyproof.guide") + ".", 15, y);
+  y += 8;
+  doc.setFontSize(9); doc.setTextColor(130, 130, 130);
+  if (CONFIG.MAILING_ADDRESS) { doc.text(CONFIG.MAILING_ADDRESS, 15, y); y += 5; }
+  doc.textWithLink("Privacy policy: " + privacyUrl().replace(/^https?:\/\//, ""), 15, y, { url: privacyUrl() });
 
   doc.save("bullyproof-action-plan.pdf");
 }

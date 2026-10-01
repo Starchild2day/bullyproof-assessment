@@ -1161,7 +1161,7 @@ const BOOKS = {
     { title: "Protecting the Gift", author: "Gavin de Becker", coverImg: "book-debecker.jpg", chapter: null }
   ],
   exclusion: [
-    { title: "Queen Bees and Wannabes", author: "Rosalind Wiseman", coverImg: "book-wiseman.jpg", chapter: "the core \"Queen Bee\" framework on social hierarchies and exclusion" },
+    { title: "Queen Bees and Wannabes", author: "Rosalind Wiseman", coverImg: "book-wiseman.jpg", chapter: "the core \"Queen Bee\" framework on social hierarchies and exclusion — use the roles to understand the group, not to label any child" },
     { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "The Bystander"` }
   ],
   namecalling: [
@@ -1177,7 +1177,7 @@ const BOOKS = {
     { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "Breaking the Cycle of Violence: Creating Circles of Caring"` }
   ],
   default: [
-    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the opening chapter, "Three Characters and a Tragedy," for a clear overview` },
+    { title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter: `the chapter "Is There a Bullied Kid in the House?" for the signs and first steps` },
     { title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", coverImg: "book-fabermazlish.jpg", chapter: `Chapter 1, "Helping Children Deal with Their Feelings"` }
   ]
 };

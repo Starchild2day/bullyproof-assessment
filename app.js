@@ -298,17 +298,9 @@ function onNext(q) {
   render();
 }
 
-function saveProgressToFirebase() {
-  if (!CONFIG.FIREBASE_DATABASE_URL) return;
-  if (!state.sessionId) state.sessionId = "s_" + Math.random().toString(36).slice(2, 12);
-  const payload = { answers: state.answers, qIndex: state.qIndex, email: state.email, updatedAt: Date.now() };
-  fetch(`${CONFIG.FIREBASE_DATABASE_URL}/sessions/${state.sessionId}.json`, { method: "PUT", body: JSON.stringify(payload) }).catch(err => console.warn("Firebase save failed (non-blocking):", err));
-}
-
 function renderResults() {
   progressTrack.style.display = "none";
   track("assessment_completed");
-  saveProgressToFirebase();
   if (!state.completionRecorded) {
     state.completionRecorded = true;
     try {

@@ -13,15 +13,6 @@ const CONFIG = {
   // Netlify Blobs, and safety alerts are emailed straight to you through Resend. Download leads
   // with the leads-admin function (see netlify/functions/leads-admin.js). ---
 
-  // --- 2. FIREBASE (lets a parent resume on another device) ---
-  // Sign up free at https://firebase.google.com → create a project
-  // → Project settings → your web app → copy these values.
-  // Leave these blank and the tool still works perfectly —
-  // it just won't offer cross-device resume until this is filled in.
-  FIREBASE_API_KEY: "",
-  FIREBASE_PROJECT_ID: "",
-  FIREBASE_DATABASE_URL: "",
-
   // --- 3. PLAUSIBLE (shows you which question parents quit on) ---
   // Sign up free trial at https://plausible.io → add your domain
   // → paste the exact domain you registered there, e.g. "assessment.bullyproof.guide"

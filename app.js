@@ -727,7 +727,7 @@ function buildEmailHtml() {
         <td style="vertical-align:top;padding:16px;">
           <p style="color:${text};font-size:14.5px;margin:0 0 4px;">${b.display}</p>
           <p style="color:${muted};font-size:13px;margin:0 0 6px;">${b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full."}</p>
-          <a href="${b.url}" style="color:${navy};font-size:14px;">View this book →</a>
+          <a href="${b.url}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:13px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;">Buy now on Amazon</a>
         </td>
       </tr></table>
     `).join("")}
@@ -1152,8 +1152,8 @@ function affiliateDisclosure() {
 // couldn't be verified for a book, "chapter" is left null and the copy
 // says so honestly rather than guessing at a section title.
 const B = {
-  coloroso: (chapter) => ({ title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", coverImg: "book-coloroso.jpg", chapter }),
-  faber: (chapter) => ({ title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", coverImg: "book-fabermazlish.jpg", chapter }),
+  coloroso: (chapter) => ({ title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780061744600", coverImg: "book-coloroso.jpg", chapter }),
+  faber: (chapter) => ({ title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884", coverImg: "book-fabermazlish.jpg", chapter }),
   showingUp: { title: "The Power of Showing Up", author: "Daniel J. Siegel & Tina Payne Bryson", isbn: "9781524797713", year: 2020,
     chapter: `the chapters on the "Four S's" — helping a child feel safe, seen, soothed, and secure` },
   screens: { title: "Behind Their Screens", author: "Emily Weinstein & Carrie James", isbn: "9780262047357", year: 2022,
@@ -1193,7 +1193,23 @@ function bookCoverUrl(isbn) {
 // already recommended in that path's step 1.
 
 function bookCoverSrc(b) {
-  return b.isbn ? `${window.location.origin}/.netlify/functions/book-cover?isbn=${b.isbn}` : assetUrl(b.coverImg);
+  return b.coverImg ? assetUrl(b.coverImg) : `${window.location.origin}/.netlify/functions/book-cover?isbn=${b.isbn}`;
+}
+
+// ISBN-13 -> ISBN-10, which is the book's Amazon product ID (ASIN) for print editions.
+function isbnToAsin(isbn13) {
+  const core = isbn13.slice(3, 12);
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += (10 - i) * Number(core[i]);
+  const check = (11 - (sum % 11)) % 11;
+  return core + (check === 10 ? "X" : String(check));
+}
+
+// Straight to the book's own Amazon page (with the Associate tag), not a search page.
+function bookBuyUrl(b) {
+  if (!b.isbn) return bookSearchUrl(b.title, b.author);
+  const slug = b.title.replace(/&/g, "and").replace(/[^A-Za-z0-9 ]/g, "").trim().split(/\s+/).slice(0, 6).join("-");
+  return amazonProductUrl(isbnToAsin(b.isbn), slug);
 }
 
 function recommendedBooks() {
@@ -1201,7 +1217,7 @@ function recommendedBooks() {
     title: b.title,
     author: b.author,
     display: `"${b.title}" by ${b.author}`,
-    url: bookSearchUrl(b.title, b.author),
+    url: bookBuyUrl(b),
     coverUrl: bookCoverSrc(b),
     chapter: b.chapter
   }));
@@ -1820,8 +1836,13 @@ async function generatePDF() {
       doc.setFontSize(10); doc.setTextColor(90, 100, 120);
       const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
       doc.text(doc.splitTextToSize(chapterText, 140), 52, by + 20);
-      doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-      doc.textWithLink("View this book", 52, by + 38, { url: b.url });
+      // Same "Buy now on Amazon" button as the email (links to the book's own page, Associate tag included)
+      doc.setFontSize(9.5); doc.setFont(undefined, "bold");
+      const bw = doc.getTextWidth("Buy now on Amazon") + 10;
+      doc.setFillColor(16, 27, 51); doc.roundedRect(52, by + 32, bw, 8, 1.6, 1.6, "F");
+      doc.setTextColor(255, 255, 255); doc.text("Buy now on Amazon", 57, by + 37.4);
+      doc.link(52, by + 32, bw, 8, { url: b.url });
+      doc.setFont(undefined, "normal");
       y = by + 50;
     } else {
       ensureRoom(20);
@@ -1831,7 +1852,7 @@ async function generatePDF() {
       const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
       doc.text(doc.splitTextToSize(chapterText, 180), 15, y); y += 6;
       doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-      doc.textWithLink("View this book", 15, y, { url: b.url });
+      doc.textWithLink("Buy now on Amazon", 15, y, { url: b.url });
       y += 10;
     }
   }

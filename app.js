@@ -1523,20 +1523,22 @@ async function generatePDF() {
   }
 
   const pageWidth = doc.internal.pageSize.getWidth();
-  doc.setFillColor(16, 27, 51);
-  doc.rect(0, 0, pageWidth, 48, "F");
+  // Print-friendly header (per Mark): a navy-outlined oval with a thin gold
+  // inner line on white paper, instead of a solid navy block that eats ink.
+  doc.setDrawColor(16, 27, 51); doc.setLineWidth(0.9);
+  doc.roundedRect(22, 7, pageWidth - 44, 44, 22, 22, "S");
+  doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.35);
+  doc.roundedRect(24.5, 9.5, pageWidth - 49, 39, 19.5, 19.5, "S");
   const bannerIconImg = await fetchImageAsDataUrl(assetUrl("icon-landing.png"));
   if (bannerIconImg) {
-    try { doc.addImage(bannerIconImg, "PNG", pageWidth / 2 - 8, 6, 16, 16); } catch (e) {}
+    try { doc.addImage(bannerIconImg, "PNG", pageWidth / 2 - 7, 12, 14, 14); } catch (e) {}
   }
-  doc.setFontSize(10); doc.setTextColor(200, 155, 60); doc.setFont(undefined, "bold");
-  doc.text("BULLYPROOF.GUIDE", pageWidth / 2, 29, { align: "center", charSpace: 0.5 });
-  doc.setFontSize(17); doc.setTextColor(255, 255, 255);
-  doc.text("Your Personalized Action Plan", pageWidth / 2, 39, { align: "center" });
-  doc.setFillColor(200, 155, 60);
-  doc.rect(0, 48, pageWidth, 1.2, "F");
+  doc.setFontSize(9.5); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
+  doc.text("BULLYPROOF.GUIDE", pageWidth / 2, 32, { align: "center", charSpace: 0.5 });
+  doc.setFontSize(17); doc.setTextColor(16, 27, 51);
+  doc.text("Your Personalized Action Plan", pageWidth / 2, 42, { align: "center" });
   doc.setFont(undefined, "normal");
-  y = 62;
+  y = 64;
 
   if (state.safetyFlags.length) {
     const priority = ["selfHarmOrSuicide", "violenceRisk", "sexualOrPower", "physicalSigns"];
@@ -1680,19 +1682,24 @@ async function generatePDF() {
     y += cardH + 8;
 
     // The reveal: a centered navy band with the book title set as a title lockup.
-    const bandH = 46;
+    const bandH = 52;
     ensureRoom(bandH + 8 + 90); // the reveal always stays on the same page as the books under it
-    doc.setFillColor(16, 27, 51);
-    doc.roundedRect(15, y, 180, bandH, 3, 3, "F");
-    doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.6);
+    // Print-friendly reveal (per Mark): navy oval outline with a gold inner line.
+    doc.setDrawColor(16, 27, 51); doc.setLineWidth(0.9);
+    doc.roundedRect(15, y, 180, bandH, 23, 23, "S");
+    doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.35);
+    doc.roundedRect(17.5, y + 2.5, 175, bandH - 5, 20.5, 20.5, "S");
+    doc.setLineWidth(0.6);
     doc.line(99, y + 7, 111, y + 7);
-    doc.setFont("times", "italic"); doc.setFontSize(12); doc.setTextColor(220, 227, 242);
-    doc.text("You'll find these pages waiting in the back of the award-winning children's book", 105, y + 14, { align: "center" });
-    doc.setFont("times", "normal"); doc.setFontSize(13); doc.setTextColor(255, 255, 255);
-    doc.text("The Adventures of the", 105, y + 22.5, { align: "center" });
-    doc.setFont("times", "bold"); doc.setFontSize(24); doc.setTextColor(227, 184, 90);
-    doc.text("True Sunbeam", 105, y + 33, { align: "center" });
-    doc.line(99, y + 39.5, 111, y + 39.5);
+    doc.setFont("times", "italic"); doc.setFontSize(12); doc.setTextColor(74, 84, 112);
+    // two short lines so the words stay clear of the oval's curved ends
+    doc.text("You'll find these pages waiting in the back of", 105, y + 14, { align: "center" });
+    doc.text("the award-winning children's book", 105, y + 19.5, { align: "center" });
+    doc.setFont("times", "normal"); doc.setFontSize(13); doc.setTextColor(16, 27, 51);
+    doc.text("The Adventures of the", 105, y + 28.5, { align: "center" });
+    doc.setFont("times", "bold"); doc.setFontSize(24); doc.setTextColor(168, 124, 42);
+    doc.text("True Sunbeam", 105, y + 39, { align: "center" });
+    doc.line(99, y + 45.5, 111, y + 45.5);
     doc.setFont("helvetica", "normal");
     y += bandH + 8;
     // Right under the reveal: coloring book (left), Ray (center), story book

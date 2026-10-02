@@ -27,7 +27,7 @@
 // blocks casual abuse; for a hard limit also add a Netlify/Cloudflare rate-limiting rule on this path.
 "use strict";
 
-const { saveRecord, sendEmail, escapeHtml, alertAddress } = require("../lib/records.js");
+const { saveRecord, sendOrQueue, escapeHtml, alertAddress } = require("../lib/records.js");
 
 let createPlanBuilder = null;
 let bundleError = null;
@@ -168,28 +168,13 @@ exports.handler = async function (event) {
   const subject = builder.state.safetyFlags.length ? "Your Bullyproof.Guide Action Plan (please read)" : "Your Bullyproof.Guide Action Plan";
   const replyTo = process.env.REPLY_TO || builder.CONFIG.CONTACT_EMAIL || undefined;
 
-  // 9. Send the parent's plan.
-  let emailSent = false;
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: fromAddress,
-        to: [to],
-        subject,
-        html,
-        ...(replyTo ? { reply_to: replyTo, headers: { "List-Unsubscribe": `<mailto:${replyTo}?subject=unsubscribe>` } } : {})
-      })
-    });
-    if (res.ok) emailSent = true;
-    else {
-      let detail = ""; try { detail = JSON.stringify(await res.json()); } catch (e) { /* ignore */ }
-      console.error("Resend rejected the email:", res.status, detail);   // detail never contains the parent's answers
-    }
-  } catch (err) {
-    console.error("Could not reach Resend:", err && err.message);
-  }
+  // 9. Send the parent's plan. If today's email allowance is used up, it goes to the outbox and the
+  //    scheduled send-queue job delivers it automatically as soon as the allowance resets.
+  const delivery = await sendOrQueue(event, {
+    to, subject, html,
+    ...(replyTo ? { replyTo, headers: { "List-Unsubscribe": `<mailto:${replyTo}?subject=unsubscribe>` } } : {})
+  }, 1, { kind: "plan" });
+  const emailSent = delivery === "sent";
 
   // 10. Save the lead (always — even if the email failed, so no family is ever lost).
   const flags = builder.state.safetyFlags.slice();
@@ -201,7 +186,7 @@ exports.handler = async function (event) {
     safetyFlags: flags,
     safetyResourcesAcknowledged: flags.length ? payload.safetyAcknowledged === true : null,
     consentGiven: payload.consentGiven === true,
-    emailDelivered: emailSent,
+    emailDelivered: delivery === "sent" ? true : (delivery === "queued" ? "queued" : false),
     answers,
     summary
   });
@@ -214,14 +199,16 @@ exports.handler = async function (event) {
         <h2 style="color:#B23A48;margin:0 0 10px;">⚠️ Safety flag on a Parent Clarity Check</h2>
         <p><strong>Flags:</strong> ${escapeHtml(flags.join(", "))}<br>
         <strong>Parent saw and acknowledged the safety resources:</strong> ${payload.safetyAcknowledged === true ? "yes" : "no"}<br>
-        <strong>Parent's plan email delivered:</strong> ${emailSent ? "yes" : "NO — the parent may not have received their plan"}<br>
+        <strong>Parent's plan email delivered:</strong> ${emailSent ? "yes" : (delivery === "queued" ? "queued — the daily email limit was reached, so it will go out automatically when it resets (the parent has their PDF)" : "NO — the parent may not have received their plan")}<br>
         <strong>Parent's email:</strong> ${escapeHtml(to)} (reply to this message to write to them)</p>
         <pre style="white-space:pre-wrap;font-family:Arial,Helvetica,sans-serif;background:#F5F6F8;border-radius:8px;padding:14px;font-size:14px;line-height:1.5;">${escapeHtml(summary)}</pre>
       </div>`;
-    await sendEmail({ to: alertTo, subject: "⚠️ Bullyproof Assessment — safety flag triggered", html, replyTo: to });
+    await sendOrQueue(event, { to: alertTo, subject: "⚠️ Bullyproof Assessment — safety flag triggered", html, replyTo: to }, 0, { kind: "safety-alert" });
   }
 
-  return emailSent ? respond(200, { success: true }) : respond(502, { error: "We couldn't send the email." });
+  if (delivery === "sent") return respond(200, { success: true });
+  if (delivery === "queued") return respond(202, { success: true, queued: true });
+  return respond(502, { error: "We couldn't send the email." });
 };
 
 exports.__test = { hits };   // lets the test script reset the rate-limit counters

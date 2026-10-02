@@ -52,6 +52,13 @@ exports.handler = async function (event) {
         if (String(rec.email || "").toLowerCase() === target) { await store.delete(rec.key); removed++; }
       }
     }
+    // Also drop any not-yet-sent emails to that address waiting in the outbox.
+    const outbox = openStore(event, "outbox");
+    if (outbox) {
+      for (const rec of await allRecords(outbox)) {
+        if (rec.msg && String(rec.msg.to || "").toLowerCase() === target) { await outbox.delete(rec.key); removed++; }
+      }
+    }
     return text(200, `Deleted ${removed} record(s) for ${target}.`);
   }
 

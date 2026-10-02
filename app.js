@@ -804,6 +804,11 @@ function setPlanStatus(msg, kind) {
 }
 
 function planStatusMessage(sent, pdfOk, email) {
+  if (sent.ok && sent.queued) {
+    return pdfOk
+      ? `Your PDF just downloaded, so you have your full plan right now. Today has been a busy day, so your email copy to ${email} is in line and will arrive automatically, usually within a day.`
+      : `Today has been a busy day, so your email copy to ${email} is in line and will arrive automatically, usually within a day.`;
+  }
   if (sent.ok) {
     return pdfOk
       ? `Your plan is on its way to ${email}. It usually arrives within a minute — if you don't see it, check your spam or promotions folder. The email is the easiest version to read on your phone. The PDF that just downloaded is your printable copy.`
@@ -845,7 +850,12 @@ async function sendPlanByEmail() {
         turnstileToken: state.turnstileToken || ""
       })
     });
-    if (res.ok) { track("plan_email_sent"); return { ok: true, status: res.status }; }
+    if (res.ok) {
+      let queued = false;
+      try { queued = res.status === 202 && (await res.json()).queued === true; } catch (e) { /* plain success */ }
+      track("plan_email_sent");
+      return { ok: true, queued, status: res.status };
+    }
     console.warn("Email delivery failed with status", res.status);
     return { ok: false, status: res.status };
   } catch (err) {

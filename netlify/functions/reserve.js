@@ -4,7 +4,7 @@
 // ALERT_EMAIL (or CONTACT_EMAIL). Only our own site may call it; honeypot + simple rate limit.
 "use strict";
 
-const { saveRecord, sendEmail, escapeHtml, alertAddress } = require("../lib/records.js");
+const { saveRecord, sendOrQueue, escapeHtml, alertAddress } = require("../lib/records.js");
 let CONFIG = {};
 try { CONFIG = require("../lib/plan-bundle.js")("https://bullyproof.guide").CONFIG || {}; } catch (e) { /* defaults below */ }
 
@@ -48,13 +48,13 @@ exports.handler = async function (event) {
     consent: "Yes, please send me the invitation to try the Bullyproof Parent Playbook, plus occasional updates. I can unsubscribe any time.",
     source: "Playbook reserve page"
   });
-  const notified = await sendEmail({
+  const notice = await sendOrQueue(event, {
     to: alertAddress(CONFIG),
     subject: "New Playbook reservation",
     html: `<p style="font-family:Arial,Helvetica,sans-serif;">A parent reserved a copy of the Bullyproof Parent Playbook: <strong>${escapeHtml(email)}</strong></p>`,
     replyTo: email
-  });
-  return (saved || notified) ? respond(200, { success: true }) : respond(503, { error: "We couldn't save that just now." });
+  }, 2, { kind: "reservation-notice" });
+  return (saved || notice !== "failed") ? respond(200, { success: true }) : respond(503, { error: "We couldn't save that just now." });
 };
 
 exports.__test = { hits };

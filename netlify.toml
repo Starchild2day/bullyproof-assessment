@@ -9,12 +9,8 @@
   directory = "netlify/functions"
   node_bundler = "esbuild"
 
-# The landing-page draft lives in /landing so Coen can copy it to bullyproof.guide/assessment/.
-# Keep this staging copy out of search engines.
-[[headers]]
-  for = "/landing/*"
-  [headers.values]
-    X-Robots-Tag = "noindex"
+# The landing page lives at /landing/ and is the ONE official copy (bullyproof.guide/assessment
+# redirects here instead of keeping its own copy), so it is open to search engines.
 
 # Basic browser-safety headers on every page.
 [[headers]]

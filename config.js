@@ -13,11 +13,8 @@ const CONFIG = {
   // Netlify Blobs, and safety alerts are emailed straight to you through Resend. Download leads
   // with the leads-admin function (see netlify/functions/leads-admin.js). ---
 
-  // --- 3. PLAUSIBLE (shows you which question parents quit on) ---
-  // Sign up free trial at https://plausible.io → add your domain
-  // → paste the exact domain you registered there, e.g. "assessment.bullyproof.guide"
-  // Leave blank and the tool still works — you just won't get the drop-off dashboard.
-  PLAUSIBLE_DOMAIN: "",
+  // --- 3. VISIT COUNTS: kept privately in Netlify storage by the "track" function (no Plausible,
+  // no cookies, nothing personal). Download them with the leads-admin link (&list=counts). ---
 
   // --- 4. WHERE THE FINISHED SITE LIVES (optional, used only for links in the PDF) ---
   SITE_URL: "https://bullyproof.guide",

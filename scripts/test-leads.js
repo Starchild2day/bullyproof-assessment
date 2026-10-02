@@ -15,6 +15,7 @@ const fakeBlobs = {
     const m = stores[name] || (stores[name] = new Map());
     return {
       async setJSON(k, v) { m.set(k, JSON.parse(JSON.stringify(v))); },
+      async set(k, v) { m.set(k, v); },
       async get(k) { return m.has(k) ? m.get(k) : null; },
       async list() { return { blobs: [...m.keys()].map((key) => ({ key })) }; },
       async delete(k) { m.delete(k); }
@@ -33,6 +34,7 @@ console.error = () => {};
 const sendPlan = require("../netlify/functions/send-plan.js");
 const reserve = require("../netlify/functions/reserve.js");
 const admin = require("../netlify/functions/leads-admin.js");
+const track = require("../netlify/functions/track.js");
 const QUESTIONS = require("../netlify/lib/plan-bundle.js")(ORIGIN).QUESTIONS;
 const opt = (id, f) => QUESTIONS.find((q) => q.id === id).options.find((o) => o.includes(f));
 const calm = { q1: "8–10", q2: opt("q2", "treated badly"), q8: opt("q8", "told me clearly"), q12: "How can I help her?" };
@@ -106,6 +108,23 @@ const leads = () => [...(stores.leads || new Map()).values()];
   r = await admin.handler({ queryStringParameters: { key: process.env.ADMIN_KEY, delete: "GONE@example.com" } });
   check("admin: delete removes the lead AND the reservation", r.body.startsWith("Deleted 2"));
   check("admin: other families untouched", leads().length === 1 && leads()[0].email === "keep@example.com" && stores.reservations.size === 0);
+
+  // 8. Visit counts.
+  reset(); track.__test.hits.clear();
+  const tev = (body, hdr = {}) => ({ httpMethod: "POST", headers: { origin: ORIGIN, "content-type": "application/json", "x-nf-client-connection-ip": "10.9.9.9", ...hdr }, body: JSON.stringify(body) });
+  r = await track.handler(tev({ e: "assessment_started" }));
+  await track.handler(tev({ e: "assessment_started" }));
+  await track.handler(tev({ e: "question_answered", d: "q3" }));
+  check("counts: a step is recorded", r.statusCode === 204 && stores.counts && stores.counts.size === 3);
+  check("counts: nothing personal is stored", [...stores.counts.keys()].every((k) => /^\d{4}-\d{2}-\d{2}\/[a-z_]+(:q\d+)?\/[a-z0-9]+$/.test(k)) && [...stores.counts.values()].every((v) => v === "1"));
+  r = await track.handler(tev({ e: "hacked_event" }));
+  check("counts: unknown steps are refused", r.statusCode === 400 && stores.counts.size === 3);
+  r = await track.handler(tev({ e: "assessment_started" }, { origin: "https://evil.example" }));
+  check("counts: other websites can't add counts", r.statusCode === 403 && stores.counts.size === 3);
+  r = await track.handler(tev({ e: "question_answered", d: "<script>" }));
+  check("counts: odd details are dropped, step still counted", r.statusCode === 204 && [...stores.counts.keys()].filter((k) => k.includes("question_answered/")).length === 1);
+  r = await admin.handler({ queryStringParameters: { key: process.env.ADMIN_KEY, list: "counts" } });
+  check("counts: daily totals download as a spreadsheet", r.statusCode === 200 && /assessment_started","2"/.test(r.body) && /question_answered:q3","1"/.test(r.body));
 
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);

@@ -7,18 +7,19 @@ const progressTrack = document.getElementById("progressTrack");
 const progressFill = document.getElementById("progressFill");
 const progressLabel = document.getElementById("progressLabel");
 
-(function loadPlausible() {
-  if (!CONFIG.PLAUSIBLE_DOMAIN) return;
-  const s = document.createElement("script");
-  s.defer = true;
-  s.setAttribute("data-domain", CONFIG.PLAUSIBLE_DOMAIN);
-  s.src = "https://plausible.io/js/script.js";
-  document.head.appendChild(s);
-})();
 
+// Simple, private visit counts kept in our own Netlify storage (no analytics company, no cookies,
+// nothing personal): just "this step happened", plus which question for question steps.
 function track(eventName, props) {
-  if (window.plausible) { window.plausible(eventName, props ? { props } : undefined); }
-  console.log("[analytics]", eventName, props || "");
+  try {
+    if (!/^https?:/.test(window.location.protocol) || /localhost|127\.0\.0\.1/.test(window.location.hostname)) return;
+    const q = props && (props.question || props.trigger);
+    fetch("/.netlify/functions/track", {
+      method: "POST", keepalive: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ e: eventName, d: q || "" })
+    }).catch(() => {});
+  } catch (e) { /* counting must never get in a parent's way */ }
 }
 
 function visibleQuestions() { return QUESTIONS.filter(q => !q.condition || q.condition(state.answers)); }

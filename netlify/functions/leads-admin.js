@@ -6,6 +6,8 @@
 //     /.netlify/functions/leads-admin?key=ADMIN_KEY
 //   Download Playbook reservations:
 //     /.netlify/functions/leads-admin?key=ADMIN_KEY&list=reservations
+//   Download daily visit counts (how many parents reached each step):
+//     /.netlify/functions/leads-admin?key=ADMIN_KEY&list=counts
 //   Delete everything saved for one email address ("Delete my data" requests):
 //     /.netlify/functions/leads-admin?key=ADMIN_KEY&delete=parent@example.com
 "use strict";
@@ -51,6 +53,24 @@ exports.handler = async function (event) {
       }
     }
     return text(200, `Deleted ${removed} record(s) for ${target}.`);
+  }
+
+  // Daily visit counts (from the track function): one row per day per step.
+  if (q.list === "counts") {
+    const store = openStore(event, "counts");
+    if (!store) return text(503, "Storage is not available.");
+    const { blobs } = await store.list();
+    const tally = new Map();
+    for (const { key } of blobs) {
+      const [day, step] = key.split("/");
+      const k = `${day}|${step}`;
+      tally.set(k, (tally.get(k) || 0) + 1);
+    }
+    const rows = [...tally.entries()].map(([k, n]) => { const [day, step] = k.split("|"); return [day, step, n]; })
+      .sort((a, b) => b[0].localeCompare(a[0]) || a[1].localeCompare(b[1], undefined, { numeric: true }));
+    const csv = ["date,step,count"].concat(rows.map((r) => r.map(csvCell).join(","))).join("\n");
+    const stamp = new Date().toISOString().slice(0, 10);
+    return text(200, csv, "text/csv; charset=utf-8", { "Content-Disposition": `attachment; filename="bullyproof-visit-counts-${stamp}.csv"` });
   }
 
   const name = q.list === "reservations" ? "reservations" : "leads";

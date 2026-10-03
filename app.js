@@ -1307,15 +1307,16 @@ function sunbeamResource() {
   // so this only adds what they don't: how to use the pages.
   const age = state.answers.q1 || "";
   const teen = age === "11–14" || age === "15–18";
-  // "Color a page together" reads right for a 6-year-old and strange for a
-  // parent of a 16-year-old — the keepsake idea still works for a teen, it
-  // just can't be built around crayons.
-  const goDeeper = teen
-    ? `If you have more time, ask a follow-up question and really listen to the answer — that's its own kind of keepsake, even without anything on paper.`
-    : `If you have more time, color a page together and make it a keepsake: your signed and dated artwork in their book is lasting proof of your love and care.`;
-  const text = isPreventive()
-    ? `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" A few minutes a night is all it takes. Each Shining Moment is a little light your child gets to keep — and the more they collect now, the brighter it glows inside when harder days come along.`
-    : `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" ${goDeeper} Each Shining Moment is a little light your child gets to keep. Collect enough of them, and even on their hardest days, there's still a light on inside.`;
+  // For a teen, lead with journaling, not a picture-book page — "color a
+  // page together" never fit, and now there's a cleaner angle: the pages
+  // ARE a nightly journal, and a standalone journal format is coming.
+  const text = teen
+    ? (isPreventive()
+        ? `For a teen, the Shining Moments pages work best as straightforward journaling: a few lines some nights, naming one good thing from the day, right before sleep. A few minutes is all it takes — no prompts needed, no pressure to make it a project. A standalone Shining Moments Journal, built just for that nightly habit, is coming soon. Each Shining Moment is a little light your child gets to keep — and the more they collect now, the brighter it glows inside when harder days come along.`
+        : `For a teen, the Shining Moments pages work best as straightforward journaling: a few lines some nights, naming one good thing from the day, right before sleep. No prompts needed, no pressure to make it a project — just a few honest lines. A standalone Shining Moments Journal, built just for that nightly habit, is coming soon. Each Shining Moment is a little light your child gets to keep. Collect enough of them, and even on their hardest days, there's still a light on inside.`)
+    : (isPreventive()
+        ? `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" A few minutes a night is all it takes. Each Shining Moment is a little light your child gets to keep — and the more they collect now, the brighter it glows inside when harder days come along.`
+        : `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" If you have more time, color a page together and make it a keepsake: your signed and dated artwork in their book is lasting proof of your love and care. Each Shining Moment is a little light your child gets to keep. Collect enough of them, and even on their hardest days, there's still a light on inside.`);
   // The opening framing — a real explanation of the mechanism and why it
   // matters, introduced before the Shining Moments pages themselves and
   // before the book reveal, since this concept has to be understood and

@@ -1037,7 +1037,14 @@ function stepOpening() {
       "Avoiding certain places, people, or activities they used to like": "you've been staying away from some places or people you used to like being around"
     };
     const behavior = named.length ? (secondPerson[named[0]] || named[0].toLowerCase()) : "a little different lately";
-    return `Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: "Want to build something with me?" or "Want to go for a walk?" — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school.`;
+    const age1 = state.answers.q1 || "";
+    // "Want to build something with me?" reads like a suggestion for a young
+    // child, not a 16-year-old — a drive together is the teen equivalent of
+    // the same side-by-side, hands-or-eyes-busy idea.
+    const sideBySide = (age1 === "11–14" || age1 === "15–18")
+      ? `"Want to go for a drive?" or "Want to go for a walk?"`
+      : `"Want to build something with me?" or "Want to go for a walk?"`;
+    return `Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: ${sideBySide} — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school.`;
   }
   if (status === "no-signals") {
     return "Start with easy time together. Nothing has been said yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — and ordinary time like this is how that trust gets built.";
@@ -1062,7 +1069,12 @@ function stepContext() {
     return `Save the evidence first. Take screenshots and note the dates before anything gets deleted. Then sit down with your child and look at the app's report and block settings together — as a team, not as spying. That's exactly the order ${communicationStatus() === "clear" ? "StopBullying.gov also" : "StopBullying.gov, the U.S. government's bullying resource,"} recommends: keep the evidence, then report and block.`;
   }
   if (weight === "in-person") {
-    return "Find the hot spots. Ask your child if certain times or places feel worse — recess, lunch, the bus. This helps the school watch the right spots instead of everywhere. The most recent federal data (2019–20) show bullying at school happens most in classrooms, then hallways and the cafeteria — busy places where adults can't see everything at once.";
+    const age = state.answers.q1 || "";
+    const teen = age === "11–14" || age === "15–18";
+    // "Recess" means nothing to a parent of a teenager — the real equivalent
+    // at that age is the hallway between classes, not a playground period.
+    const spots = teen ? "passing periods between classes, lunch, the bus" : "recess, lunch, the bus";
+    return `Find the hot spots. Ask your child if certain times or places feel worse — ${spots}. This helps the school watch the right spots instead of everywhere. The most recent federal data (2019–20) show bullying at school happens most in classrooms, then hallways and the cafeteria — busy places where adults can't see everything at once.`;
   }
   return "Keep a short daily note. Just one line, no pressure — write down your child's mood and anything small they say. Patterns often show up after a week or two.";
 }
@@ -1293,9 +1305,17 @@ function sunbeamResource() {
   // The bridge line, the "award-winning" label, the badge and the title above
   // this already say what and where the book is (and that it won the award),
   // so this only adds what they don't: how to use the pages.
+  const age = state.answers.q1 || "";
+  const teen = age === "11–14" || age === "15–18";
+  // "Color a page together" reads right for a 6-year-old and strange for a
+  // parent of a 16-year-old — the keepsake idea still works for a teen, it
+  // just can't be built around crayons.
+  const goDeeper = teen
+    ? `If you have more time, ask a follow-up question and really listen to the answer — that's its own kind of keepsake, even without anything on paper.`
+    : `If you have more time, color a page together and make it a keepsake: your signed and dated artwork in their book is lasting proof of your love and care.`;
   const text = isPreventive()
     ? `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" A few minutes a night is all it takes. Each Shining Moment is a little light your child gets to keep — and the more they collect now, the brighter it glows inside when harder days come along.`
-    : `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" If you have more time, color a page together and make it a keepsake: your signed and dated artwork in their book is lasting proof of your love and care. Each Shining Moment is a little light your child gets to keep. Collect enough of them, and even on their hardest days, there's still a light on inside.`;
+    : `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" ${goDeeper} Each Shining Moment is a little light your child gets to keep. Collect enough of them, and even on their hardest days, there's still a light on inside.`;
   // The opening framing — a real explanation of the mechanism and why it
   // matters, introduced before the Shining Moments pages themselves and
   // before the book reveal, since this concept has to be understood and

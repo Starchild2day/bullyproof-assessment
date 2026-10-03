@@ -1,8 +1,0 @@
-{
-  "name": "bullyproof-assessment",
-  "private": true,
-  "description": "Bullyproof.Guide Parent Clarity Check",
-  "dependencies": {
-    "@netlify/blobs": "^11.1.3"
-  }
-}

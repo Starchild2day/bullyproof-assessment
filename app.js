@@ -51,7 +51,7 @@ function checkSafety(question, selected) {
 // type on phones without accents. Both the English and Spanish patterns run on EVERY free-text answer,
 // whichever language the screen is in.
 const foldText = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-const SPANISH_SELF_HARM = /\bsuicid\w*|\bautolesion\w*|\bmatar(me|se)\b|\b(me|se)\s+(quiero|quiere|voy\s+a|va\s+a|iba\s+a)\s+matar\b|\bquit(ar|arme|arse)\s*(me|se)?\s+la\s+vida\b|\b(quiero|quiere|quieren|queria|queremos)\s+morir(me|se)?\b|\b(me|se)\s+(quiero|quiere)\s+morir\b|\bno\s+(quiero|quiere)\s+(seguir\s+)?viv(ir|iendo)\b|\bno\s+(quiero|quiere)\s+estar\s+(aqui|vivo|viva)\b|\bhacer(me|se)\s+dano\b|\blastimar(me|se)\b|\b(acabar|terminar)\s+con\s+(mi|su)\s+vida\b|\bmejor\s+(estar\s+)?muert[oa]\b|\bdesear\w*\s+(estar\s+)?muert[oa]\b/;
+const SPANISH_SELF_HARM = /\bsuicid\w*|\bautolesion\w*|\bmatar(me|se)\b|\b(me|se)\s+(quiero|quiere|voy\s+a|va\s+a|iba\s+a)\s+matar\b|\bquit(ar|arme|arse)\s*(me|se)?\s+la\s+vida\b|\b(quiero|quiere|quieren|queria|queremos)\s+morir(me|se)?\b|\b(me|se)\s+(quiero|quiere)\s+morir\b|\bno\s+(quiero|quiere)\s+(seguir\s+)?viv(ir|iendo)\b|\bno\s+(quiero|quiere)\s+estar\s+(aqui|vivo|viva)\b|\bhacer(me|se)\s+dano\b|\b(me|se)\s+(quiero|quiere)\s+(hacer\s+dano|lastimar)\b|\blastimar(me|se)\b|\b(acabar|terminar)\s+con\s+(mi|su)\s+vida\b|\bmejor\s+(estar\s+|estaria\s+)?muert[oa]\b|\bdesear\w*\s+(estar\s+)?muert[oa]\b/;
 const SPANISH_VIOLENCE = /\bmat(ar|arlo|arla|arlos|arlas|arle|arles|ando)\b|\b(lo|la|los|las|le|les)\s+mato\b|\basesin\w*|\blastimar(lo|la|los|las|le|les)?\b|\bhacer(le|les|lo|la|los|las)\s+dano\b|\bhacer\s+dano\s+a\b/;
 function checkTextSafety(rawText) {
   if (!rawText) return;
@@ -1372,9 +1372,12 @@ Here's why that moment matters more than it seems. Cellular biologist Bruce Lipt
 Every night, as your child drifts toward sleep, their mind passes through the same open, impressionable state that makes early childhood so absorbent in the first place. Call it dreamtime programming: whatever's on their mind in those last few minutes has an outsized chance of settling in.
 
 Which means every bedtime is also an opportunity — a nightly chance to interrupt that programming before it takes hold, and redirect it toward something that builds your child up instead. That's the entire idea behind Shining Moments.`, `La mente de un niño puede quedarse atascada. Lo que le preocupa (un mal día, un momento que dolió, una inquietud sin respuesta fácil) suele dar más vueltas justo a la hora de dormir, cuando ya no hay nada que lo distraiga.
+
 Por eso ese momento importa más de lo que parece. El biólogo celular Bruce Lipton lleva décadas estudiando cómo se forma la mente subconsciente de un niño. Según él:
+
 Cada noche, mientras su hijo o hija se acerca al sueño, su mente pasa por el mismo estado abierto e impresionable que hace que la primera infancia absorba tanto. Llámelo programación de ensueño: lo que tenga en la mente en esos últimos minutos tiene más probabilidad de quedarse grabado.
-Eso significa que cada hora de dormir también es una oportunidad: una oportunidad cada noche de interrumpir esa programación antes de que se asiente y redirigirla hacia algo que fortalezca a su hijo o hija. Esa es toda la idea detrás de Shining Moments.`);
+
+Eso significa que cada hora de dormir también es una oportunidad: la posibilidad, cada noche, de interrumpir esa programación antes de que se asiente y redirigirla hacia algo que fortalezca a su hijo o hija. Esa es toda la idea detrás de Shining Moments.`);
   return {
     text,
     introCaption,
@@ -1889,9 +1892,10 @@ async function generatePDF() {
       doc.text(doc.splitTextToSize(chapterText, 140), 52, by + 20);
       // Same "Buy now on Amazon" button as the email (links to the book's own page, Associate tag included)
       doc.setFontSize(9.5); doc.setFont(undefined, "bold");
-      const bw = doc.getTextWidth("Buy now on Amazon") + 10;
+      const amazonLabel = L("Buy now on Amazon", "Comprar ahora en Amazon");
+      const bw = doc.getTextWidth(amazonLabel) + 10;   // measured from the words actually shown (Spanish is longer)
       doc.setFillColor(16, 27, 51); doc.roundedRect(52, by + 32, bw, 8, 1.6, 1.6, "F");
-      doc.setTextColor(255, 255, 255); doc.text(L("Buy now on Amazon", "Comprar ahora en Amazon"), 57, by + 37.4);
+      doc.setTextColor(255, 255, 255); doc.text(amazonLabel, 57, by + 37.4);
       doc.link(52, by + 32, bw, 8, { url: b.url });
       doc.setFont(undefined, "normal");
       y = by + 50;

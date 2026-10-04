@@ -109,16 +109,21 @@ const check = (name, ok, extra = "") => { (ok ? pass++ : fail++); console.log(`$
   reset(); r = await mod.handler(event()); check("no parent email or answers are ever written to the logs", errors.every((e) => !/parent\d+@example\.com|She has been quiet/.test(e)));
 
   // The server's email must equal what the browser code itself produces for the same answers.
-  const src = ["config.js", "assessment-data.js", "app.js"].map((f) => fs.readFileSync(path.join(root, f), "utf8")).join("\n").split("\n").filter((l) => l.trim() !== "render();").join("\n");
+  const src = ["config.js", "i18n.js", "assessment-data.js", "assessment-data.es.js", "app.js"].map((f) => fs.readFileSync(path.join(root, f), "utf8")).join("\n").split("\n").filter((l) => l.trim() !== "render();").join("\n");
   const stub = () => ({ style: {}, classList: { add() {}, remove() {} }, setAttribute() {}, appendChild() {}, addEventListener() {}, querySelector: () => null, querySelectorAll: () => [] });
   const makeCtx = () => vm.createContext({ window: { location: { origin: ORIGIN, search: "" } }, document: { getElementById: () => null, querySelector: () => null, querySelectorAll: () => [], createElement: stub, addEventListener() {}, body: stub(), head: stub() }, localStorage: { getItem: () => null, setItem() {} }, console: { log() {}, warn() {}, error() {} }, URLSearchParams });
-  const browserHtml = (answers, consent) => vm.runInContext(`${src}\n;state.answers = ${JSON.stringify(answers)}; state.safetyFlags = []; QUESTIONS.forEach(q => { const v = state.answers[q.id]; if (v === undefined) return; if (q.type === "text") checkTextSafety(v); else checkSafety(q, v); }); state.marketingConsent = ${consent}; buildEmailHtml();`, makeCtx());
+  const browserHtml = (answers, consent, lang = "en") => vm.runInContext(`${src}\n;setLang(${JSON.stringify(lang)}); state.answers = ${JSON.stringify(answers)}; state.safetyFlags = []; QUESTIONS.forEach(q => { const v = state.answers[q.id]; if (v === undefined) return; if (q.type === "text") checkTextSafety(v); else checkSafety(q, v); }); state.marketingConsent = ${consent}; buildEmailHtml();`, makeCtx());
   const scenarios = { worried, prevent: { q1: "5–7", q2: opt("q2", "prevent"), q4: "I'm all about prevention.", q12: "How to talk to my kids" }, harm: { ...worried, q12: "Learn how to keep from killing someone" }, teen: { q1: "11–14", q2: opt("q2", "Something happened online"), q6: [opt("q6", "Withdrawing")], q8: opt("q8", "hints"), q12: "What can I say to help?" } };
-  for (const [name, ans] of Object.entries(scenarios)) for (const consent of [false, true]) {
-    reset(); r = await mod.handler(event({ body: { answers: ans, marketingConsent: consent } }));
-    const same = calls[0] && calls[0].html === browserHtml(ans, consent);
-    check(`server email is IDENTICAL to the browser-built email (${name}, consent=${consent})`, r.statusCode === 200 && same);
+  for (const lang of ["en", "es"]) for (const [name, ans] of Object.entries(scenarios)) for (const consent of [false, true]) {
+    reset(); r = await mod.handler(event({ body: { answers: ans, marketingConsent: consent, lang } }));
+    const same = calls[0] && calls[0].html === browserHtml(ans, consent, lang);
+    check(`server email is IDENTICAL to the browser-built email (${lang}, ${name}, consent=${consent})`, r.statusCode === 200 && same);
   }
+  // Spanish subject lines, and an unknown language falls back to English
+  reset(); r = await mod.handler(event({ body: { lang: "es" } }));
+  check("Spanish request -> Spanish subject and a Spanish plan", /^Su Plan de Acción/.test(calls[0].subject) && /lang="es"/.test(calls[0].html) && /Su Plan de Acción Personalizado/.test(calls[0].html), calls[0] && calls[0].subject);
+  reset(); r = await mod.handler(event({ body: { lang: "fr" } }));
+  check("unknown language falls back to English", calls[0].subject === "Your Bullyproof.Guide Action Plan" && !/lang="es"/.test(calls[0].html));
 
   console.error = realError;
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

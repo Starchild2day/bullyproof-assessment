@@ -28,12 +28,20 @@
   .note{background:#FBF6EA;border-left:4px solid var(--gold);border-radius:8px;padding:14px 16px;margin:14px 0;}
   address{font-style:normal;}
   footer{text-align:center;color:var(--muted);font-size:14px;padding:0 20px 40px;}
+  .lang-toggle{margin-left:auto;flex-shrink:0;white-space:nowrap;display:inline-flex;border:1px solid rgba(27,42,74,0.28);border-radius:999px;overflow:hidden;background:#fff;}
+  .lang-toggle button{border:0;background:transparent;color:var(--navy);font:600 13px/1 'Inter',sans-serif;padding:8px 13px;min-height:32px;cursor:pointer;}
+  .lang-toggle button.on{background:var(--navy);color:#fff;}
+  header .in b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  header .in img{flex-shrink:0;}
+  @media (max-width:430px){ header .in b{font-size:15px;} .lang-toggle button{padding:7px 10px;font-size:12.5px;} }
+  html[lang="es"] article[data-lang="en"], html:not([lang="es"]) article[data-lang="es"]{display:none;}
 </style>
 </head>
 <body>
-<header><div class="in"><img src="/assets/icon-landing.png" alt=""><b>Bullyproof.Guide</b></div></header>
+<header><div class="in"><img src="/assets/icon-landing.png" alt=""><b>Bullyproof.Guide</b>
+  <div class="lang-toggle" id="langToggle" role="group" aria-label="Language / Idioma"><button type="button" data-lang="en" lang="en">English</button><button type="button" data-lang="es" lang="es">Español</button></div></div></header>
 <main>
-  <article class="card">
+  <article class="card" data-lang="en">
     <h1>Privacy Policy</h1>
     <p class="eff">Effective October 1, 2026</p>
     <p class="lede">Parents trust us with some of the hardest moments in their family's life. This policy explains, in plain words, what information we collect, how we use it, and the choices you have.</p>
@@ -51,7 +59,7 @@
       <li><strong>Basic technical information.</strong> Like nearly every website, our hosting and content providers automatically receive information such as your IP address and browser type when pages load.</li>
     </ul>
     <div class="note">We never ask for your child's name, and we ask that you don't include names or other identifying details in your answers. If you have more than one child, simply call them Child A and Child B.</div>
-    <p>The assessment also saves a small note in your own browser (not on our servers) so it can remember that you recently finished a plan. You can clear it anytime by clearing your browser's site data.</p>
+    <p>The assessment also saves a small note in your own browser (not on our servers) so it can remember that you recently finished a plan and which language you chose. You can clear it anytime by clearing your browser's site data.</p>
 
     <h2>How we use it</h2>
     <ul>
@@ -99,7 +107,92 @@
     <p>Questions about privacy? We're happy to help.</p>
     <address>Bullyproof.Guide<br>11720 S. Foothills Blvd, Suite 234<br>Yuma, AZ 85367<br><a href="mailto:mark@bullyproof.guide">mark@bullyproof.guide</a></address>
   </article>
+  <article class="card" data-lang="es" lang="es">
+    <h1>Política de Privacidad</h1>
+    <p class="eff">Vigente desde el 1 de octubre de 2026</p>
+    <div class="note">Esta es una traducción al español para su comodidad. Si hay alguna diferencia entre esta versión y la versión en inglés, prevalece la versión en inglés.</div>
+    <p class="lede">Los padres nos confían algunos de los momentos más difíciles de la vida de su familia. Esta política explica, en palabras sencillas, qué información recopilamos, cómo la usamos y las opciones que usted tiene.</p>
+
+    <h2>Quiénes somos</h2>
+    <p>Bullyproof.Guide ayuda a los padres y cuidadores a responder al bullying y a formar niños seguros y conectados. Esta política cubre Bullyproof.Guide, el Parent Clarity Check (nuestra evaluación gratuita), los correos con el plan de acción que envía y la lista de reservas del Bullyproof Parent Playbook.</p>
+    <address>Bullyproof.Guide<br>11720 S. Foothills Blvd, Suite 234<br>Yuma, AZ 85367<br><a href="mailto:mark@bullyproof.guide">mark@bullyproof.guide</a></address>
+
+    <h2>Qué recopilamos</h2>
+    <ul>
+      <li><strong>Sus respuestas.</strong> Cuando usted hace el Parent Clarity Check, recopilamos sus respuestas, como el rango de edad de su hijo o hija, lo que está pasando y cualquier cosa que decida escribir con sus propias palabras.</li>
+      <li><strong>Su dirección de correo electrónico.</strong> La necesitamos para enviarle su plan de acción.</li>
+      <li><strong>Su reserva del Playbook.</strong> Si decide reservar una copia del Bullyproof Parent Playbook, guardamos su correo electrónico y su permiso para contactarle.</li>
+      <li><strong>Conteos anónimos de pasos.</strong> Para saber dónde la evaluación podría ser más clara, contamos cuántos visitantes llegan a cada paso (por ejemplo, "pregunta 3 respondida"). Estos conteos no incluyen correo electrónico, respuestas, dirección IP ni cookies.</li>
+      <li><strong>Información técnica básica.</strong> Como casi todos los sitios web, nuestros proveedores de alojamiento y de contenido reciben automáticamente información como su dirección IP y el tipo de navegador cuando se cargan las páginas.</li>
+    </ul>
+    <div class="note">Nunca pedimos el nombre de su hijo o hija, y le pedimos que no incluya nombres ni otros datos que identifiquen en sus respuestas. Si tiene más de un hijo, simplemente llámelos Hijo A e Hijo B.</div>
+    <p>La evaluación también guarda una pequeña nota en su propio navegador (no en nuestros servidores) para recordar que usted terminó un plan recientemente y qué idioma eligió. Puede borrarla en cualquier momento borrando los datos del sitio en su navegador.</p>
+
+    <h2>Cómo la usamos</h2>
+    <ul>
+      <li>Para crear su plan de acción personalizado y enviárselo.</li>
+      <li>Para mantener seguros a los niños. Si sus respuestas sugieren que alguien podría estar en riesgo de sufrir daño, su plan muestra primero recursos de crisis, y se nos notifica para que podamos revisarlo. No somos un servicio de emergencia y no monitoreamos las respuestas en tiempo real. Si alguien está en peligro inmediato, llame al 911. Para una crisis de salud mental, llame o envíe un mensaje de texto al 988.</li>
+      <li>Para enviarle la invitación al Playbook y novedades ocasionales, pero solo si usted dijo que sí.</li>
+      <li>Para mejorar la evaluación observando patrones generales, nunca para señalar a una familia.</li>
+    </ul>
+
+    <h2>Cómo la compartimos</h2>
+    <p><strong>Nunca vendemos ni alquilamos su información, y nunca la compartimos con otros para su publicidad.</strong> Usamos un pequeño número de proveedores de servicios de confianza que procesan información solo para operar nuestros servicios por nosotros:</p>
+    <ul>
+      <li><strong>Netlify</strong> aloja nuestro sitio web y guarda de forma segura los envíos de la evaluación y las reservas.</li>
+      <li><strong>Resend</strong> entrega nuestros correos.</li>
+      <li><strong>Google Fonts</strong> y <strong>cdnjs de Cloudflare</strong> proporcionan las letras y la herramienta de PDF que cargan nuestras páginas.</li>
+    </ul>
+    <p>También podemos compartir información si la ley lo exige, o si creemos de buena fe que es necesario para proteger la seguridad de alguien.</p>
+
+    <h2>Privacidad de los niños</h2>
+    <p>Nuestros servicios están hechos para padres y cuidadores de 18 años o más. No están dirigidos a niños y no recopilamos a sabiendas información personal de niños menores de 13 años. Si usted cree que un niño nos ha enviado información, comuníquese con nosotros y la eliminaremos.</p>
+
+    <h2>Enlaces a otros sitios</h2>
+    <p>Nuestros planes enlazan a otros sitios web, como Amazon para los libros recomendados, Bullyproof.Support y directorios de profesionales con licencia. Esos sitios tienen sus propias políticas de privacidad. Como afiliados de Amazon, ganamos comisiones por compras que califiquen; Amazon puede usar cookies para saber que usted llegó desde nuestro enlace.</p>
+
+    <h2>Correos y sus opciones</h2>
+    <ul>
+      <li>El correo con su plan de acción es un mensaje único que usted solicitó.</li>
+      <li>Enviamos la invitación al Playbook y las novedades solo si usted reservó una copia. Para dejar de recibirlos, responda "cancelar" a cualquier correo o escriba a <a href="mailto:mark@bullyproof.guide?subject=Unsubscribe">mark@bullyproof.guide</a>. Atendemos las solicitudes en un plazo de 10 días hábiles.</li>
+      <li>Cada correo incluye nuestra dirección postal y una forma de comunicarse con nosotros.</li>
+    </ul>
+
+    <h2>Eliminación de su información</h2>
+    <p>Usted puede pedirnos que eliminemos sus respuestas y su dirección de correo electrónico en cualquier momento. Use el enlace "Eliminar mis datos" de su correo, o escriba a <a href="mailto:mark@bullyproof.guide?subject=Eliminar%20mis%20datos">mark@bullyproof.guide</a>. Eliminaremos su información de nuestros registros y de los sistemas de nuestros proveedores de servicios en un plazo de 30 días y le avisaremos cuando esté hecho. Según el lugar donde viva, también podría tener derecho a ver o corregir la información que tenemos sobre usted. Solo pídalo.</p>
+
+    <h2>Cuánto tiempo la conservamos</h2>
+    <p>Conservamos los envíos de la evaluación solo el tiempo que los necesitemos para entregar y revisar su plan y mejorar la evaluación. Conservamos las reservas del Playbook hasta que el Playbook salga a la venta o hasta que usted cancele la suscripción, lo que ocurra primero, a menos que usted se una y decida seguir en contacto.</p>
+
+    <h2>Cómo la protegemos</h2>
+    <p>Todas las páginas y formularios usan conexiones cifradas (HTTPS), y limitamos el acceso a la información que guardamos. Ningún método de almacenar o enviar información en línea es perfectamente seguro, pero trabajamos mucho para proteger la suya.</p>
+
+    <h2>Cambios a esta política</h2>
+    <p>Si cambiamos esta política, actualizaremos la fecha en la parte superior de esta página. Si un cambio es importante, lo anunciaremos claramente en el sitio antes de que entre en vigor.</p>
+
+    <h2>Contáctenos</h2>
+    <p>¿Preguntas sobre privacidad? Con gusto le ayudamos.</p>
+    <address>Bullyproof.Guide<br>11720 S. Foothills Blvd, Suite 234<br>Yuma, AZ 85367<br><a href="mailto:mark@bullyproof.guide">mark@bullyproof.guide</a></address>
+  </article>
 </main>
 <footer>© 2026 Bullyproof.Guide</footer>
+<script>
+(function () {   // same order of preference as the assessment: ?lang= link, then the saved choice, then the phone's language
+  var lang = "en";
+  try {
+    var q = new URLSearchParams(location.search).get("lang"), s = localStorage.getItem("bp_lang"), nav = (navigator.languages && navigator.languages[0]) || navigator.language || "";
+    lang = (q === "es" || q === "en") ? q : (s === "es" || s === "en") ? s : (/^es(-|$)/i.test(nav) ? "es" : "en");
+  } catch (e) {}
+  function apply(l) {
+    document.documentElement.lang = l;
+    document.title = l === "es" ? "Política de Privacidad — Bullyproof.Guide" : "Privacy Policy — Bullyproof.Guide";
+    var b = document.querySelectorAll("#langToggle button");
+    for (var i = 0; i < b.length; i++) { var on = b[i].getAttribute("data-lang") === l; b[i].className = on ? "on" : ""; b[i].setAttribute("aria-pressed", on ? "true" : "false"); }
+  }
+  var btns = document.querySelectorAll("#langToggle button");
+  for (var i = 0; i < btns.length; i++) btns[i].addEventListener("click", function () { var l = this.getAttribute("data-lang"); try { localStorage.setItem("bp_lang", l); } catch (e) {} apply(l); });
+  apply(lang);
+})();
+</script>
 </body>
 </html>

@@ -99,4 +99,16 @@ check("switching back to English restores English text", /Your Personalized Acti
 const essay = (lang) => run(`setLang("${lang}"); state.answers = { q1: "8–10", q2: "I'm trying to prevent problems before they start" }; sunbeamResource().introCaption`);
 const parasEs = essay("es").split("\n\n").length, parasEn = essay("en").split("\n\n").length;
 check("bedtime essay has the same number of paragraphs in Spanish and English", parasEs === parasEn && parasEn >= 4, `es=${parasEs} en=${parasEn}`);
+
+// ---------- 8. the privacy policy exists in both languages with the same structure, contacts and numbers ----------
+const priv = read("privacy/index.html");
+const art = (l) => (priv.match(new RegExp(`<article[^>]*data-lang="${l}"[\\s\\S]*?</article>`)) || [""])[0];
+const pEn = art("en"), pEs = art("es");
+const count = (s, re) => (s.match(re) || []).length;
+check("privacy page has both an English and a Spanish article", pEn.length > 2000 && pEs.length > 2000);
+check("privacy: same number of sections, bullets and paragraphs in both languages", ["<h2>", "<li>", "<p>", "<address>", "<div class=\"note\">"].filter((tag) => tag !== "<div class=\"note\">").every((tag) => count(pEn, new RegExp(tag, "g")) === count(pEs, new RegExp(tag, "g"))), ["<h2>", "<li>", "<p>"].map((t) => `${t} en=${count(pEn, new RegExp(t, "g"))} es=${count(pEs, new RegExp(t, "g"))}`).join(", "));
+check("privacy: same contact address in both", count(pEs, /mark@bullyproof\.guide/g) === count(pEn, /mark@bullyproof\.guide/g) && /11720 S\. Foothills Blvd/.test(pEs));
+const nums = (s) => (s.replace(/<[^>]+>/g, " ").match(/\b\d[\d,]*\b/g) || []).filter((n) => !/^(2026|1)$/.test(n)).sort().join(",");
+check("privacy: same numbers (days, ages, address) in both — nothing changed in translation", nums(pEn) === nums(pEs), `en=${nums(pEn)} es=${nums(pEs)}`);
+check("privacy: Spanish version says the English version prevails", /prevalece la versión en inglés/.test(pEs));
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

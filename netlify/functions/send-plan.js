@@ -150,6 +150,9 @@ exports.handler = async function (event) {
   const answers = cleanAnswers(builder.QUESTIONS, payload.answers);
   if (!answers) return respond(400, { error: "We couldn't read those answers." });
 
+  // The plan is built in the language the parent was using ("es" = Spanish); anything else is English.
+  const lang = payload.lang === "es" ? "es" : "en";
+  builder.setLang(lang);
   builder.state.answers = answers;
   builder.state.safetyFlags = [];
   for (const q of builder.QUESTIONS) {
@@ -165,7 +168,10 @@ exports.handler = async function (event) {
 
   let html;
   try { html = builder.buildEmailHtml(); } catch (err) { console.error("Could not build the plan email:", err && err.message); return respond(500, { error: "Email is not available right now." }); }
-  const subject = builder.state.safetyFlags.length ? "Your Bullyproof.Guide Action Plan (please read)" : "Your Bullyproof.Guide Action Plan";
+  const flagged = builder.state.safetyFlags.length > 0;
+  const subject = lang === "es"
+    ? (flagged ? "Su Plan de Acción de Bullyproof.Guide (por favor, léalo)" : "Su Plan de Acción de Bullyproof.Guide")
+    : (flagged ? "Your Bullyproof.Guide Action Plan (please read)" : "Your Bullyproof.Guide Action Plan");
   const replyTo = process.env.REPLY_TO || builder.CONFIG.CONTACT_EMAIL || undefined;
 
   // 9. Send the parent's plan. If today's email allowance is used up, it goes to the outbox and the
@@ -179,10 +185,12 @@ exports.handler = async function (event) {
   // 10. Save the lead (always — even if the email failed, so no family is ever lost).
   const flags = builder.state.safetyFlags.slice();
   let summary = "";
+  builder.setLang("en");   // the summary is for our own team, so it is always written in English
   try { summary = builder.buildReadableSummary(); } catch (e) { /* summary is optional */ }
   await saveRecord(event, "leads", {
     createdAt: new Date().toISOString(),
     email: to,
+    lang,
     safetyFlags: flags,
     safetyResourcesAcknowledged: flags.length ? payload.safetyAcknowledged === true : null,
     consentGiven: payload.consentGiven === true,
@@ -200,6 +208,7 @@ exports.handler = async function (event) {
         <p><strong>Flags:</strong> ${escapeHtml(flags.join(", "))}<br>
         <strong>Parent saw and acknowledged the safety resources:</strong> ${payload.safetyAcknowledged === true ? "yes" : "no"}<br>
         <strong>Parent's plan email delivered:</strong> ${emailSent ? "yes" : (delivery === "queued" ? "queued — the daily email limit was reached, so it will go out automatically when it resets (the parent has their PDF)" : "NO — the parent may not have received their plan")}<br>
+        <strong>Language of the plan:</strong> ${lang === "es" ? "Spanish (Español)" : "English"}<br>
         <strong>Parent's email:</strong> ${escapeHtml(to)} (reply to this message to write to them)</p>
         <pre style="white-space:pre-wrap;font-family:Arial,Helvetica,sans-serif;background:#F5F6F8;border-radius:8px;padding:14px;font-size:14px;line-height:1.5;">${escapeHtml(summary)}</pre>
       </div>`;

@@ -1,5 +1,5 @@
 // Builds netlify/lib/plan-bundle.js from the SAME files the browser runs
-// (config.js + assessment-data.js + app.js), so the email the server sends is
+// (config.js + i18n.js + assessment-data.js + assessment-data.es.js + app.js), so the email the server sends is
 // built by exactly the same code as the on-screen plan and the PDF — one source of truth.
 //
 // Netlify runs this on every deploy (see netlify.toml). To run it yourself:
@@ -10,7 +10,8 @@ const root = path.join(__dirname, "..");
 const read = (f) => fs.readFileSync(path.join(root, f), "utf8");
 
 const config = read("config.js");
-const data = read("assessment-data.js");
+const i18n = read("i18n.js");
+const data = read("assessment-data.js") + "\n" + read("assessment-data.es.js");
 // app.js ends by calling render() to draw the page in a browser — the server has no page to draw.
 const app = read("app.js").split("\n").filter((l) => l.trim() !== "render();").join("\n");
 
@@ -24,10 +25,10 @@ module.exports = function createPlanBuilder(ORIGIN) {
   const console = { log() {}, info() {}, warn: globalThis.console.warn.bind(globalThis.console), error: globalThis.console.error.bind(globalThis.console) };
 `;
 const footer = `
-  return { CONFIG, state, QUESTIONS, SAFETY_VARIANTS, buildEmailHtml, buildReadableSummary, checkSafety, checkTextSafety };
+  return { CONFIG, state, QUESTIONS, SAFETY_VARIANTS, buildEmailHtml, buildReadableSummary, checkSafety, checkTextSafety, setLang, getLang, missingTranslations, PLAYBOOK_INVITE_LABEL };
 };
 `;
-const out = header + config + "\n" + data + "\n" + app + "\n" + footer;
+const out = header + config + "\n" + i18n + "\n" + data + "\n" + app + "\n" + footer;
 const dest = path.join(root, "netlify", "lib", "plan-bundle.js");
 fs.mkdirSync(path.dirname(dest), { recursive: true });
 fs.writeFileSync(dest, out);

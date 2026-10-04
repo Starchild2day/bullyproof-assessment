@@ -60,6 +60,10 @@
     font-family:'Inter',sans-serif;
   }
   header.brand .name{font-weight:600;font-size:17px;color:var(--navy);letter-spacing:-0.01em;}
+  .lang-toggle{margin-left:auto;display:inline-flex;border:1px solid rgba(27,42,74,0.28);border-radius:999px;overflow:hidden;background:#fff;}
+  .lang-toggle button{border:0;background:transparent;color:var(--navy);font:600 13px/1 'Inter',sans-serif;padding:8px 13px;min-height:32px;cursor:pointer;}
+  .lang-toggle button.on{background:var(--navy);color:#fff;}
+  .lang-toggle button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px;}
 
   .progress-track{
     position:-webkit-sticky;
@@ -99,7 +103,9 @@
     position:relative;overflow:hidden;
   }
   .banner.landing-banner{height:130px;}
-  body.landing-mode header.brand{display:none;}
+  /* On the landing screen the logo lives in the banner, so the header shows only the language button. */
+  body.landing-mode header.brand{padding:0 0 10px;justify-content:flex-end;}
+  body.landing-mode header.brand .mark, body.landing-mode header.brand .name{display:none;}
   body.landing-mode .wrap{padding-top:8px;}
   .banner svg{width:100%;height:100%;position:relative;z-index:1;}
 
@@ -223,6 +229,7 @@
   body.question-mode header.brand{flex-shrink:0;padding:6px 0 8px;}
   body.question-mode header.brand .mark{width:26px;height:26px;font-size:12px;}
   body.question-mode header.brand .name{font-size:14px;}
+  body.question-mode .lang-toggle button{padding:5px 10px;font-size:12px;min-height:26px;}
   body.question-mode .progress-track{position:static;flex-shrink:0;padding:6px 0 8px;}
   body.question-mode .progress-label{margin-top:5px;}
   body.question-mode #app{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;}
@@ -242,6 +249,10 @@
   <header class="brand">
     <div class="mark">B</div>
     <div class="name">Bullyproof.Guide</div>
+    <div class="lang-toggle" id="langToggle" role="group" aria-label="Language / Idioma">
+      <button type="button" data-lang="en" lang="en" class="on" aria-pressed="true">English</button>
+      <button type="button" data-lang="es" lang="es" aria-pressed="false">Español</button>
+    </div>
   </header>
 
   <div class="progress-track" id="progressTrack" style="display:none;" role="progressbar" aria-label="Assessment progress">
@@ -251,12 +262,14 @@
 
   <div id="app"></div>
 
-  <footer class="foot">© Bullyproof.Guide — This tool does not replace professional help. If your child is in immediate danger, call 911.<br>Are you a helping professional? <a href="https://www.bullyproof.support/join">Join the Bullyproof Support network</a></footer>
+  <footer class="foot" id="siteFooter">© Bullyproof.Guide — This tool does not replace professional help. If your child is in immediate danger, call 911.<br>Are you a helping professional? <a href="https://www.bullyproof.support/join">Join the Bullyproof Support network</a></footer>
 </div>
 
-<script src="config.js?v=20261004a"></script>
-<script src="assessment-data.js?v=20261004a"></script>
-<script src="app.js?v=20261004a"></script>
+<script src="config.js?v=20261004b"></script>
+<script src="i18n.js?v=20261004b"></script>
+<script src="assessment-data.js?v=20261004b"></script>
+<script src="assessment-data.es.js?v=20261004b"></script>
+<script src="app.js?v=20261004b"></script>
 </body>
 </html>
 <!-- redeploy trigger 2026-09-18T19:23:58Z -->

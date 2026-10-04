@@ -6,7 +6,14 @@
 
 const { saveRecord, sendOrQueue, escapeHtml, alertAddress } = require("../lib/records.js");
 let CONFIG = {};
-try { CONFIG = require("../lib/plan-bundle.js")("https://bullyproof.guide").CONFIG || {}; } catch (e) { /* defaults below */ }
+let makePlanBundle = null;
+try { makePlanBundle = require("../lib/plan-bundle.js"); CONFIG = makePlanBundle("https://bullyproof.guide").CONFIG || {}; } catch (e) { /* defaults below */ }
+const ENGLISH_CONSENT = "Yes, please send me the invitation to try the Bullyproof Parent Playbook, plus occasional updates. I can unsubscribe any time.";
+// Store the exact wording the parent saw (English or Spanish), so the consent record is accurate.
+function consentWording(lang) {
+  if (lang !== "es" || !makePlanBundle) return ENGLISH_CONSENT;
+  try { const b = makePlanBundle("https://bullyproof.guide"); b.setLang("es"); return b.PLAYBOOK_INVITE_LABEL(); } catch (e) { return ENGLISH_CONSENT; }
+}
 
 const DEFAULT_ORIGINS = ["https://assessment.bullyproof.guide", "https://shimmering-pegasus-4a4a21.netlify.app"];
 const hits = new Map();
@@ -45,7 +52,8 @@ exports.handler = async function (event) {
   const saved = await saveRecord(event, "reservations", {
     createdAt: new Date().toISOString(),
     email,
-    consent: "Yes, please send me the invitation to try the Bullyproof Parent Playbook, plus occasional updates. I can unsubscribe any time.",
+    consent: consentWording(payload.lang),
+    lang: payload.lang === "es" ? "es" : "en",
     source: "Playbook reserve page"
   });
   const notice = await sendOrQueue(event, {

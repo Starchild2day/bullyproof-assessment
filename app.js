@@ -47,8 +47,17 @@ function checkSafety(question, selected) {
 // or risk of self-harm/suicide (the parent's own, or described for the
 // child), should surface the same crisis resources immediately, not a
 // routine action plan.
+// Text typed in Spanish is folded (accents removed, "ñ" -> "n") before matching, because many parents
+// type on phones without accents. Both the English and Spanish patterns run on EVERY free-text answer,
+// whichever language the screen is in.
+const foldText = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const SPANISH_SELF_HARM = /\bsuicid\w*|\bautolesion\w*|\bmatar(me|se)\b|\b(me|se)\s+(quiero|quiere|voy\s+a|va\s+a|iba\s+a)\s+matar\b|\bquit(ar|arme|arse)\s*(me|se)?\s+la\s+vida\b|\b(quiero|quiere|quieren|queria|queremos)\s+morir(me|se)?\b|\b(me|se)\s+(quiero|quiere)\s+morir\b|\bno\s+(quiero|quiere)\s+(seguir\s+)?viv(ir|iendo)\b|\bno\s+(quiero|quiere)\s+estar\s+(aqui|vivo|viva)\b|\bhacer(me|se)\s+dano\b|\blastimar(me|se)\b|\b(acabar|terminar)\s+con\s+(mi|su)\s+vida\b|\bmejor\s+(estar\s+)?muert[oa]\b|\bdesear\w*\s+(estar\s+)?muert[oa]\b/;
+const SPANISH_VIOLENCE = /\bmat(ar|arlo|arla|arlos|arlas|arle|arles|ando)\b|\b(lo|la|los|las|le|les)\s+mato\b|\basesin\w*|\blastimar(lo|la|los|las|le|les)?\b|\bhacer(le|les|lo|la|los|las)\s+dano\b|\bhacer\s+dano\s+a\b/;
 function checkTextSafety(rawText) {
   if (!rawText) return;
+  const folded = foldText(rawText);
+  if (SPANISH_SELF_HARM.test(folded)) { addFlag("selfHarmOrSuicide"); return; }
+  if (SPANISH_VIOLENCE.test(folded)) { addFlag("violenceRisk"); return; }
   const text = rawText.toLowerCase();
   const selfHarmPattern = /\b(suicide|suicidal)\b|\b(kill|hurt|harm)(ing)?\s+(myself|himself|herself|themselves)\b|\bwant(s|ed)?\s+to\s+die\b|\bend(ing)?\s+(my|his|her|their)\s+life\b|\bdon'?t\s+want\s+to\s+(live|be\s+here)\b/;
   const violencePattern = /\bkill(ing)?\b|\b(hurt|harm)(ing)?\s+(him|her|them|someone|somebody)\b|\bwant(s|ed)?\s+to\s+hurt\b/;
@@ -80,7 +89,7 @@ function renderLanding() {
     if (prior.length >= 1 || preview) {
       returningNotice = `
         <div style="background:var(--gold-soft);border-left:4px solid var(--gold);border-radius:10px;padding:14px 16px;margin:0 0 18px;">
-          <p style="margin:0;font-size:14px;color:var(--navy-deep);"><strong>Welcome back.</strong> It looks like you've already taken this check-in. If your situation has changed, go ahead and take it again. For ongoing, personalized support as things keep changing, that's exactly what <a href="${NETWORK_HOME_URL}" style="color:var(--navy);font-weight:600;">Bullyproof.Support</a> and the upcoming Parent Playbook are built for.</p>
+          <p style="margin:0;font-size:14px;color:var(--navy-deep);"><strong>${L(`Welcome back.`, `Qué gusto verle de nuevo.`)}</strong> ${L(`It looks like you've already taken this check-in. If your situation has changed, go ahead and take it again. For ongoing, personalized support as things keep changing, that's exactly what`, `Parece que ya hizo este chequeo. Si su situación ha cambiado, puede hacerlo de nuevo. Para recibir apoyo continuo y personalizado a medida que las cosas cambian, para eso mismo fueron creados`)} <a href="${NETWORK_HOME_URL}" style="color:var(--navy);font-weight:600;">Bullyproof.Support</a> ${L(`and the upcoming Parent Playbook are built for.`, `y el próximo Bullyproof Parent Playbook.`)}</p>
         </div>`;
     }
   } catch (e) { /* storage unavailable — just skip the notice */ }
@@ -88,16 +97,16 @@ function renderLanding() {
     <div class="card">
       ${banner(LANDING_ICON, { large: true, imageSrc: assetUrl("icon-landing.png"), showLogo: true })}
       <div class="card-body">
-      <h1>You don't have to figure this out alone.</h1>
-      <p class="body-text">Twelve quick questions — about 3 minutes — and you'll have a personalized action plan for your exact situation, sent straight to your inbox tonight.</p>
+      <h1>${L(`You don't have to figure this out alone.`, `No tiene que resolver esto por su cuenta.`)}</h1>
+      <p class="body-text">${L(`Twelve quick questions — about 3 minutes — and you'll have a personalized action plan for your exact situation, sent straight to your inbox tonight.`, `Doce preguntas rápidas, unos 3 minutos, y tendrá un plan de acción personalizado para su situación exacta, enviado directamente a su correo esta noche.`)}</p>
       ${returningNotice}
-      <p class="privacy-note">Your answers are only used to build your action plan, and we never sell your information. <a href="${privacyUrl()}" target="_blank" rel="noopener">Privacy policy</a></p>
+      <p class="privacy-note">${L(`Your answers are only used to build your action plan, and we never sell your information.`, `Sus respuestas solo se usan para crear su plan de acción, y nunca vendemos su información.`)} <a href="${privacyUrl()}" target="_blank" rel="noopener">${L(`Privacy policy`, `Política de privacidad`)}</a></p>
       <div class="checkbox-row">
         <input type="checkbox" id="consentCheck">
-        <label for="consentCheck">I understand this tool gives general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. If my child is in immediate danger, I'll call 911 or a crisis line right away instead of relying on this tool. I agree to the <a href="https://www.bullyproof.support/about/terms" target="_blank">Terms of Use</a> and <a href="https://www.bullyproof.support/about/privacy" target="_blank">Privacy Policy</a>.</label>
+        <label for="consentCheck">${L(`I understand this tool gives general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. If my child is in immediate danger, I'll call 911 or a crisis line right away instead of relying on this tool. I agree to the`, `Entiendo que esta herramienta ofrece solo información general. No es asesoría médica, de salud mental ni legal, y no garantiza ningún resultado específico. Si mi hijo o hija está en peligro inmediato, llamaré al 911 o a una línea de crisis de inmediato, en lugar de depender de esta herramienta. Acepto los`)} <a href="https://www.bullyproof.support/about/terms" target="_blank">${L(`Terms of Use`, `Términos de Uso (en inglés)`)}</a> ${L(`and`, `y la`)} <a href="https://www.bullyproof.support/about/privacy" target="_blank">${L(`Privacy Policy`, `Política de Privacidad`)}</a>.</label>
       </div>
       <div class="nav-row" style="justify-content:flex-start;">
-        <button class="primary" id="startBtn" disabled>Start the Assessment</button>
+        <button class="primary" id="startBtn" disabled>${L(`Start the Assessment`, `Comenzar la evaluación`)}</button>
       </div>
       </div>
     </div>
@@ -120,7 +129,7 @@ function renderProgress() {
   const pct = Math.round((state.qIndex / total) * 100);
   progressTrack.style.display = "block";
   progressFill.style.width = pct + "%";
-  progressLabel.textContent = `Question ${state.qIndex + 1} of ${total}`;
+  progressLabel.textContent = L(`Question ${state.qIndex + 1} of ${total}`, `Pregunta ${state.qIndex + 1} de ${total}`);
 }
 
 function renderQuestion() {
@@ -144,10 +153,10 @@ function renderQuestion() {
       <div class="options-scroll">
         ${bodyHTML}
       </div>
-      <p id="validationMsg" style="display:none;color:#B23A48;font-size:13.5px;margin:0 0 8px;font-weight:600;">Please select an answer to continue.</p>
+      <p id="validationMsg" style="display:none;color:#B23A48;font-size:13.5px;margin:0 0 8px;font-weight:600;">${L(`Please select an answer to continue.`, `Por favor, elija una respuesta para continuar.`)}</p>
       <div class="nav-row">
-        <button class="ghost" id="backBtn" ${state.qIndex === 0 ? "disabled style='visibility:hidden'" : ""}>Back</button>
-        <button class="primary" id="nextBtn">Next</button>
+        <button class="ghost" id="backBtn" ${state.qIndex === 0 ? "disabled style='visibility:hidden'" : ""}>${L(`Back`, `Atrás`)}</button>
+        <button class="primary" id="nextBtn">${L(`Next`, `Siguiente`)}</button>
       </div>
       </div>
     </div>
@@ -165,17 +174,17 @@ function renderSafetyBanner() {
   if (state.safetyAcknowledged) {
     return `
       <div class="safety-banner safety-banner-mini">
-        <strong>Crisis resources:</strong> ${variant.resources.map(r => r.name + " — " + r.detail).join(" · ")}
+        <strong>${L(`Crisis resources:`, `Recursos de crisis:`)}</strong> ${variant.resources.map(r => resName(r) + " — " + resDetail(r)).join(" · ")}
       </div>
     `;
   }
 
   return `
     <div class="safety-banner">
-      <h3>Please know help is available right now</h3>
-      <p>Based on what you've shared, we want to make sure you have these resources close by. You can keep going with the assessment whenever you're ready.</p>
-      <ul>${variant.resources.map(r => `<li><strong>${r.name}</strong> — ${r.detail}</li>`).join("")}</ul>
-      <button type="button" id="safetyAckBtn" class="safety-ack-btn">I've seen these — continue</button>
+      <h3>${L(`Please know help is available right now`, `Sepa que hay ayuda disponible ahora mismo`)}</h3>
+      <p>${L(`Based on what you've shared, we want to make sure you have these resources close by. You can keep going with the assessment whenever you're ready.`, `Con base en lo que nos compartió, queremos asegurarnos de que tenga estos recursos a la mano. Puede continuar con la evaluación cuando lo desee.`)}</p>
+      <ul>${variant.resources.map(r => `<li><strong>${resName(r)}</strong> — ${resDetail(r)}</li>`).join("")}</ul>
+      <button type="button" id="safetyAckBtn" class="safety-ack-btn">${L(`I've seen these — continue`, `Ya los vi — continuar`)}</button>
     </div>
   `;
 }
@@ -196,8 +205,14 @@ const CHECKMARK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke-linecap="roun
 // problems before they start" should never be asked questions that
 // assume something is already happening, so questions can carry their own
 // prevention title/subtitle and extra options (listed last, so they read every option first).
-function qTitle(q) { return (isPreventive() && q.preventTitle) || q.title; }
-function qSub(q) { return (isPreventive() && q.preventSub) || q.sub; }
+// What the parent SEES comes from the Spanish layer when Spanish is chosen; what is STORED is always the
+// exact English option text (the plan logic matches on it).
+function qText(q) { return (getLang() === "es" && QUESTIONS_ES[q.id]) ? QUESTIONS_ES[q.id] : q; }
+function qTitle(q) { const s = qText(q); return (isPreventive() && s.preventTitle) || s.title; }
+function qSub(q) { const s = qText(q); return (isPreventive() && s.preventSub) || s.sub; }
+function optLabel(opt) { return (getLang() === "es" && OPTIONS_ES[opt]) ? OPTIONS_ES[opt] : opt; }
+function resName(r) { return (getLang() === "es" && RESOURCE_NAME_ES[r.name]) || r.name; }
+function resDetail(r) { return (getLang() === "es" && RESOURCE_DETAIL_ES[r.detail]) || r.detail; }
 function qOptions(q) {
   if (!isPreventive()) return q.options;
   const base = q.preventReplace ? q.options.map(o => q.preventReplace[o] || o) : q.options;
@@ -206,17 +221,17 @@ function qOptions(q) {
 
 function renderChoice(q) {
   const selected = state.answers[q.id];
-  return `<div class="options" role="radiogroup">${qOptions(q).map(opt => `<button type="button" class="option-btn ${selected === opt ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="radio" aria-checked="${selected === opt}"><span class="check">${CHECKMARK_SVG}</span><span>${opt}</span></button>`).join("")}</div>`;
+  return `<div class="options" role="radiogroup">${qOptions(q).map(opt => `<button type="button" class="option-btn ${selected === opt ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="radio" aria-checked="${selected === opt}"><span class="check">${CHECKMARK_SVG}</span><span>${optLabel(opt)}</span></button>`).join("")}</div>`;
 }
 
 function renderMulti(q) {
   const selected = state.answers[q.id] || [];
-  return `<div class="options" role="group">${qOptions(q).map(opt => `<button type="button" class="option-btn multi-opt ${selected.includes(opt) ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="checkbox" aria-checked="${selected.includes(opt)}"><span class="check">${CHECKMARK_SVG}</span><span>${opt}</span></button>`).join("")}</div>`;
+  return `<div class="options" role="group">${qOptions(q).map(opt => `<button type="button" class="option-btn multi-opt ${selected.includes(opt) ? "selected" : ""}" data-value="${escapeAttr(opt)}" role="checkbox" aria-checked="${selected.includes(opt)}"><span class="check">${CHECKMARK_SVG}</span><span>${optLabel(opt)}</span></button>`).join("")}</div>`;
 }
 
 function renderText(q) {
   const val = state.answers[q.id] || "";
-  return `<textarea id="textInput" rows="5" placeholder="Type here...">${val}</textarea>`;
+  return `<textarea id="textInput" rows="5" placeholder="${L(`Type here...`, `Escriba aquí...`)}">${val}</textarea>`;
 }
 
 function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
@@ -301,7 +316,7 @@ function onNext(q) {
 
 function renderResults() {
   progressTrack.style.display = "none";
-  track("assessment_completed");
+  if (!state.completionTracked) { state.completionTracked = true; track("assessment_completed"); }
   if (!state.completionRecorded) {
     state.completionRecorded = true;
     try {
@@ -311,7 +326,7 @@ function renderResults() {
     } catch (e) { /* storage unavailable — not critical, just skip the nudge later */ }
   }
   const summary = deriveSummary();
-  const q2Answer = state.answers.q2 || "your situation";
+  const q2Answer = state.answers.q2 ? optLabel(state.answers.q2) : L("your situation", "su situación");
   const reflection = [communicationReflection(), openingValidation()].filter(Boolean).join(" ");
   appEl.innerHTML = `
     ${state.safetyFlags.length ? renderSafetyBanner() : ""}
@@ -319,32 +334,32 @@ function renderResults() {
       ${banner(RESULTS_ICON, { imageSrc: assetUrl("icon-results.png") })}
       <div class="card-body">
       <div class="results-summary">
-        <h3>Here's what we're seeing</h3>
-        <p class="summary-label">You told us:</p>
+        <h3>${L(`Here's what we're seeing`, `Esto es lo que vemos`)}</h3>
+        <p class="summary-label">${L(`You told us:`, `Usted nos dijo:`)}</p>
         <p class="summary-quote">"${q2Answer}"</p>
         ${reflection ? `<p class="summary-reflection">${reflection}</p>` : ""}
       </div>
-      <h2 class="question">Where should we send your action plan?</h2>
-      <p class="sub">One email with your personalized plan, easy to read on your phone — plus a printable copy to keep.</p>
-      <input type="email" id="finalEmail" placeholder="you@email.com" value="${state.email || ""}">
-      <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Leave this empty<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
+      <h2 class="question">${L(`Where should we send your action plan?`, `¿A dónde enviamos su plan de acción?`)}</h2>
+      <p class="sub">${L(`One email with your personalized plan, easy to read on your phone — plus a printable copy to keep.`, `Un correo con su plan personalizado, fácil de leer en su teléfono, más una copia para imprimir y guardar.`)}</p>
+      <input type="email" id="finalEmail" placeholder="${L(`you@email.com`, `usted@correo.com`)}" value="${state.email || ""}">
+      <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>${L(`Leave this empty`, `Deje esto vacío`)}<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
       <div id="turnstileBox" style="margin-top:12px;"></div>
       <div class="nav-row">
-        <button class="ghost" id="backToQ">Back</button>
-        <button class="primary" id="getPlanBtn">Get My Action Plan</button>
+        <button class="ghost" id="backToQ">${L(`Back`, `Atrás`)}</button>
+        <button class="primary" id="getPlanBtn">${L(`Get My Action Plan`, `Recibir mi plan de acción`)}</button>
       </div>
       <p id="planStatus" role="status" aria-live="polite" style="display:none;margin:12px 0 0;font-size:14.5px;line-height:1.5;"></p>
       <div class="results-summary" id="includedPreview" style="margin-top:18px;">
-        <p style="margin:0;font-size:14.5px;">Included in your complimentary Action Plan:</p>
+        <p style="margin:0;font-size:14.5px;">${L(`Included in your complimentary Action Plan:`, `Incluido en su Plan de Acción de cortesía:`)}</p>
         <ul style="margin:6px 0 0;padding-left:20px;font-size:14px;">
-          <li>Top 3 next steps for your specific situation</li>
-          <li>Targeted, recommended reading</li>
-          <li>Links to free helpful tools</li>
-          <li>Connections to appropriate local professionals</li>
-          <li>...and more!</li>
+          <li>${L(`Top 3 next steps for your specific situation`, `Los 3 mejores próximos pasos para su situación`)}</li>
+          <li>${L(`Targeted, recommended reading`, `Lecturas recomendadas, a su medida`)}</li>
+          <li>${L(`Links to free helpful tools`, `Enlaces a herramientas útiles y gratuitas`)}</li>
+          <li>${L(`Connections to appropriate local professionals`, `Conexiones con profesionales locales adecuados`)}</li>
+          <li>${L(`...and more!`, `...¡y más!`)}</li>
         </ul>
       </div>
-      <p class="privacy-note">Your answers are only used to build your action plan, and we never sell your information. Every email includes a "Delete my data" link. <a href="${privacyUrl()}" target="_blank" rel="noopener">Privacy policy</a></p>
+      <p class="privacy-note">${L(`Your answers are only used to build your action plan, and we never sell your information. Every email includes a "Delete my data" link.`, `Sus respuestas solo se usan para crear su plan de acción, y nunca vendemos su información. Cada correo incluye un enlace de "Eliminar mis datos".`)} <a href="${privacyUrl()}" target="_blank" rel="noopener">${L(`Privacy policy`, `Política de privacidad`)}</a></p>
       </div>
     </div>
   `;
@@ -355,17 +370,17 @@ function renderResults() {
     const btn = document.getElementById("getPlanBtn");
     const emailInput = document.getElementById("finalEmail");
     const email = emailInput.value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailInput.style.borderColor = "#C53030"; setPlanStatus("Please enter a valid email address.", "error"); return; }
-    if (CONFIG.TURNSTILE_SITE_KEY && !state.turnstileToken) { setPlanStatus("Please complete the quick check above so we know you're a person.", "error"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailInput.style.borderColor = "#C53030"; setPlanStatus(L("Please enter a valid email address.", "Por favor, escriba un correo electrónico válido."), "error"); return; }
+    if (CONFIG.TURNSTILE_SITE_KEY && !state.turnstileToken) { setPlanStatus(L("Please complete the quick check above so we know you're a person.", "Por favor, complete la verificación rápida de arriba para saber que es una persona."), "error"); return; }
     emailInput.style.borderColor = "";
     state.email = email;
     state.honeypot = document.getElementById("hpWebsite").value;
     btn.disabled = true; btn.textContent = "Sending…";
-    setPlanStatus("Sending your plan…", "info");
+    setPlanStatus(L("Sending your plan…", "Enviando su plan…"), "info");
     const sent = await sendPlanByEmail();
     let pdfOk = true;
     try { await generatePDF(); track("pdf_downloaded"); } catch (err) { pdfOk = false; console.warn("PDF creation failed:", err); }
-    btn.disabled = false; btn.textContent = sent.ok ? "Send it again" : "Try again";
+    btn.disabled = false; btn.textContent = sent.ok ? L("Send it again", "Enviarlo de nuevo") : L("Try again", "Intentar de nuevo");
     setPlanStatus(planStatusMessage(sent, pdfOk, email), sent.ok ? "success" : "error");
     // Once the plan is on its way, the "what's included" preview has done its job — hide it.
     if (sent.ok || pdfOk) { const inc = document.getElementById("includedPreview"); if (inc) inc.style.display = "none"; }
@@ -380,10 +395,9 @@ function renderResults() {
 // email and the PDF, which opens ?invite=1. (Per Mark: not on the
 // email-entry screen, before or after sending.)
 // ============================================================
-const PLAYBOOK_INVITE_LABEL = "Yes, please send me the invitation to try the Bullyproof Parent Playbook, plus occasional updates. I can unsubscribe any time.";
-
+function PLAYBOOK_INVITE_LABEL() { return L("Yes, please send me the invitation to try the Bullyproof Parent Playbook, plus occasional updates. I can unsubscribe any time.", "Sí, por favor envíenme la invitación para probar el Bullyproof Parent Playbook, además de novedades ocasionales. Puedo cancelar la suscripción en cualquier momento."); }
 function playbookInviteUrl() {
-  return `${window.location.origin}/?invite=1`;
+  return `${window.location.origin}/?invite=1${getLang() === "es" ? "&lang=es" : ""}`;
 }
 
 function playbookInviteHtml(askEmail) {
@@ -393,18 +407,18 @@ function playbookInviteHtml(askEmail) {
         <img src="${playbookBoxImageUrl()}" alt="The Bullyproof Parent Playbook" style="width:96px;border-radius:6px;flex-shrink:0;">
         <div style="flex:1;min-width:200px;">
           <p style="margin:0 0 6px;font-size:17px;font-weight:700;color:var(--navy-deep);">The Bullyproof Parent Playbook</p>
-          <p style="margin:0 0 8px;font-size:14.5px;font-weight:600;color:var(--navy-deep);">Personalized guidance that grows with your child.</p>
-          <p style="margin:0 0 8px;font-size:14.5px;color:var(--text);">${PLAYBOOK_BLURB}</p>
-          <p style="margin:0;font-size:14px;color:var(--text);">When it launches, you can try it FREE for one week.</p>
+          <p style="margin:0 0 8px;font-size:14.5px;font-weight:600;color:var(--navy-deep);">${L(`Personalized guidance that grows with your child.`, `Orientación personalizada que crece con su hijo o hija.`)}</p>
+          <p style="margin:0 0 8px;font-size:14.5px;color:var(--text);">${PLAYBOOK_BLURB()}</p>
+          <p style="margin:0;font-size:14px;color:var(--text);">${L(`When it launches, you can try it FREE for one week.`, `Cuando salga, podrá probarlo GRATIS durante una semana.`)}</p>
         </div>
       </div>
-      ${askEmail ? `<input type="email" id="inviteEmail" placeholder="you@email.com" style="margin-top:14px;">` : ""}
+      ${askEmail ? `<input type="email" id="inviteEmail" placeholder="${L(`you@email.com`, `usted@correo.com`)}" style="margin-top:14px;">` : ""}
       <div class="checkbox-row" style="margin-top:14px;">
         <input type="checkbox" id="marketingConsent">
-        <label for="marketingConsent">${PLAYBOOK_INVITE_LABEL}</label>
+        <label for="marketingConsent">${PLAYBOOK_INVITE_LABEL()}</label>
       </div>
       <div class="nav-row" style="justify-content:flex-start;margin-top:10px;">
-        <button class="primary" id="saveInviteBtn" disabled>Reserve my copy</button>
+        <button class="primary" id="saveInviteBtn" disabled>${L(`Reserve my copy`, `Reservar mi copia`)}</button>
       </div>
       <p id="inviteStatus" role="status" aria-live="polite" style="display:none;margin:10px 0 0;font-size:14.5px;line-height:1.5;"></p>
     </div>`;
@@ -421,7 +435,7 @@ function wirePlaybookInvite(askEmail) {
     if (askEmail) {
       const input = document.getElementById("inviteEmail");
       email = input.value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { input.style.borderColor = "#C53030"; status.style.display = "block"; status.style.color = "#C53030"; status.textContent = "Please enter a valid email address."; return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { input.style.borderColor = "#C53030"; status.style.display = "block"; status.style.color = "#C53030"; status.textContent = L("Please enter a valid email address.", "Por favor, escriba un correo electrónico válido."); return; }
       input.style.borderColor = "";
     }
     btn.disabled = true; btn.textContent = "Saving…";
@@ -429,9 +443,9 @@ function wirePlaybookInvite(askEmail) {
     status.style.display = "block";
     status.style.color = ok ? "#276749" : "#C53030";
     status.textContent = ok
-      ? `Your copy is reserved. We'll send your invitation to ${email} when the Playbook launches.`
-      : "We couldn't save that just now. Please try again in a minute.";
-    btn.textContent = ok ? "Reserved" : "Reserve my copy";
+      ? L(`Your copy is reserved. We'll send your invitation to ${email} when the Playbook launches.`, `Su copia está reservada. Le enviaremos la invitación a ${email} cuando salga el Playbook.`)
+      : L("We couldn't save that just now. Please try again in a minute.", "No pudimos guardarlo en este momento. Por favor, intente de nuevo en un minuto.");
+    btn.textContent = ok ? "Reserved" : L("Reserve my copy", "Reservar mi copia");
     btn.disabled = ok;
     if (ok) { state.marketingConsent = true; box.disabled = true; }
   });
@@ -443,7 +457,7 @@ async function submitPlaybookInvite(email) {
     const res = await fetch("/.netlify/functions/reserve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, consent: true, website: "" })
+      body: JSON.stringify({ email, consent: true, lang: getLang(), website: "" })
     });
     if (res.ok) track("playbook_invite_optin");
     return res.ok;
@@ -456,10 +470,10 @@ function renderInvite() {
     <div class="card">
       ${banner(RESULTS_ICON, { imageSrc: assetUrl("icon-results.png") })}
       <div class="card-body">
-        <h2 class="question">Reserve your copy of the Playbook</h2>
-        <p class="sub">Enter the email where you received your action plan.</p>
+        <h2 class="question">${L(`Reserve your copy of the Playbook`, `Reserve su copia del Playbook`)}</h2>
+        <p class="sub">${L(`Enter the email where you received your action plan.`, `Escriba el correo donde recibió su plan de acción.`)}</p>
         ${playbookInviteHtml(true)}
-        <p class="privacy-note">We never sell your information. Every email includes a way to unsubscribe. <a href="${privacyUrl()}" target="_blank" rel="noopener">Privacy policy</a></p>
+        <p class="privacy-note">${L(`We never sell your information. Every email includes a way to unsubscribe.`, `Nunca vendemos su información. Cada correo incluye una forma de cancelar la suscripción.`)} <a href="${privacyUrl()}" target="_blank" rel="noopener">${L(`Privacy policy`, `Política de privacidad`)}</a></p>
       </div>
     </div>`;
   wirePlaybookInvite(true);
@@ -492,21 +506,21 @@ function hasEmotionalChallengeSignals() {
 // them ("Your child hasn't said anything..."). Restate them in second person.
 function q2Statement() {
   const q2 = state.answers.q2 || "";
-  if (q2.includes("not sure yet")) return "You have a feeling something's off, but you're not sure what yet.";
-  if (q2.includes("concerning at school")) return "You've noticed something concerning at school.";
-  if (q2.includes("Something happened online")) return "Something happened online or on social media.";
-  if (q2.includes("treated badly")) return "Your child told you they're being treated badly by other kids.";
-  return q2 ? q2.replace(/\.$/, "") + "." : "You're working through a bullying situation.";
+  if (q2.includes("not sure yet")) return L("You have a feeling something's off, but you're not sure what yet.", "Tiene la sensación de que algo no anda bien, pero todavía no sabe qué.");
+  if (q2.includes("concerning at school")) return L("You've noticed something concerning at school.", "Ha notado algo preocupante en la escuela.");
+  if (q2.includes("Something happened online")) return L("Something happened online or on social media.", "Pasó algo en internet o en las redes sociales.");
+  if (q2.includes("treated badly")) return L("Your child told you they're being treated badly by other kids.", "Su hijo o hija le contó que está recibiendo mal trato de parte de otros niños.");
+  return q2 ? q2.replace(/\.$/, "") + "." : L("You're working through a bullying situation.", "Está atravesando una situación de bullying.");
 }
 
 function deriveSummary() {
-  if (isPreventive()) return "You're focused on prevention — and that's the best time to build the habits that keep kids strong, confident and connected.";
+  if (isPreventive()) return L("You're focused on prevention — and that's the best time to build the habits that keep kids strong, confident and connected.", "Está enfocándose en la prevención, y ese es el mejor momento para crear los hábitos que mantienen a los niños fuertes, seguros y conectados.");
   const status = communicationStatus();
   const statusText = {
-    "clear": "Your child has spoken with you directly about it.",
-    "hints": "Your child has shared pieces of it, but not the full picture yet.",
-    "behavior-only": "Your child hasn't said anything directly, but their behavior is telling you something.",
-    "no-signals": "Nothing concrete yet — you're going on instinct."
+    "clear": L("Your child has spoken with you directly about it.", "Su hijo o hija ha hablado directamente con usted sobre esto."),
+    "hints": L("Your child has shared pieces of it, but not the full picture yet.", "Su hijo o hija le ha contado algunas partes, pero todavía no toda la historia."),
+    "behavior-only": L("Your child hasn't said anything directly, but their behavior is telling you something.", "Su hijo o hija no ha dicho nada directamente, pero su comportamiento le está diciendo algo."),
+    "no-signals": L("Nothing concrete yet — you're going on instinct.", "Todavía nada concreto: usted se está guiando por su instinto.")
   }[status] || "";
   // Don't say the same thing twice when Q2 already says the child told them.
   const redundant = (state.answers.q2 || "").includes("treated badly") && status === "clear";
@@ -520,10 +534,10 @@ function deriveSummary() {
 function communicationReflection() {
   if (isPreventive()) return "";
   return {
-    "clear": "Your child has spoken with you directly about it.",
-    "hints": "Your child has shared pieces of it, but not the full picture yet.",
-    "behavior-only": "Your child hasn't said anything directly, but their behavior is telling you something.",
-    "no-signals": "Nothing concrete yet — you're going on instinct."
+    "clear": L("Your child has spoken with you directly about it.", "Su hijo o hija ha hablado directamente con usted sobre esto."),
+    "hints": L("Your child has shared pieces of it, but not the full picture yet.", "Su hijo o hija le ha contado algunas partes, pero todavía no toda la historia."),
+    "behavior-only": L("Your child hasn't said anything directly, but their behavior is telling you something.", "Su hijo o hija no ha dicho nada directamente, pero su comportamiento le está diciendo algo."),
+    "no-signals": L("Nothing concrete yet — you're going on instinct.", "Todavía nada concreto: usted se está guiando por su instinto.")
   }[communicationStatus()] || "";
 }
 
@@ -558,21 +572,21 @@ function buildEmailHtml() {
     const variant = SAFETY_VARIANTS[key];
     sections.push(`
       <div style="background:#FDEDED;border-left:4px solid #B23A48;border-radius:8px;padding:16px 18px;margin-bottom:20px;">
-        <p style="margin:0 0 8px;font-weight:700;color:#B23A48;font-size:16px;">Please reach out to one of these resources first:</p>
+        <p style="margin:0 0 8px;font-weight:700;color:#B23A48;font-size:16px;">${L(`Please reach out to one of these resources first:`, `Por favor, comuníquese primero con uno de estos recursos:`)}</p>
         <ul style="margin:0;padding-left:20px;color:#7A2E31;font-size:14px;">
-          ${variant.resources.map(r => `<li><strong>${r.name}</strong> — ${r.detail}</li>`).join("")}
+          ${variant.resources.map(r => `<li><strong>${resName(r)}</strong> — ${resDetail(r)}</li>`).join("")}
         </ul>
       </div>
     `);
   }
 
   if (state.answers.q4) {
-    sections.push(`${sectionHeader("You told us")}<p style="color:${text};font-size:15.5px;font-style:italic;margin:0;">"${escapeHtml(state.answers.q4)}"</p>`);
+    sections.push(`${sectionHeader(L("You told us", "Usted nos dijo"))}<p style="color:${text};font-size:15.5px;font-style:italic;margin:0;">"${escapeHtml(state.answers.q4)}"</p>`);
   }
   if (openingValidation()) {
     sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${openingValidation()}</p>`);
   }
-  sections.push(`${sectionHeader(isPreventive() ? "Where you're starting" : "What's happening")}<p style="color:${text};font-size:15px;margin:0;">${deriveSummary()}</p>`);
+  sections.push(`${sectionHeader(isPreventive() ? L("Where you're starting", "Su punto de partida") : L("What's happening", "Qué está pasando"))}<p style="color:${text};font-size:15px;margin:0;">${deriveSummary()}</p>`);
   if (focusLine()) {
     sections.push(`<p style="color:${text};font-size:14.5px;font-style:italic;margin:10px 0 0;">${escapeHtml(focusLine())}</p>`);
   }
@@ -584,7 +598,7 @@ function buildEmailHtml() {
       <table role="presentation" style="width:100%;margin:0 0 16px;"><tr><td style="background:#EEF2F7;border-left:4px solid ${gold};border-radius:6px;padding:16px 18px;"><p style="color:${navyDeep};font-size:18px;font-weight:700;line-height:1.5;margin:0;">“${w.quote}”</p></td></tr></table>
       <p style="color:${muted};font-size:13px;font-weight:700;margin:0 0 4px;">${w.reframeLead}</p>
       <p style="color:${text};font-size:15px;font-style:italic;margin:0 0 14px;">“${w.reframe}”</p>
-      <p style="color:${muted};font-size:14px;margin:0 0 10px;"><strong style="color:${navy};">Why it works:</strong> ${w.why}</p>
+      <p style="color:${muted};font-size:14px;margin:0 0 10px;"><strong style="color:${navy};">${L(`Why it works:`, `Por qué funciona:`)}</strong> ${w.why}</p>
       <p style="color:${muted};font-size:13.5px;margin:0;">${w.teaser}</p>`);
   }
   if (multiChildNote()) {
@@ -593,9 +607,9 @@ function buildEmailHtml() {
   if (selfReflectionNote()) {
     sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${selfReflectionNote()}</p>`);
   }
-  sections.push(`${sectionHeader("What actually helps")}<p style="color:${text};font-size:15px;margin:0;">${whyThisMattersNote()}</p>`);
+  sections.push(`${sectionHeader(L("What actually helps", "Lo que de verdad ayuda"))}<p style="color:${text};font-size:15px;margin:0;">${whyThisMattersNote()}</p>`);
   sections.push(`
-    ${sectionHeader("Your next 3 steps")}
+    ${sectionHeader(L("Your next 3 steps", "Sus próximos 3 pasos"))}
     <table role="presentation" style="width:100%;">
       ${stepParts().map(([stepT, stepR], i) => `
         <tr>
@@ -612,7 +626,7 @@ function buildEmailHtml() {
   const watchFor = preventionWatchForNote();
   if (watchFor) {
     sections.push(`
-      ${sectionHeader("What to watch for")}
+      ${sectionHeader(L("What to watch for", "Qué debe observar"))}
       <p style="color:${text};font-size:15px;margin:0 0 10px;">${watchFor.intro}</p>
       <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0 0 10px;">
         ${watchFor.items.map(i => `<li style="margin-bottom:8px;">${i}</li>`).join("")}
@@ -622,7 +636,7 @@ function buildEmailHtml() {
   }
   const proNote = professionalSupportNote();
   if (proNote) {
-    sections.push(`${sectionHeader("Worth considering")}<p style="color:${text};font-size:15px;margin:0;">${proNote}</p>`);
+    sections.push(`${sectionHeader(L("Worth considering", "Vale la pena considerar"))}<p style="color:${text};font-size:15px;margin:0;">${proNote}</p>`);
   }
 
   // Recommended reading now comes after the steps — a natural answer to
@@ -634,7 +648,7 @@ function buildEmailHtml() {
   // card treatment at all, which made it feel like an afterthought.
   if (sunbeamResource()) {
     sections.push(`
-    ${sectionHeader("A nightly opportunity")}
+    ${sectionHeader(L("A nightly opportunity", "Una oportunidad cada noche"))}
       <table role="presentation" style="width:100%;background:#FFFBF3;border:1px solid #EADFC6;border-top:4px solid ${gold};border-radius:12px;margin:0;overflow:hidden;"><tr><td style="padding:28px 26px 26px;">
         ${sunbeamResource().introCaption.split("\n\n").map((para, i) => {
           if (i === 0) return `<p style="color:${navyDeep};font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1.6;margin:0 0 18px;">${para}</p>`;
@@ -644,15 +658,15 @@ function buildEmailHtml() {
           }
           return `<p style="color:${text};font-size:15.5px;line-height:1.75;margin:0 0 18px;">${para}</p>`;
         }).join("")}
-        <p style="color:#A87C2A;font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;text-align:center;margin:26px 0 12px;">Start collecting your child's Shining Moments</p>
-        <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="Shining Moments pages from the back of the book" width="100%" style="border-radius:8px;display:block;max-width:100%;">
+        <p style="color:#A87C2A;font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;text-align:center;margin:26px 0 12px;">${L(`Start collecting your child's Shining Moments`, `Comience a juntar los Shining Moments (Momentos Brillantes) de su hijo o hija`)}</p>
+        <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="${L(`Shining Moments pages from the back of the book`, `Páginas de Shining Moments al final del libro`)}" width="100%" style="border-radius:8px;display:block;max-width:100%;">
         <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #EADFC6;border-radius:8px;margin:16px 0 24px;"><tr><td style="padding:16px 18px;">
-          <p style="color:#A87C2A;font-size:11px;font-weight:800;letter-spacing:0.12em;margin:0 0 6px;text-transform:uppercase;">How it works</p>
+          <p style="color:#A87C2A;font-size:11px;font-weight:800;letter-spacing:0.12em;margin:0 0 6px;text-transform:uppercase;">${L(`How it works`, `Cómo funciona`)}</p>
           <p style="color:${navyDeep};font-size:15px;line-height:1.65;margin:0;">${sunbeamResource().closeupCaption}</p>
         </td></tr></table>
         <table role="presentation" style="width:100%;background:${navyDeep};border-radius:10px;"><tr><td style="padding:30px 22px 32px;text-align:center;">
           <table role="presentation" style="margin:0 auto 16px;"><tr><td style="width:44px;border-top:2px solid ${gold};font-size:0;line-height:0;">&nbsp;</td></tr></table>
-          <p style="color:#DCE3F2;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:16px;line-height:1.55;margin:0 0 14px;">You'll find these pages waiting in the back of the award-winning children's book</p>
+          <p style="color:#DCE3F2;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:16px;line-height:1.55;margin:0 0 14px;">${L(`You'll find these pages waiting in the back of the award-winning children's book`, `Encontrará estas páginas al final del libro infantil galardonado`)}</p>
           <p style="color:#ffffff;font-family:Georgia,'Times New Roman',serif;font-size:18px;letter-spacing:0.04em;margin:0 0 2px;">The Adventures of the</p>
           <p style="color:#E3B85A;font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:700;letter-spacing:0.03em;line-height:1.15;margin:0;">True Sunbeam</p>
           <table role="presentation" style="margin:16px auto 0;"><tr><td style="width:44px;border-top:2px solid ${gold};font-size:0;line-height:0;">&nbsp;</td></tr></table>
@@ -664,7 +678,7 @@ function buildEmailHtml() {
                 <a href="${sunbeamResource().coloringPagesUrl}" style="text-decoration:none;border:0;"><img src="${sunbeamResource().coloringImg}" alt="The Adventures of the True Sunbeam Coloring Book" width="92" border="0" style="border-radius:4px;display:block;margin:0 auto;border:0;"></a>
               </td>
               <td style="text-align:center;width:34%;vertical-align:bottom;padding:0 4px;">
-                <img src="${sunbeamResource().rayImg}" alt="Ray the Sunbeam plush toy" width="80" style="display:block;margin:0 auto;">
+                <img src="${sunbeamResource().rayImg}" alt="${L(`Ray the Sunbeam plush toy`, `Peluche de Ray the Sunbeam`)}" width="80" style="display:block;margin:0 auto;">
               </td>
               <td style="text-align:center;width:33%;vertical-align:bottom;padding:0 4px;">
                 <a href="${sunbeamResource().animatedCoverUrl}" style="text-decoration:none;border:0;"><img src="${sunbeamResource().fullColorImg}" alt="The Adventures of the True Sunbeam" width="92" border="0" style="border-radius:4px;display:block;margin:0 auto;border:0;"></a>
@@ -672,39 +686,39 @@ function buildEmailHtml() {
             </tr>
             <tr>
               <td style="text-align:center;vertical-align:top;padding:8px 4px 0;line-height:1.35;">
-                <span style="color:${muted};font-size:11.5px;">Coloring book</span><br>
+                <span style="color:${muted};font-size:11.5px;">${L(`Coloring book`, `Libro para colorear`)}</span><br>
                 <a href="${sunbeamResource().coloringPagesUrl}" style="color:${navy};font-size:11px;text-decoration:underline;">${sunbeamResource().coloringHint}</a>
               </td>
               <td style="text-align:center;vertical-align:top;padding:8px 4px 0;line-height:1.35;">
-                <span style="color:${muted};font-size:11.5px;">Meet Ray, the Sunbeam plush toy</span>
+                <span style="color:${muted};font-size:11.5px;">${L(`Meet Ray, the Sunbeam plush toy`, `Conozca a Ray, el peluche Sunbeam`)}</span>
               </td>
               <td style="text-align:center;vertical-align:top;padding:8px 4px 0;line-height:1.35;">
-                <span style="color:${muted};font-size:11.5px;">Full-color story book</span><br>
+                <span style="color:${muted};font-size:11.5px;">${L(`Full-color story book`, `Libro de cuentos a todo color`)}</span><br>
                 <a href="${sunbeamResource().animatedCoverUrl}" style="color:${navy};font-size:11px;text-decoration:underline;">${sunbeamResource().fullColorHint}</a>
               </td>
             </tr>
             <tr>
-              <td style="text-align:center;vertical-align:top;padding:10px 4px 0;"><a href="${sunbeamResource().coloringUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;white-space:nowrap;">Buy now</a></td>
+              <td style="text-align:center;vertical-align:top;padding:10px 4px 0;"><a href="${sunbeamResource().coloringUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;white-space:nowrap;">${L(`Buy now`, `Comprar ahora`)}</a></td>
               <td style="text-align:center;vertical-align:top;padding:10px 4px 0;"><a href="${sunbeamResource().rayPreorderUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;white-space:nowrap;">${sunbeamResource().rayPreorderLabel}</a><br><span style="color:${muted};font-size:11px;line-height:2;">${sunbeamResource().rayPreorderNote}</span></td>
-              <td style="text-align:center;vertical-align:top;padding:10px 4px 0;"><a href="${sunbeamResource().fullColorUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;white-space:nowrap;">Buy now</a></td>
+              <td style="text-align:center;vertical-align:top;padding:10px 4px 0;"><a href="${sunbeamResource().fullColorUrl}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;white-space:nowrap;">${L(`Buy now`, `Comprar ahora`)}</a></td>
             </tr>
           </table>
         <table role="presentation" style="width:100%;margin-top:18px;"><tr>
           <td style="text-align:center;line-height:1.8;white-space:nowrap;">
-            <img src="${sunbeamResource().bibaBadgeImg}" alt="Best Indie Book Award Winner" width="170" style="display:block;margin:0 auto 8px;max-width:100%;">
-            <a href="${sunbeamResource().bothBooksUrl}" style="color:${navy};font-size:13px;font-weight:700;">Buy both books →</a><br>
-            <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">Book + Ray plush set (coming soon) →</a>
+            <img src="${sunbeamResource().bibaBadgeImg}" alt="${L(`Best Indie Book Award Winner`, `Ganador del Best Indie Book Award`)}" width="170" style="display:block;margin:0 auto 8px;max-width:100%;">
+            <a href="${sunbeamResource().bothBooksUrl}" style="color:${navy};font-size:13px;font-weight:700;">${L(`Buy both books →`, `Comprar los dos libros →`)}</a><br>
+            <a href="${sunbeamResource().setUrl}" style="color:${navy};font-size:12px;">${L(`Book + Ray plush set (coming soon) →`, `Paquete de libro + peluche de Ray (próximamente) →`)}</a>
           </td>
         </tr></table>
         <div style="margin-top:20px;">
           <p style="color:${navyDeep};font-size:15px;line-height:1.7;margin:0 0 4px;">${sunbeamResource().text.replace(/"(What happened today[^"]*)"/, `<span style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:700;color:#8A6420;">&ldquo;$1&rdquo;</span>`)}</p>
         </div>
-        <img src="${sunbeamResource().heroImg}" alt="A child writing in the Shining Moments pages with Ray" width="100%" style="display:block;max-width:100%;border-radius:8px;margin:18px 0 0;">
+        <img src="${sunbeamResource().heroImg}" alt="${L(`A child writing in the Shining Moments pages with Ray`, `Un niño o niña escribiendo en las páginas de Shining Moments junto a Ray`)}" width="100%" style="display:block;max-width:100%;border-radius:8px;margin:18px 0 0;">
       </td></tr></table>
     `);
   }
   sections.push(`
-    ${sectionHeader("Recommended reading")}
+    ${sectionHeader(L("Recommended reading", "Lecturas recomendadas"))}
     <table role="presentation" style="width:100%;background:#F9FAFC;border:1px solid #E1E4EA;border-radius:12px;"><tr><td style="padding:20px 22px;">
     <p style="color:${text};font-size:14.5px;margin:0 0 16px;">${topicLabel()}</p>
     ${recommendedBooks().map((b, i) => `
@@ -712,8 +726,8 @@ function buildEmailHtml() {
         ${b.coverUrl ? `<td style="padding:16px 0 16px 16px;vertical-align:top;"><img src="${b.coverUrl}" alt="${b.title} by ${b.author}" width="70" style="border-radius:4px;display:block;"></td>` : ""}
         <td style="vertical-align:top;padding:16px;">
           <p style="color:${text};font-size:14.5px;margin:0 0 4px;">${b.display}</p>
-          <p style="color:${muted};font-size:13px;margin:0 0 6px;">${b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full."}</p>
-          <a href="${b.url}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:13px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;">Buy now on Amazon</a>
+          <p style="color:${muted};font-size:13px;margin:0 0 6px;">${b.chapter ? L(`Look for ${b.chapter}.`, `Busque ${b.chapter}.`) : L("Relevant throughout — worth reading in full.", "Es relevante de principio a fin; vale la pena leerlo completo.")}</p>
+          <a href="${b.url}" style="display:inline-block;background:${navyDeep};color:#ffffff;font-size:13px;font-weight:700;padding:8px 14px;border-radius:6px;text-decoration:none;">${L(`Buy now on Amazon`, `Comprar ahora en Amazon`)}</a>
         </td>
       </tr></table>
     `).join("")}
@@ -725,12 +739,12 @@ function buildEmailHtml() {
   // (per Mark). A "Reserve my copy" box sits right under the picture, and again
   // after the full details below. Email can't hold a working checkbox, so both
   // open the reserve page, where the real checkbox is.
-  const reserveBox = (align) => `<a href="${playbookInviteUrl()}" style="display:inline-block;text-decoration:none;color:${navyDeep};font-size:13.5px;font-weight:700;line-height:1.3;white-space:nowrap;text-align:${align};"><span style="display:inline-block;width:14px;height:14px;border:2px solid ${navyDeep};border-radius:3px;background:#ffffff;vertical-align:-3px;margin-right:7px;"></span>Reserve my copy</a>`;
+  const reserveBox = (align) => `<a href="${playbookInviteUrl()}" style="display:inline-block;text-decoration:none;color:${navyDeep};font-size:13.5px;font-weight:700;line-height:1.3;white-space:nowrap;text-align:${align};"><span style="display:inline-block;width:14px;height:14px;border:2px solid ${navyDeep};border-radius:3px;background:#ffffff;vertical-align:-3px;margin-right:7px;"></span>${L(`Reserve my copy`, `Reservar mi copia`)}</a>`;
   sections.push(`
-    ${sectionHeader("What comes next")}
+    ${sectionHeader(L("What comes next", "Lo que sigue"))}
     <table role="presentation" style="width:100%;border-collapse:collapse;"><tr>
       <td style="vertical-align:top;padding:0 14px 0 0;">
-        <p style="color:${text};font-size:15px;margin:0 0 12px;">${WHAT_COMES_NEXT_INTRO}</p>
+        <p style="color:${text};font-size:15px;margin:0 0 12px;">${WHAT_COMES_NEXT_INTRO()}</p>
         <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0;">
           ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
         </ul>
@@ -745,50 +759,59 @@ function buildEmailHtml() {
     <table role="presentation" style="width:100%;background:#F5F6FB;border-radius:10px;margin:18px 0 16px;border:1px solid #E1E4EA;"><tr>
       <td style="padding:20px;vertical-align:top;">
         <p style="color:${navyDeep};font-size:17px;font-weight:700;margin:0 0 8px;">The Bullyproof Parent Playbook</p>
-        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;font-weight:600;">Personalized guidance that grows with your child.</p>
-        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">${PLAYBOOK_BLURB}</p>
-        <p style="color:${muted};font-size:13px;margin:0 0 10px;">${PLAYBOOK_SOON}</p>
-        <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">Join Bullyproof.Support FREE today →</a>
-        <p style="color:${muted};font-size:12.5px;margin:12px 0 4px;font-weight:700;">What membership includes, starting today:</p>
+        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;font-weight:600;">${L(`Personalized guidance that grows with your child.`, `Orientación personalizada que crece con su hijo o hija.`)}</p>
+        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">${PLAYBOOK_BLURB()}</p>
+        <p style="color:${muted};font-size:13px;margin:0 0 10px;">${PLAYBOOK_SOON()}</p>
+        <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">${L(`Join Bullyproof.Support FREE today →`, `Únase GRATIS hoy a Bullyproof.Support →`)}</a>
+        <p style="color:${muted};font-size:12.5px;margin:12px 0 4px;font-weight:700;">${L(`What membership includes, starting today:`, `Lo que incluye la membresía, desde hoy:`)}</p>
         <ul style="color:${muted};font-size:12.5px;padding-left:18px;margin:0;">
-          ${MEMBERSHIP_BENEFITS.map((b, i) => `<li style="margin-bottom:${i === MEMBERSHIP_BENEFITS.length - 1 ? 0 : 4}px;">${b}</li>`).join("")}
+          ${MEMBERSHIP_BENEFITS().map((b, i) => `<li style="margin-bottom:${i === MEMBERSHIP_BENEFITS().length - 1 ? 0 : 4}px;">${b}</li>`).join("")}
         </ul>
       </td>
     </tr></table>
-    <p style="color:${muted};font-size:13.5px;margin:0 0 14px;">Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.</p>
+    <p style="color:${muted};font-size:13.5px;margin:0 0 14px;">${L(`Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.`, `Su membresía no inicia hoy su prueba gratuita. Cuando el Playbook salga a la venta, recibirá una invitación para probarlo GRATIS durante una semana.`)}</p>
     ${state.marketingConsent ? "" : `<p style="margin:0;">${reserveBox("left")}</p>`}
   `);
   sections.push(`
-    ${sectionHeader("Prefer to talk to a licensed professional?")}
+    ${sectionHeader(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"))}
     <p style="color:${text};font-size:15px;margin:0;">
-      That's always an option too. <a href="${NETWORK_MATCH_URL}" style="color:${navy};">Search the Bullyproof Support network</a> to get matched with a professional near you — just enter your location, no cost to look.<br>
-      If your area doesn't have a strong match yet, <a href="${FIND_SUPPORT_URL}" style="color:${navy};">Psychology Today's broader directory</a> is a good backup.
+      ${L(`That's always an option too.`, `Esa también es siempre una opción.`)} <a href="${NETWORK_MATCH_URL}" style="color:${navy};">${L(`Search the Bullyproof Support network`, `Busque en la red de Bullyproof Support`)}</a> ${L(`to get matched with a professional near you — just enter your location, no cost to look.`, `para encontrar a un profesional cerca de usted: solo escriba su ubicación; buscar no cuesta nada.`)}<br>
+      ${L(`If your area doesn't have a strong match yet,`, `Si en su zona todavía no hay una buena coincidencia,`)} <a href="${FIND_SUPPORT_URL}" style="color:${navy};">${L(`Psychology Today's broader directory`, `el directorio más amplio de Psychology Today`)}</a> ${L(`is a good backup.`, `es una buena alternativa.`)}
     </p>
   `);
   sections.push(`
     <p style="color:#8896B8;font-size:12px;margin-top:28px;border-top:1px solid #E1E4EA;padding-top:14px;">
-    This plan is for general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. Please use your own judgment and talk to a licensed professional about your specific situation. If your child is in immediate danger, call 911.
+    ${L(`This plan is for general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. Please use your own judgment and talk to a licensed professional about your specific situation. If your child is in immediate danger, call 911.`, `Este plan es solo para información general. No es asesoría médica, de salud mental ni legal, y no garantiza ningún resultado específico. Use su propio criterio y hable con un profesional con licencia sobre su situación específica. Si su hijo o hija está en peligro inmediato, llame al 911.`)}
     </p>
   `);
 
   const footContact = (typeof CONFIG !== "undefined" && CONFIG.CONTACT_EMAIL) || "";
   const footAddress = (typeof CONFIG !== "undefined" && CONFIG.MAILING_ADDRESS) || "";
+  const footIntro = L("You're receiving this email because this address was entered at Bullyproof.Guide to get an action plan.",
+    "Usted recibe este correo porque esta dirección se ingresó en Bullyproof.Guide para obtener un plan de acción.");
+  const footConsent = state.marketingConsent
+    ? L(`You also asked to hear about the Bullyproof Parent Playbook and occasional updates. To stop them, just reply with the word "unsubscribe".`,
+        `También pidió recibir información sobre el Bullyproof Parent Playbook y novedades ocasionales. Para dejar de recibirlas, simplemente responda con la palabra "cancelar".`)
+    : "";
+  const footDelete = footContact
+    ? `${L("Want your answers deleted?", "¿Quiere que se eliminen sus respuestas?")} <a href="mailto:${escapeAttr(footContact)}?subject=${L("Delete%20my%20data", "Eliminar%20mis%20datos")}" style="color:#8896B8;">${L("Delete my data", "Eliminar mis datos")}</a>.`
+    : "";
   sections.push(`
     <p style="color:#8896B8;font-size:12px;line-height:1.6;margin:10px 0 0;">
-      You're receiving this email because this address was entered at Bullyproof.Guide to get an action plan.
-      ${state.marketingConsent ? `You also asked to hear about the Bullyproof Parent Playbook and occasional updates. To stop them, just reply with the word "unsubscribe".` : ""}
-      ${footContact ? `Want your answers deleted? <a href="mailto:${escapeAttr(footContact)}?subject=Delete%20my%20data" style="color:#8896B8;">Delete my data</a>.` : ""}
-      <a href="${escapeAttr(privacyUrl())}" style="color:#8896B8;">Privacy policy</a>.
+      ${footIntro}
+      ${footConsent}
+      ${footDelete}
+      <a href="${escapeAttr(privacyUrl())}" style="color:#8896B8;">${L("Privacy policy", "Política de privacidad")}</a>.
       ${footAddress ? `<br>${escapeHtml(footAddress)}` : ""}
     </p>
   `);
 
   return `
-    <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;">
+    <div${getLang() === "es" ? ' lang="es"' : ""} style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;">
       <table role="presentation" style="width:100%;background-color:${navyDeep};border-bottom:3px solid ${gold};"><tr><td style="padding:36px 30px 32px;text-align:center;">
         <img src="${assetUrl("icon-landing.png")}" width="58" alt="" style="display:block;margin:0 auto 16px;">
         <p style="color:${gold};font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 8px;">Bullyproof.Guide</p>
-        <p style="color:#ffffff;font-size:25px;font-weight:800;letter-spacing:-0.01em;margin:0;">Your Personalized Action Plan</p>
+        <p style="color:#ffffff;font-size:25px;font-weight:800;letter-spacing:-0.01em;margin:0;">${L(`Your Personalized Action Plan`, `Su Plan de Acción Personalizado`)}</p>
       </td></tr></table>
       <div style="padding:34px 24px 24px;">
       ${sections.join("\n")}
@@ -806,16 +829,16 @@ function setPlanStatus(msg, kind) {
 function planStatusMessage(sent, pdfOk, email) {
   if (sent.ok && sent.queued) {
     return pdfOk
-      ? `Your PDF just downloaded, so you have your full plan right now. Today has been a busy day, so your email copy to ${email} is in line and will arrive automatically, usually within a day.`
-      : `Today has been a busy day, so your email copy to ${email} is in line and will arrive automatically, usually within a day.`;
+      ? L(`Your PDF just downloaded, so you have your full plan right now. Today has been a busy day, so your email copy to ${email} is in line and will arrive automatically, usually within a day.`, `Su PDF acaba de descargarse, así que ya tiene su plan completo. Hoy hubo mucha actividad, por lo que su copia por correo a ${email} está en fila y llegará automáticamente, normalmente en un día.`)
+      : L(`Today has been a busy day, so your email copy to ${email} is in line and will arrive automatically, usually within a day.`, `Hoy hubo mucha actividad, por lo que su copia por correo a ${email} está en fila y llegará automáticamente, normalmente en un día.`);
   }
   if (sent.ok) {
     return pdfOk
-      ? `Your plan is on its way to ${email}. It usually arrives within a minute — if you don't see it, check your spam or promotions folder. The email is the easiest version to read on your phone. The PDF that just downloaded is your printable copy.`
-      : `Your plan is on its way to ${email}. We couldn't create the PDF copy this time; tap the button to try again.`;
+      ? L(`Your plan is on its way to ${email}. It usually arrives within a minute — if you don't see it, check your spam or promotions folder. The email is the easiest version to read on your phone. The PDF that just downloaded is your printable copy.`, `Su plan va en camino a ${email}. Normalmente llega en un minuto; si no lo ve, revise su carpeta de spam o de promociones. El correo es la versión más fácil de leer en su teléfono. El PDF que se acaba de descargar es su copia para imprimir.`)
+      : L(`Your plan is on its way to ${email}. We couldn't create the PDF copy this time; tap the button to try again.`, `Su plan va en camino a ${email}. Esta vez no pudimos crear la copia en PDF; toque el botón para intentarlo de nuevo.`);
   }
-  if (sent.status === 429) return "We're getting a lot of requests right now. Please wait a few minutes and tap the button to try again." + (pdfOk ? " Your PDF copy did download, so you still have your plan." : "");
-  return "We couldn't send the email just now." + (pdfOk ? " Your PDF copy did download, so you still have your plan. You can tap the button to try the email again in a minute." : " Please tap the button to try again in a minute.");
+  if (sent.status === 429) return L("We're getting a lot of requests right now. Please wait a few minutes and tap the button to try again.", "Estamos recibiendo muchas solicitudes en este momento. Espere unos minutos y toque el botón para intentarlo de nuevo.") + (pdfOk ? L(" Your PDF copy did download, so you still have your plan.", " Su copia en PDF sí se descargó, así que todavía tiene su plan.") : "");
+  return L("We couldn't send the email just now.", "No pudimos enviar el correo en este momento.") + (pdfOk ? L(" Your PDF copy did download, so you still have your plan. You can tap the button to try the email again in a minute.", " Su copia en PDF sí se descargó, así que todavía tiene su plan. Puede tocar el botón para volver a intentar el correo en un minuto.") : L(" Please tap the button to try again in a minute.", " Por favor, toque el botón para intentarlo de nuevo en un minuto."));
 }
 
 // Optional bot check (Cloudflare Turnstile). Does nothing until CONFIG.TURNSTILE_SITE_KEY is filled in.
@@ -846,6 +869,7 @@ async function sendPlanByEmail() {
         safetyAcknowledged: !!state.safetyAcknowledged,
         consentGiven: !!state.consentGiven,
         marketingConsent: !!state.marketingConsent,
+        lang: getLang(),
         website: state.honeypot || "",
         turnstileToken: state.turnstileToken || ""
       })
@@ -918,11 +942,11 @@ function needsProfessionalSupport() {
 
 function openingValidation() {
   const q2 = state.answers.q2 || "";
-  if (q2.includes("not sure yet")) return "It's OK to feel worried even without proof. Many parents notice small changes before anything big happens.";
-  if (q2.includes("prevent")) return "Focusing on prevention is one of the smartest, most caring things a parent can do.";
-  if (q2.includes("treated badly")) return "It takes courage for a child to say they're being treated badly. It takes just as much courage for a parent to believe them right away.";
-  if (q2.includes("Something happened online")) return "Things online can get bad fast. It's good that you're acting now instead of waiting.";
-  if (q2.includes("concerning at school")) return "Trusting what you see at school, even before your child says anything, is the right thing to do.";
+  if (q2.includes("not sure yet")) return L("It's OK to feel worried even without proof. Many parents notice small changes before anything big happens.", "Está bien sentir preocupación aunque no tenga pruebas. Muchos padres notan pequeños cambios antes de que ocurra algo grave.");
+  if (q2.includes("prevent")) return L("Focusing on prevention is one of the smartest, most caring things a parent can do.", "Enfocarse en la prevención es una de las cosas más inteligentes y cariñosas que puede hacer un padre o una madre.");
+  if (q2.includes("treated badly")) return L("It takes courage for a child to say they're being treated badly. It takes just as much courage for a parent to believe them right away.", "Se necesita valor para que un hijo o una hija diga que está recibiendo mal trato. Se necesita el mismo valor para que un padre o una madre le crea de inmediato.");
+  if (q2.includes("Something happened online")) return L("Things online can get bad fast. It's good that you're acting now instead of waiting.", "Las cosas en internet pueden empeorar rápido. Qué bueno que usted esté actuando ahora en lugar de esperar.");
+  if (q2.includes("concerning at school")) return L("Trusting what you see at school, even before your child says anything, is the right thing to do.", "Confiar en lo que usted observa en la escuela, aun antes de que su hijo o hija diga algo, es lo correcto.");
   return "";
 }
 
@@ -931,11 +955,12 @@ function openingValidation() {
 // time. Acknowledge that out loud instead of silently treating it as one.
 function mentionsMultipleChildren() {
   const t = `${state.answers.q4 || ""} ${state.answers.q12 || ""}`.toLowerCase();
+  if (/\bmis\s+(dos|tres|2|3)\s+(hij[oa]s|ninos|ninas|chicos|chicas)\b|\bmis\s+(hij[oa]s|ninos|ninas)\b|\b(gemel[oa]s|hermanos|hermanas)\b|\b(ambos|ambas)\b(?!\s+padres)|\b(los|las)\s+(dos|tres)\b/.test(foldText(t))) return true;
   return /\b(both|two|three|all)\s+(of\s+)?(my\s+|our\s+)?(kids|children|boys|girls|sons|daughters)\b|\bboth\s+of\s+(them|my)\b|\bmy\s+(two|three|2|3)\s+(kids|children|boys|girls)\b|\b(twins|siblings)\b|\bmy\s+(kids|children)\b/.test(t);
 }
 function multiChildNote() {
   if (!mentionsMultipleChildren()) return null;
-  return "You mentioned more than one child. Each child's situation can look a little different, so this plan is written for one child at a time. Start with the child you're most worried about, then come back and take this check-in again for the other, so their plan fits them, too. When it's more than one, it also helps to talk with each child alone first, so neither one has to speak for the other.";
+  return L("You mentioned more than one child. Each child's situation can look a little different, so this plan is written for one child at a time. Start with the child you're most worried about, then come back and take this check-in again for the other, so their plan fits them, too. When it's more than one, it also helps to talk with each child alone first, so neither one has to speak for the other.", "Usted mencionó a más de un hijo. La situación de cada hijo puede ser un poco distinta, por eso este plan está escrito para un hijo a la vez. Empiece con el hijo que más le preocupa y luego vuelva a hacer este chequeo para el otro, para que su plan también sea a su medida. Cuando son varios, también ayuda hablar primero con cada uno a solas, para que ninguno tenga que hablar por el otro.");
 }
 
 // When a parent asks for something to say, the plan should hand them
@@ -944,6 +969,16 @@ function askedForWords() {
   const t = `${state.answers.q12 || ""} ${state.answers.q4 || ""}`.toLowerCase();
   // Explicit asks for words only. A bare "tell" or "sound" is not enough
   // ("how do I tell if my child is being bullied" is not a request for a script).
+  const tf = foldText(t);
+  if ([
+    /\bque\s+(le\s+|les\s+)?(digo|decir|debo\s+decir|puedo\s+decir|podria\s+decir|deberia\s+decir)\b/,
+    /\balgo\b[^.?!]{0,25}\b(decir|decirle|decirles)\b/,
+    /\blas\s+(palabras|frases)\s+(correctas|adecuadas|indicadas|exactas)\b/,
+    /\bque\s+decirle\b/,
+    /\bcomo\s+(le\s+|les\s+)?(hablo|hablarle|hablarles|digo)\b|\bcomo\s+hablar(le|les)?\s+(con|a)\b/,
+    /\b(animar|alentar|animarl[oa]s?|alentarl[oa]s?)\b/,
+    /\bsonar\s+como\s+si\b/
+  ].some(re => re.test(tf))) return true;
   return [
     /\bwhat (do|should|can|could|would|to) (i |we )?(say|tell)\b/,
     /\b(something|anything|one thing|the right thing|the right words?|words?)\b[^.?!]{0,20}\b(say|tell)\b/,
@@ -963,27 +998,27 @@ function wordsAnswer() {
   // their words open the door instead of repairing one ("You did nothing
   // wrong" would make no sense to a child nothing has happened to).
   const quote = prevent
-    ? (young ? "If anyone is ever mean to you, or something feels yucky, tell me. I will always listen, and you will never be in trouble."
-      : teen ? "You can tell me anything, anytime — even the stuff that's embarrassing. I won't freak out. I'm on your side."
-      : "If anything ever happens that feels wrong, big or small, come tell me. You will never be in trouble for telling me, and I'll always be on your side.")
-    : (young ? "I love you. You did nothing wrong. I'm going to help."
-      : teen ? "I'm on your side. Whatever is going on, it's not your fault, and you don't have to handle it alone. You don't have to tell me everything right now. I'm here when you're ready."
-      : "I'm on your side, always. Whatever happened is not your fault, and you are not in trouble. We'll figure it out together.");
+    ? (young ? L("If anyone is ever mean to you, or something feels yucky, tell me. I will always listen, and you will never be in trouble.", "Si alguien se porta mal contigo, o algo te hace sentir feo, dímelo. Siempre te voy a escuchar, y nunca te vas a meter en problemas por contármelo.")
+      : teen ? L("You can tell me anything, anytime — even the stuff that's embarrassing. I won't freak out. I'm on your side.", "Puedes contarme lo que sea, cuando sea, incluso lo que te dé pena. No me voy a alterar. Estoy de tu lado.")
+      : L("If anything ever happens that feels wrong, big or small, come tell me. You will never be in trouble for telling me, and I'll always be on your side.", "Si alguna vez pasa algo que te parece mal, grande o pequeño, ven y cuéntamelo. Nunca te vas a meter en problemas por contármelo, y siempre voy a estar de tu lado."))
+    : (young ? L("I love you. You did nothing wrong. I'm going to help.", "Te quiero. No hiciste nada malo. Yo te voy a ayudar.")
+      : teen ? L("I'm on your side. Whatever is going on, it's not your fault, and you don't have to handle it alone. You don't have to tell me everything right now. I'm here when you're ready.", "Estoy de tu lado. Sea lo que sea que esté pasando, no es tu culpa, y no tienes que enfrentarlo sin ayuda. No tienes que contarme todo ahora mismo. Aquí estoy cuando quieras hablar.")
+      : L("I'm on your side, always. Whatever happened is not your fault, and you are not in trouble. We'll figure it out together.", "Estoy de tu lado, siempre. Lo que haya pasado no es tu culpa, y no estás en problemas. Lo vamos a resolver juntos."));
   const reframe = prevent
-    ? "If someone is ever mean to you, that says something about them. It doesn't say anything about you."
-    : (young ? "When someone is mean, that's a choice they made. It's not about you."
-      : "What someone does to you tells you about them. It doesn't tell you who you are.");
+    ? L("If someone is ever mean to you, that says something about them. It doesn't say anything about you.", "Si alguien es cruel contigo, eso dice algo sobre esa persona. No dice nada sobre ti.")
+    : (young ? L("When someone is mean, that's a choice they made. It's not about you.", "Cuando alguien es malo con otros, es una decisión que tomó. No tiene que ver contigo.")
+      : L("What someone does to you tells you about them. It doesn't tell you who you are.", "Lo que alguien te hace dice cómo es esa persona. No dice quién eres tú."));
   const why = prevent
-    ? "Kids often stay quiet because they're afraid of getting in trouble or upsetting their parent. Saying this ahead of time answers both worries before they ever have to ask."
-    : "Kids who are hurting usually wonder two things first: \"Am I in trouble?\" and \"Is my parent upset with me?\" These words answer both, so they can breathe and start to talk.";
+    ? L("Kids often stay quiet because they're afraid of getting in trouble or upsetting their parent. Saying this ahead of time answers both worries before they ever have to ask.", "Los niños suelen quedarse callados por miedo a meterse en problemas o a molestar a sus padres. Decir esto con anticipación responde a las dos preocupaciones antes de que tengan que preguntar.")
+    : L("Kids who are hurting usually wonder two things first: \"Am I in trouble?\" and \"Is my parent upset with me?\" These words answer both, so they can breathe and start to talk.", "Los niños que sufren suelen preguntarse primero dos cosas: \"¿Estoy en problemas?\" y \"¿Mi papá o mi mamá está enojado conmigo?\" Estas palabras responden a ambas, para que puedan respirar y empezar a hablar.");
   return {
-    title: "You asked what to say. Here it is.",
-    lead: "You don't have to sound like an expert. Calm and simple works better than clever. If you only say one thing, say this:",
+    title: L("You asked what to say. Here it is.", "Usted preguntó qué decir. Aquí está."),
+    lead: L("You don't have to sound like an expert. Calm and simple works better than clever. If you only say one thing, say this:", "No tiene que tener todas las respuestas. Lo tranquilo y sencillo funciona mejor que lo ingenioso. Si solo dice una cosa, diga esto:"),
     quote,
-    reframeLead: "Then, to help them see it a different way:",
+    reframeLead: L("Then, to help them see it a different way:", "Luego, para ayudarle a verlo de otra manera:"),
     reframe,
     why,
-    teaser: "The Bullyproof Parent Playbook will give you words like these matched to your child's age, personality, and exactly what happened, so you're never left wondering what to say."
+    teaser: L("The Bullyproof Parent Playbook will give you words like these matched to your child's age, personality, and exactly what happened, so you're never left wondering what to say.", "El Bullyproof Parent Playbook le dará palabras como estas, adaptadas a la edad y la personalidad de su hijo o hija y a lo que pasó exactamente, para que nunca se quede sin saber qué decir.")
   };
 }
 
@@ -991,10 +1026,10 @@ function focusLine() {
   const q12 = (state.answers.q12 || "").trim();
   if (!q12) return null;
   if (state.safetyFlags.length) {
-    return `You told us: "${q12}" — please reach out to the resources above first. Everything below is still here when you're ready.`;
+    return L(`You told us: "${q12}" — please reach out to the resources above first. Everything below is still here when you're ready.`, `Usted nos dijo: "${q12}". Por favor, comuníquese primero con los recursos de arriba. Todo lo de abajo seguirá aquí cuando pueda leerlo.`);
   }
   if (wordsAnswer()) return null;
-  return `You told us what you most want help with: "${q12}" — that's what we kept in mind as we built this plan.`;
+  return L(`You told us what you most want help with: "${q12}" — that's what we kept in mind as we built this plan.`, `Usted nos dijo con qué quiere más ayuda: "${q12}". Eso tuvimos presente al crear este plan.`);
 }
 
 // Detects when a parent has asked, in their own words, whether they
@@ -1011,17 +1046,19 @@ function selfReflectionNote() {
     "contributed to this", "what i did wrong", "how i can change",
     "something i'm doing", "something i am doing"
   ];
-  if (!signals.some(s => text.includes(s))) return null;
-  return "You also asked whether you might have played a role in this. Wondering that is a sign of self-awareness, not evidence you did something wrong — most of the time there's no single cause to find. The most useful thing to do with that instinct right now isn't searching for a mistake, it's showing your child, through how you respond today, that this is safe to keep bringing to you. Looking at specific patterns worth adjusting — without blame — is exactly the kind of ongoing, personalized work the Bullyproof Parent Playbook is built for.";
+  const signalsEs = ["algo que hice", "algo que yo hice", "lo que hice mal", "hice algo mal", "mi culpa", "tengo la culpa", "soy el culpable", "soy la culpable", "yo cause", "lo cause", "causado esto", "soy la razon", "soy el motivo", "estoy haciendo mal", "contribuido a esto", "como puedo cambiar", "algo que estoy haciendo"];
+  const textFolded = foldText(text);
+  if (!signals.some(s => text.includes(s)) && !signalsEs.some(s => textFolded.includes(s))) return null;
+  return L("You also asked whether you might have played a role in this. Wondering that is a sign of self-awareness, not evidence you did something wrong — most of the time there's no single cause to find. The most useful thing to do with that instinct right now isn't searching for a mistake, it's showing your child, through how you respond today, that this is safe to keep bringing to you. Looking at specific patterns worth adjusting — without blame — is exactly the kind of ongoing, personalized work the Bullyproof Parent Playbook is built for.", "También preguntó si usted pudo haber tenido algún papel en esto. Hacerse esa pregunta es señal de autoconciencia, no prueba de que hizo algo mal; la mayoría de las veces no hay una sola causa que encontrar. Lo más útil que puede hacer con ese instinto ahora no es buscar un error, sino mostrarle a su hijo o hija, con la manera en que responde hoy, que es seguro seguir acudiendo a usted con esto. Revisar patrones específicos que valga la pena ajustar, sin culpas, es justo el tipo de trabajo continuo y personalizado para el que fue creado el Bullyproof Parent Playbook.");
 }
 
 function stepOpening() {
   const status = communicationStatus();
   if (status === "clear") {
-    return "Write it down today. Use your child's own words, and add the date. Keep this note — you can show it to a counselor or the school later. StopBullying.gov, the U.S. government's bullying resource, recommends keeping exactly this kind of record: the date, what happened, and who was involved.";
+    return L("Write it down today. Use your child's own words, and add the date. Keep this note — you can show it to a counselor or the school later. StopBullying.gov, the U.S. government's bullying resource, recommends keeping exactly this kind of record: the date, what happened, and who was involved.", "Anótelo hoy. Use las palabras de su hijo o hija y agregue la fecha. Guarde esta nota: podrá mostrarla más adelante a un consejero o a la escuela. StopBullying.gov, el recurso del gobierno de EE. UU. sobre el bullying, recomienda llevar justo este tipo de registro: la fecha, lo que pasó y quiénes estuvieron involucrados.");
   }
   if (status === "hints") {
-    return `Keep the door open. Try saying: "You told me something was bothering you. I've been thinking about it. I'm here if you want to say more." Don't push for the whole story yet — let them go at their own pace. That patience matters: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school, so a child who has hinted is already trusting you more than most.`;
+    return L(`Keep the door open. Try saying: "You told me something was bothering you. I've been thinking about it. I'm here if you want to say more." Don't push for the whole story yet — let them go at their own pace. That patience matters: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school, so a child who has hinted is already trusting you more than most.`, `Mantenga la puerta abierta. Pruebe decir: "Me dijiste que algo te molestaba. He estado pensando en eso. Aquí estoy si quieres contarme más." No insista todavía en saber toda la historia; deje que su hijo o hija avance a su propio ritmo. Esa paciencia importa: la encuesta más reciente del Departamento de Educación de EE. UU. (2022) encontró que más de la mitad de los niños que sufren bullying nunca se lo contaron a un adulto en la escuela, así que un niño que ya insinuó algo confía en usted más que la mayoría.`);
   }
   if (status === "behavior-only") {
     const named = (state.answers.q6 || []).filter(b => b !== "No noticeable changes");
@@ -1031,57 +1068,60 @@ function stepOpening() {
     // child. Rewritten here in the plain, warm language a parent would
     // really use, not just swapped to second person.
     const secondPerson = {
-      "Withdrawing from family activities they used to enjoy": "you haven't wanted to join in on things with us that you used to love doing",
-      "More irritable, tearful, or anxious than usual": "you've seemed more upset, or more worried, than usual",
-      "Reluctant to go to school or ride the bus": "you haven't wanted to go to school or get on the bus",
-      "Avoiding certain places, people, or activities they used to like": "you've been staying away from some places or people you used to like being around"
+      "Withdrawing from family activities they used to enjoy": L("you haven't wanted to join in on things with us that you used to love doing", "no has querido participar en las cosas que hacíamos juntos y que antes te encantaban"),
+      "More irritable, tearful, or anxious than usual": L("you've seemed more upset, or more worried, than usual", "has estado con más enojo o preocupación que de costumbre"),
+      "Reluctant to go to school or ride the bus": L("you haven't wanted to go to school or get on the bus", "no has querido ir a la escuela ni subirte al autobús"),
+      "Avoiding certain places, people, or activities they used to like": L("you've been staying away from some places or people you used to like being around", "te has estado alejando de algunos lugares o personas que antes disfrutabas")
     };
-    const behavior = named.length ? (secondPerson[named[0]] || named[0].toLowerCase()) : "a little different lately";
+    const behavior = named.length ? (secondPerson[named[0]] || named[0].toLowerCase()) : L("a little different lately", "has estado un poco diferente últimamente");
     const age1 = state.answers.q1 || "";
     // "Want to build something with me?" reads like a suggestion for a young
     // child, not a 16-year-old — a drive together is the teen equivalent of
     // the same side-by-side, hands-or-eyes-busy idea.
     const sideBySide = (age1 === "11–14" || age1 === "15–18")
-      ? `"Want to go for a drive?" or "Want to go for a walk?"`
-      : `"Want to build something with me?" or "Want to go for a walk?"`;
-    return `Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: ${sideBySide} — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school.`;
+      ? L(`"Want to go for a drive?" or "Want to go for a walk?"`, `"¿Quieres dar una vuelta en el carro?" o "¿Quieres salir a caminar?"`)
+      : L(`"Want to build something with me?" or "Want to go for a walk?"`, `"¿Quieres armar algo conmigo?" o "¿Quieres salir a caminar?"`);
+    return L(`Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: ${sideBySide} — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school.`, `Diga lo que ve, sin preguntar por qué. Pruebe: "He notado que ${behavior}. No tienes que explicármelo ahora; solo quiero que sepas que lo veo y que aquí estoy." O, si un momento lado a lado le resulta más natural a su hijo o hija: ${sideBySide}. A veces es más fácil para los niños abrirse cuando tienen las manos o los pies ocupados, y no sentados cara a cara. Observar de cerca importa, porque el comportamiento suele ser la única pista que tendrá: la encuesta más reciente del Departamento de Educación de EE. UU. (2022) encontró que más de la mitad de los niños que sufren bullying nunca se lo contaron a un adulto en la escuela.`);
   }
   if (status === "no-signals") {
-    return "Start with easy time together. Nothing has been said yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — and ordinary time like this is how that trust gets built.";
+    return L("Start with easy time together. Nothing has been said yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — and ordinary time like this is how that trust gets built.", "Comience con tiempo tranquilo juntos. Todavía no se ha dicho nada, así que no pregunte directamente de inmediato: eso puede hacer que los niños se cierren más. En cambio, pasen tiempo sin presión: un paseo en carro, una caminata, cocinar uno al lado del otro. Los niños suelen hablar más cuando no tienen a alguien mirándolos directamente. El Center on the Developing Child de la Universidad de Harvard encontró que lo más común entre los niños que logran sobreponerse es contar con al menos un adulto estable en quien confían; y el tiempo cotidiano como este es lo que construye esa confianza.");
   }
-  return "Check in, side by side. Find an easy, low-pressure time to check in with your child this week. Talking side by side, not face to face, often works better than a direct sit-down. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — these small check-ins are how you stay that adult.";
+  return L("Check in, side by side. Find an easy, low-pressure time to check in with your child this week. Talking side by side, not face to face, often works better than a direct sit-down. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — these small check-ins are how you stay that adult.", "Converse, lado a lado. Busque un momento tranquilo y sin presión esta semana para ver cómo está su hijo o hija. Hablar lado a lado, y no cara a cara, muchas veces funciona mejor que sentarse a conversar directamente. El Center on the Developing Child de la Universidad de Harvard encontró que lo más común entre los niños que logran sobreponerse es contar con al menos un adulto estable en quien confían; estas pequeñas conversaciones son la manera de seguir siendo ese adulto.");
 }
 
 function stepSchool() {
   const map = {
-    "helping": "Keep the school in the loop. Check in with the school contact again this week. Ask what they're seeing, and if there's a follow-up plan. It's worth the effort: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.",
-    "no-change": `Ask for a real plan. Nothing has changed yet, so ask for a new meeting. Get a clear plan with a real date — not just "we'll keep an eye on it." Research is on your side: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.`,
-    "dismissed": "You can still push back. If the school said this isn't bullying, ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes. It's worth pressing for: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.",
-    "not-reached-out": `Loop in the school counselor. Contact the counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in." It's worth that small step: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20% — and a short note from you can be how that action starts.`,
-    "child-doesnt-want": "Ask what they're afraid of. Ask your child what they're afraid will happen if you talk to the school. Their answer will help you decide how — or whether — to bring the school in without it feeling like a betrayal."
+    "helping": L("Keep the school in the loop. Check in with the school contact again this week. Ask what they're seeing, and if there's a follow-up plan. It's worth the effort: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.", "Mantenga informada a la escuela. Comuníquese de nuevo esta semana con su contacto en la escuela. Pregunte qué están observando y si hay un plan de seguimiento. Vale la pena el esfuerzo: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%."),
+    "no-change": L(`Ask for a real plan. Nothing has changed yet, so ask for a new meeting. Get a clear plan with a real date — not just "we'll keep an eye on it." Research is on your side: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.`, `Pida un plan de verdad. Todavía nada ha cambiado, así que pida una nueva reunión. Consiga un plan claro con una fecha real, no solo un "vamos a estar pendientes". La investigación está de su lado: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%.`),
+    "dismissed": L("You can still push back. If the school said this isn't bullying, ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes. It's worth pressing for: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.", "Todavía puede insistir. Si la escuela dijo que esto no es bullying, pida reunirse con un consejero o con la dirección de la escuela, no solo con la primera persona con la que habló. Lleve sus notas escritas. Vale la pena insistir: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%."),
+    "not-reached-out": L(`Loop in the school counselor. Contact the counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in." It's worth that small step: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20% — and a short note from you can be how that action starts.`, `Incluya al consejero escolar. Comuníquese con el consejero esta semana. Un correo corto funciona bien: "Me gustaría tener 15 minutos para hablar de unos cambios que estoy viendo en mi hijo o hija. Nada urgente, solo quiero ponerle al tanto." Vale la pena ese pequeño paso: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%, y una nota breve suya puede ser el comienzo de esa acción.`),
+    "child-doesnt-want": L("Ask what they're afraid of. Ask your child what they're afraid will happen if you talk to the school. Their answer will help you decide how — or whether — to bring the school in without it feeling like a betrayal.", "Pregunte a qué le tiene miedo. Pregúntele a su hijo o hija qué teme que pase si usted habla con la escuela. Su respuesta le ayudará a decidir cómo, o si, involucrar a la escuela sin que se sienta como una traición.")
   };
-  return map[schoolStatus()] || "Get another set of eyes on it. Reach out to a counselor or trusted adult at school this week. Adults at school often see things you can't — especially in the busy, crowded parts of the day.";
+  return map[schoolStatus()] || L("Get another set of eyes on it. Reach out to a counselor or trusted adult at school this week. Adults at school often see things you can't — especially in the busy, crowded parts of the day.", "Consiga otro par de ojos. Comuníquese esta semana con un consejero o un adulto de confianza en la escuela. Los adultos de la escuela a menudo ven cosas que usted no puede, sobre todo en los momentos del día con más gente y movimiento.");
 }
 
 function stepContext() {
   const weight = onlineWeight();
   if (weight === "online" || weight === "both") {
-    return `Save the evidence first. Take screenshots and note the dates before anything gets deleted. Then sit down with your child and look at the app's report and block settings together — as a team, not as spying. That's exactly the order ${communicationStatus() === "clear" ? "StopBullying.gov also" : "StopBullying.gov, the U.S. government's bullying resource,"} recommends: keep the evidence, then report and block.`;
+    const so = communicationStatus() === "clear"
+      ? L("StopBullying.gov also", "StopBullying.gov también")
+      : L("StopBullying.gov, the U.S. government's bullying resource,", "StopBullying.gov, el recurso del gobierno de EE. UU. sobre el bullying,");
+    return L(`Save the evidence first. Take screenshots and note the dates before anything gets deleted. Then sit down with your child and look at the app's report and block settings together — as a team, not as spying. That's exactly the order ${so} recommends: keep the evidence, then report and block.`, `Primero guarde las pruebas. Tome capturas de pantalla y anote las fechas antes de que algo se borre. Luego siéntese con su hijo o hija y revisen juntos las opciones de denuncia y bloqueo de la aplicación: como equipo, no como espionaje. Ese es justo el orden que ${so} recomienda: guardar las pruebas, y luego denunciar y bloquear.`);
   }
   if (weight === "in-person") {
     const age = state.answers.q1 || "";
     const teen = age === "11–14" || age === "15–18";
     // "Recess" means nothing to a parent of a teenager — the real equivalent
     // at that age is the hallway between classes, not a playground period.
-    const spots = teen ? "passing periods between classes, lunch, the bus" : "recess, lunch, the bus";
-    return `Find the hot spots. Ask your child if certain times or places feel worse — ${spots}. This helps the school watch the right spots instead of everywhere. The most recent federal data (2019–20) show bullying at school happens most in classrooms, then hallways and the cafeteria — busy places where adults can't see everything at once.`;
+    const spots = teen ? L("passing periods between classes, lunch, the bus", "los cambios de clase, el almuerzo, el autobús") : L("recess, lunch, the bus", "el recreo, el almuerzo, el autobús");
+    return L(`Find the hot spots. Ask your child if certain times or places feel worse — ${spots}. This helps the school watch the right spots instead of everywhere. The most recent federal data (2019–20) show bullying at school happens most in classrooms, then hallways and the cafeteria — busy places where adults can't see everything at once.`, `Encuentre los puntos críticos. Pregúntele a su hijo o hija si hay momentos o lugares que se sienten peor: ${spots}. Eso ayuda a que la escuela vigile los lugares correctos en lugar de todos. Los datos federales más recientes (2019–20) muestran que el bullying en la escuela ocurre sobre todo en los salones de clase, y luego en los pasillos y la cafetería: lugares concurridos donde los adultos no pueden ver todo a la vez.`);
   }
-  return "Keep a short daily note. Just one line, no pressure — write down your child's mood and anything small they say. Patterns often show up after a week or two.";
+  return L("Keep a short daily note. Just one line, no pressure — write down your child's mood and anything small they say. Patterns often show up after a week or two.", "Lleve una breve nota diaria. Solo una línea, sin presión: anote el estado de ánimo de su hijo o hija y cualquier cosa pequeña que diga. Los patrones suelen aparecer después de una o dos semanas.");
 }
 
 function professionalSupportNote() {
   if (!needsProfessionalSupport()) return null;
-  return "Based on what you shared, it may help to bring in a school counselor or child therapist now, not just as a backup plan. A trained professional can help things move faster.";
+  return L("Based on what you shared, it may help to bring in a school counselor or child therapist now, not just as a backup plan. A trained professional can help things move faster.", "Con base en lo que compartió, puede ayudar involucrar ahora a un consejero escolar o a un terapeuta infantil, y no solo como plan de respaldo. Un profesional capacitado puede ayudar a que las cosas avancen más rápido.");
 }
 
 function topicBranch() {
@@ -1098,13 +1138,13 @@ function topicBranch() {
 
 function topicLabel() {
   const map = {
-    power: "This falls into what's often called a power-imbalance situation — someone using power over a child in a way that isn't okay.",
-    physical: "This falls into what's often called physical bullying — situations where writing things down and working with the school make the biggest difference.",
-    exclusion: "This falls into what's often called social exclusion — being deliberately left out or frozen out by other kids.",
-    namecalling: "This falls into what's often called verbal bullying — name-calling and teasing that shouldn't be brushed off.",
-    online: "This falls into what's often called cyberbullying — situations where screenshots, reporting, and a calm conversation matter most.",
-    prevent: "This is about building strength early, before problems start — one of the most effective things a parent can do.",
-    default: "This is about getting your bearings — figuring out what to watch for and how to open the conversation."
+    power: L("This falls into what's often called a power-imbalance situation — someone using power over a child in a way that isn't okay.", "Esto entra en lo que suele llamarse una situación de desequilibrio de poder: alguien que usa su poder sobre un niño de una manera que no está bien."),
+    physical: L("This falls into what's often called physical bullying — situations where writing things down and working with the school make the biggest difference.", "Esto entra en lo que suele llamarse bullying físico: situaciones en las que anotar lo ocurrido y trabajar con la escuela hacen la mayor diferencia."),
+    exclusion: L("This falls into what's often called social exclusion — being deliberately left out or frozen out by other kids.", "Esto entra en lo que suele llamarse exclusión social: que otros niños excluyan o ignoren a un niño a propósito."),
+    namecalling: L("This falls into what's often called verbal bullying — name-calling and teasing that shouldn't be brushed off.", "Esto entra en lo que suele llamarse bullying verbal: apodos y burlas que no deben tomarse a la ligera."),
+    online: L("This falls into what's often called cyberbullying — situations where screenshots, reporting, and a calm conversation matter most.", "Esto entra en lo que suele llamarse ciberacoso: situaciones en las que importan más las capturas de pantalla, las denuncias y una conversación tranquila."),
+    prevent: L("This is about building strength early, before problems start — one of the most effective things a parent can do.", "Se trata de fortalecer a su hijo o hija desde temprano, antes de que empiecen los problemas: una de las cosas más eficaces que puede hacer un padre o una madre."),
+    default: L("This is about getting your bearings — figuring out what to watch for and how to open the conversation.", "Se trata de orientarse: saber qué observar y cómo abrir la conversación.")
   };
   return map[topicBranch()];
 }
@@ -1130,43 +1170,46 @@ function bookSearchUrl(title, author) {
 }
 
 function affiliateDisclosure() {
-  return AMAZON_ASSOCIATE_TAG ? "As an Amazon Associate, we may earn from qualifying purchases." : null;
+  return AMAZON_ASSOCIATE_TAG ? L("As an Amazon Associate, we may earn from qualifying purchases.", "Como afiliados de Amazon, podemos ganar comisiones por compras que califiquen.") : null;
 }
 
 // Chapter references verified against real published tables of contents
 // (Coloroso and Faber & Mazlish) — not invented. Where a specific chapter
 // couldn't be verified for a book, "chapter" is left null and the copy
 // says so honestly rather than guessing at a section title.
-const B = {
-  coloroso: (chapter) => ({ title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780061744600", coverImg: "book-coloroso.jpg", chapter }),
-  faber: (chapter) => ({ title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884", coverImg: "book-fabermazlish.jpg", chapter }),
-  showingUp: { title: "The Power of Showing Up", author: "Daniel J. Siegel & Tina Payne Bryson", isbn: "9781524797713", year: 2020,
-    chapter: `the chapters on the "Four S's" — helping a child feel safe, seen, soothed, and secure` },
-  screens: { title: "Behind Their Screens", author: "Emily Weinstein & Carrie James", isbn: "9780262047357", year: 2022,
-    chapter: `Chapter 3, "Friendship Dilemmas," and Chapter 4, "Small Slights, Big Fights"` },
-  middleSchool: { title: "Middle School Matters", author: "Phyllis L. Fagell", isbn: "9780738235080", year: 2019,
-    chapter: `the sections "Managing shifting friendships" and "Coping with gossip and social turmoil"` },
-  kidConfidence: { title: "Kid Confidence", author: "Eileen Kennedy-Moore", isbn: "9781684030491", year: 2019, chapter: null },
-  thrivers: { title: "Thrivers", author: "Michele Borba", isbn: "9780593085271", year: 2021,
-    chapter: `Chapter 1, "Self-Confidence," and Chapter 2, "Empathy"` }
-};
-// Book choices (Oct 2026 refresh, per Mark): newer, research-grounded books
-// that match the plan's approach, with chapters verified against published
-// tables of contents. Older or off-tone picks (1999, 2012, label-based) were
-// retired. Friendship pick depends on age: middle-school book for 11+.
-const BOOKS = {
-  power: [B.showingUp, B.coloroso(`the chapter "Is There a Bullied Kid in the House?"`)],
-  physical: [B.coloroso(`the chapters "The Bullied" and "Is There a Bullied Kid in the House?"`), B.showingUp],
-  exclusion: [null /* age-based friendship book, filled in below */, B.faber(`Chapter 1, "Helping Children Deal with Their Feelings"`)],
-  namecalling: [B.faber(`Chapter 1, "Helping Children Deal with Their Feelings"`), B.coloroso(`the chapter "The Bullied"`)],
-  online: [B.screens, B.faber(`Chapter 1, "Helping Children Deal with Their Feelings"`)],
-  prevent: [B.thrivers, B.faber(`Chapters 1 and 2, "Helping Children Deal with Their Feelings" and "Engaging Cooperation"`)],
-  default: [B.coloroso(`the chapter "Is There a Bullied Kid in the House?" for the signs and first steps`), B.faber(`Chapter 1, "Helping Children Deal with Their Feelings"`)]
-};
+function bookCatalog() {
+  const B = {
+    coloroso: (chapter) => ({ title: "The Bully, the Bullied, and the Bystander", author: "Barbara Coloroso", isbn: "9780061744600", coverImg: "book-coloroso.jpg", chapter }),
+    faber: (chapter) => ({ title: "How to Talk So Kids Will Listen & Listen So Kids Will Talk", author: "Adele Faber & Elaine Mazlish", isbn: "9781451663884", coverImg: "book-fabermazlish.jpg", chapter }),
+    showingUp: { title: "The Power of Showing Up", author: "Daniel J. Siegel & Tina Payne Bryson", isbn: "9781524797713", year: 2020,
+      chapter: L(`the chapters on the "Four S's" — helping a child feel safe, seen, soothed, and secure`, `los capítulos sobre las "Four S's" (las cuatro S): ayudar a un niño a sentirse a salvo, visto, calmado y seguro`) },
+    screens: { title: "Behind Their Screens", author: "Emily Weinstein & Carrie James", isbn: "9780262047357", year: 2022,
+      chapter: L(`Chapter 3, "Friendship Dilemmas," and Chapter 4, "Small Slights, Big Fights"`, `el capítulo 3, "Friendship Dilemmas" (dilemas de amistad), y el capítulo 4, "Small Slights, Big Fights" (desaires pequeños, grandes peleas)`) },
+    middleSchool: { title: "Middle School Matters", author: "Phyllis L. Fagell", isbn: "9780738235080", year: 2019,
+      chapter: L(`the sections "Managing shifting friendships" and "Coping with gossip and social turmoil"`, `las secciones "Managing shifting friendships" (cómo manejar amistades cambiantes) y "Coping with gossip and social turmoil" (cómo sobrellevar los chismes y la agitación social)`) },
+    kidConfidence: { title: "Kid Confidence", author: "Eileen Kennedy-Moore", isbn: "9781684030491", year: 2019, chapter: null },
+    thrivers: { title: "Thrivers", author: "Michele Borba", isbn: "9780593085271", year: 2021,
+      chapter: L(`Chapter 1, "Self-Confidence," and Chapter 2, "Empathy"`, `el capítulo 1, "Self-Confidence" (confianza en uno mismo), y el capítulo 2, "Empathy" (empatía)`) }
+  };
+  // Book choices (Oct 2026 refresh, per Mark): newer, research-grounded books
+  // that match the plan's approach, with chapters verified against published
+  // tables of contents. Older or off-tone picks (1999, 2012, label-based) were
+  // retired. Friendship pick depends on age: middle-school book for 11+.
+  const BOOKS = {
+    power: [B.showingUp, B.coloroso(L(`the chapter "Is There a Bullied Kid in the House?"`, `el capítulo "Is There a Bullied Kid in the House?" (¿hay un niño acosado en la casa?)`))],
+    physical: [B.coloroso(L(`the chapters "The Bullied" and "Is There a Bullied Kid in the House?"`, `los capítulos "The Bullied" (el acosado) e "Is There a Bullied Kid in the House?" (¿hay un niño acosado en la casa?)`)), B.showingUp],
+    exclusion: [null /* age-based friendship book, filled in below */, B.faber(L(`Chapter 1, "Helping Children Deal with Their Feelings"`, `el capítulo 1, "Helping Children Deal with Their Feelings" (cómo ayudar a los niños a manejar sus sentimientos)`))],
+    namecalling: [B.faber(L(`Chapter 1, "Helping Children Deal with Their Feelings"`, `el capítulo 1, "Helping Children Deal with Their Feelings" (cómo ayudar a los niños a manejar sus sentimientos)`)), B.coloroso(L(`the chapter "The Bullied"`, `el capítulo "The Bullied" (el acosado)`))],
+    online: [B.screens, B.faber(L(`Chapter 1, "Helping Children Deal with Their Feelings"`, `el capítulo 1, "Helping Children Deal with Their Feelings" (cómo ayudar a los niños a manejar sus sentimientos)`))],
+    prevent: [B.thrivers, B.faber(L(`Chapters 1 and 2, "Helping Children Deal with Their Feelings" and "Engaging Cooperation"`, `los capítulos 1 y 2, "Helping Children Deal with Their Feelings" (cómo ayudar a los niños a manejar sus sentimientos) y "Engaging Cooperation" (cómo lograr cooperación)`))],
+    default: [B.coloroso(L(`the chapter "Is There a Bullied Kid in the House?" for the signs and first steps`, `el capítulo "Is There a Bullied Kid in the House?" (¿hay un niño acosado en la casa?) para conocer las señales y los primeros pasos`)), B.faber(L(`Chapter 1, "Helping Children Deal with Their Feelings"`, `el capítulo 1, "Helping Children Deal with Their Feelings" (cómo ayudar a los niños a manejar sus sentimientos)`))]
+  };
+  return { B, BOOKS };
+}
 
 function friendshipBook() {
   const age = state.answers.q1 || "";
-  return (age === "11–14" || age === "15–18") ? B.middleSchool : B.kidConfidence;
+  return (age === "11–14" || age === "15–18") ? bookCatalog().B.middleSchool : bookCatalog().B.kidConfidence;
 }
 
 function bookCoverUrl(isbn) {
@@ -1199,10 +1242,10 @@ function bookBuyUrl(b) {
 }
 
 function recommendedBooks() {
-  return BOOKS[topicBranch()].map(b => b || friendshipBook()).map(b => ({
+  return bookCatalog().BOOKS[topicBranch()].map(b => b || friendshipBook()).map(b => ({
     title: b.title,
     author: b.author,
-    display: `"${b.title}" by ${b.author}`,
+    display: L(`"${b.title}" by ${b.author}`, `"${b.title}" de ${b.author} (libro en inglés)`),
     url: bookBuyUrl(b),
     coverUrl: bookCoverSrc(b),
     chapter: b.chapter
@@ -1240,8 +1283,8 @@ const SUNBEAM_SET_URL = "https://www.bullyproof.support";
 // TODO (Mark asked to be reminded): point this at the Ray pre-order landing page once it exists.
 // For now it goes to the Bullyproof.Support store.
 const RAY_PREORDER_URL = "https://www.bullyproof.support";
-const RAY_PREORDER_LABEL = "Pre-order Ray";
-const RAY_PREORDER_NOTE = "Ships January 2027";
+function RAY_PREORDER_LABEL() { return L("Pre-order Ray", "Preordene a Ray"); }
+function RAY_PREORDER_NOTE() { return L("Ships January 2027", "Se envía en enero de 2027"); }
 // One tap puts BOTH books in the parent's Amazon cart (Amazon Associates "Add to Cart" link), tagged with our Associate ID.
 function amazonBothBooksUrl() {
   const tag = AMAZON_ASSOCIATE_TAG ? `AssociateTag=${encodeURIComponent(AMAZON_ASSOCIATE_TAG)}&` : "";
@@ -1251,7 +1294,7 @@ const SUNBEAM_FULLCOLOR_AMAZON_URL = amazonProductUrl("0999371800", "Adventures-
 const SUNBEAM_COLORING_AMAZON_URL = amazonProductUrl("1616113324", "Adventures-True-Sunbeam-Keepsake-Coloring");
 
 function privacyUrl() {
-  return (typeof CONFIG !== "undefined" && CONFIG.PRIVACY_URL) || `${window.location.origin}/privacy/`;
+  return (typeof CONFIG !== "undefined" && CONFIG.PRIVACY_URL) || `${window.location.origin}/privacy/${getLang() === "es" ? "?lang=es" : ""}`;
 }
 
 function assetUrl(name) {
@@ -1265,8 +1308,9 @@ function assetUrl(name) {
 // returns "unknown" and the bracket's default photo is used instead.
 function detectChildGender() {
   const text = `${state.answers.q4 || ""} ${state.answers.q12 || ""}`.toLowerCase();
-  const boySignal = /\b(he|him|his|son|boy)\b/.test(text);
-  const girlSignal = /\b(she|her|hers|daughter|girl)\b/.test(text);
+  const tf = foldText(text);
+  const boySignal = /\b(he|him|his|son|boy)\b/.test(text) || /\b(mi|su|el|un)\s+(hijo|nino|chico|muchacho)\b/.test(tf) || /(?:^|[^\p{L}])él(?![\p{L}])/u.test(text);
+  const girlSignal = /\b(she|her|hers|daughter|girl)\b/.test(text) || /\b(mi|su|la|una)\s+(hija|nina|chica|muchacha)\b/.test(tf) || /\bella\b/.test(tf);
   if (boySignal && !girlSignal) return "boy";
   if (girlSignal && !boySignal) return "girl";
   return "unknown";
@@ -1312,36 +1356,39 @@ function sunbeamResource() {
   // ARE a nightly journal, and a standalone journal format is coming.
   const text = teen
     ? (isPreventive()
-        ? `For a teen, the Shining Moments pages work best as straightforward journaling: a few lines some nights, naming one good thing from the day, right before sleep. A few minutes is all it takes — no prompts needed, no pressure to make it a project. A standalone Shining Moments Journal, built just for that nightly habit, is coming soon. Each Shining Moment is a little light your child gets to keep — and the more they collect now, the brighter it glows inside when harder days come along.`
-        : `For a teen, the Shining Moments pages work best as straightforward journaling: a few lines some nights, naming one good thing from the day, right before sleep. No prompts needed, no pressure to make it a project — just a few honest lines. A standalone Shining Moments Journal, built just for that nightly habit, is coming soon. Each Shining Moment is a little light your child gets to keep. Collect enough of them, and even on their hardest days, there's still a light on inside.`)
+        ? L(`For a teen, the Shining Moments pages work best as straightforward journaling: a few lines some nights, naming one good thing from the day, right before sleep. A few minutes is all it takes — no prompts needed, no pressure to make it a project. A standalone Shining Moments Journal, built just for that nightly habit, is coming soon. Each Shining Moment is a little light your child gets to keep — and the more they collect now, the brighter it glows inside when harder days come along.`, `Para un adolescente, las páginas de Shining Moments funcionan mejor como un diario sencillo: unas pocas líneas algunas noches, nombrando algo bueno del día, justo antes de dormir. Bastan unos minutos, sin preguntas guía y sin presión de convertirlo en un proyecto. Pronto habrá un Shining Moments Journal independiente, creado justo para ese hábito nocturno. Cada Shining Moment es una lucecita que su hijo o hija se queda para siempre; y mientras más junte ahora, más brillará por dentro cuando lleguen días más difíciles.`)
+        : L(`For a teen, the Shining Moments pages work best as straightforward journaling: a few lines some nights, naming one good thing from the day, right before sleep. No prompts needed, no pressure to make it a project — just a few honest lines. A standalone Shining Moments Journal, built just for that nightly habit, is coming soon. Each Shining Moment is a little light your child gets to keep. Collect enough of them, and even on their hardest days, there's still a light on inside.`, `Para un adolescente, las páginas de Shining Moments funcionan mejor como un diario sencillo: unas pocas líneas algunas noches, nombrando algo bueno del día, justo antes de dormir. Sin preguntas guía y sin presión de convertirlo en un proyecto: solo unas líneas sinceras. Pronto habrá un Shining Moments Journal independiente, creado justo para ese hábito nocturno. Cada Shining Moment es una lucecita que su hijo o hija se queda para siempre. Si junta suficientes, aun en sus días más difíciles siempre habrá una luz encendida por dentro.`))
     : (isPreventive()
-        ? `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" A few minutes a night is all it takes. Each Shining Moment is a little light your child gets to keep — and the more they collect now, the brighter it glows inside when harder days come along.`
-        : `Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" If you have more time, color a page together and make it a keepsake: your signed and dated artwork in their book is lasting proof of your love and care. Each Shining Moment is a little light your child gets to keep. Collect enough of them, and even on their hardest days, there's still a light on inside.`);
+        ? L(`Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" A few minutes a night is all it takes. Each Shining Moment is a little light your child gets to keep — and the more they collect now, the brighter it glows inside when harder days come along.`, `Cada página de Shining Moments empieza con una pregunta guía. A la hora de dormir, pruebe una, como: "¿Qué pasó hoy que te hizo sentir que eres especial y que te quieren?" Bastan unos minutos cada noche. Cada Shining Moment es una lucecita que su hijo o hija se queda para siempre; y mientras más junte ahora, más brillará por dentro cuando lleguen días más difíciles.`)
+        : L(`Each Shining Moments page opens with a prompting question. At bedtime, try one, like: "What happened today that helped you to feel extra special or loved?" If you have more time, color a page together and make it a keepsake: your signed and dated artwork in their book is lasting proof of your love and care. Each Shining Moment is a little light your child gets to keep. Collect enough of them, and even on their hardest days, there's still a light on inside.`, `Cada página de Shining Moments empieza con una pregunta guía. A la hora de dormir, pruebe una, como: "¿Qué pasó hoy que te hizo sentir que eres especial y que te quieren?" Si tiene más tiempo, coloreen una página juntos y háganla un recuerdo: su dibujo firmado y fechado en el libro es una prueba duradera de su amor y su cuidado. Cada Shining Moment es una lucecita que su hijo o hija se queda para siempre. Si junta suficientes, aun en sus días más difíciles siempre habrá una luz encendida por dentro.`));
   // The opening framing — a real explanation of the mechanism and why it
   // matters, introduced before the Shining Moments pages themselves and
   // before the book reveal, since this concept has to be understood and
   // "sold" on its own merits first.
-  const introCaption = `A child's mind can get stuck. Whatever's bothering them — a hard day, a hurtful moment, a worry with no easy answer — often loops the loudest right at bedtime, when there's nothing left to distract from it.
+  const introCaption = L(`A child's mind can get stuck. Whatever's bothering them — a hard day, a hurtful moment, a worry with no easy answer — often loops the loudest right at bedtime, when there's nothing left to distract from it.
 
 Here's why that moment matters more than it seems. Cellular biologist Bruce Lipton has spent decades studying how a child's subconscious mind forms. By his account:
 
 Every night, as your child drifts toward sleep, their mind passes through the same open, impressionable state that makes early childhood so absorbent in the first place. Call it dreamtime programming: whatever's on their mind in those last few minutes has an outsized chance of settling in.
 
-Which means every bedtime is also an opportunity — a nightly chance to interrupt that programming before it takes hold, and redirect it toward something that builds your child up instead. That's the entire idea behind Shining Moments.`;
+Which means every bedtime is also an opportunity — a nightly chance to interrupt that programming before it takes hold, and redirect it toward something that builds your child up instead. That's the entire idea behind Shining Moments.`, `La mente de un niño puede quedarse atascada. Lo que le preocupa (un mal día, un momento que dolió, una inquietud sin respuesta fácil) suele dar más vueltas justo a la hora de dormir, cuando ya no hay nada que lo distraiga.
+Por eso ese momento importa más de lo que parece. El biólogo celular Bruce Lipton lleva décadas estudiando cómo se forma la mente subconsciente de un niño. Según él:
+Cada noche, mientras su hijo o hija se acerca al sueño, su mente pasa por el mismo estado abierto e impresionable que hace que la primera infancia absorba tanto. Llámelo programación de ensueño: lo que tenga en la mente en esos últimos minutos tiene más probabilidad de quedarse grabado.
+Eso significa que cada hora de dormir también es una oportunidad: una oportunidad cada noche de interrumpir esa programación antes de que se asiente y redirigirla hacia algo que fortalezca a su hijo o hija. Esa es toda la idea detrás de Shining Moments.`);
   return {
     text,
     introCaption,
-    pullQuote: "By age 7, up to 70% of what a child's subconscious mind has been programmed with is self-sabotaging, negative, or limiting.",
-    closeupCaption: `It only takes a few minutes: naming one good moment from the day, and letting that be the last thing on their mind before sleep. Do it most nights, and something happens beneath the surface — confidence builds, worry loosens its grip, and it happens so gradually your child may never notice it's working.`,
+    pullQuote: L("By age 7, up to 70% of what a child's subconscious mind has been programmed with is self-sabotaging, negative, or limiting.", "Para los 7 años, hasta el 70% de lo que ha quedado programado en la mente subconsciente de un niño lo lleva a sabotearse a sí mismo, es negativo o lo limita."),
+    closeupCaption: L(`It only takes a few minutes: naming one good moment from the day, and letting that be the last thing on their mind before sleep. Do it most nights, and something happens beneath the surface — confidence builds, worry loosens its grip, and it happens so gradually your child may never notice it's working.`, `Solo toma unos minutos: nombrar un buen momento del día y dejar que eso sea lo último en su mente antes de dormir. Hágalo casi todas las noches y algo sucede por debajo de la superficie: la confianza crece, la preocupación afloja su control, y ocurre tan poco a poco que su hijo o hija quizá nunca note que está funcionando.`),
     setUrl: SUNBEAM_SET_URL,
     bothBooksUrl: amazonBothBooksUrl(),
     animatedCoverUrl: assetUrl("sunbeam-cover-animated-full.gif"),
     coloringPagesUrl: assetUrl("true-sunbeam-coloring-pages.pdf"),
-    fullColorHint: "See it animated",
-    coloringHint: "Print free coloring pages",
+    fullColorHint: L("See it animated", "Véalo animado"),
+    coloringHint: L("Print free coloring pages", "Imprima páginas para colorear gratis"),
     rayPreorderUrl: RAY_PREORDER_URL,
-    rayPreorderLabel: RAY_PREORDER_LABEL,
-    rayPreorderNote: RAY_PREORDER_NOTE,
+    rayPreorderLabel: RAY_PREORDER_LABEL(),
+    rayPreorderNote: RAY_PREORDER_NOTE(),
     fullColorUrl: SUNBEAM_FULLCOLOR_AMAZON_URL,
     coloringUrl: SUNBEAM_COLORING_AMAZON_URL,
     fullColorImg: assetUrl("sunbeam-fullcolor.jpg"),
@@ -1372,20 +1419,21 @@ const NETWORK_HOME_URL = "https://www.bullyproof.support/checkout/clarity-check"
 
 // What a free Bullyproof.Support account includes. One list, used by both
 // the email and the PDF so the two can't drift apart again.
-const MEMBERSHIP_BENEFITS = [
-  "Free access to the Bullyproof.Support community",
-  "A directory of professionals you can search anytime, not just this once",
-  "Real stories from other parents navigating situations like yours",
-  "Music, podcasts, and articles focused specifically on kids and bullying",
-  "A free trial of the Bullyproof Parent Playbook when it's available",
-  "Founding Member status while the community is still growing"
+function MEMBERSHIP_BENEFITS() {
+  return [
+  L("Free access to the Bullyproof.Support community", "Acceso gratuito a la comunidad de Bullyproof.Support"),
+  L("A directory of professionals you can search anytime, not just this once", "Un directorio de profesionales que puede consultar cuando quiera, no solo esta vez"),
+  L("Real stories from other parents navigating situations like yours", "Historias reales de otros padres que atraviesan situaciones como la suya"),
+  L("Music, podcasts, and articles focused specifically on kids and bullying", "Música, podcasts y artículos enfocados en los niños y el bullying"),
+  L("A free trial of the Bullyproof Parent Playbook when it's available", "Una prueba gratuita del Bullyproof Parent Playbook cuando esté disponible"),
+  L("Founding Member status while the community is still growing", "Estatus de Miembro Fundador mientras la comunidad sigue creciendo")
 ];
+}
 
 // Wording that appears in BOTH the email and the PDF lives here, once.
-const WHAT_COMES_NEXT_INTRO = "What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of support parents find most helpful on a consistent basis:";
-const PLAYBOOK_BLURB = "Being built to give you practical, personalized guidance based on your child's age, personality, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.";
-const PLAYBOOK_SOON = "Coming soon — and Bullyproof.Support members will be first in line.";
-
+function WHAT_COMES_NEXT_INTRO() { return L("What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of support parents find most helpful on a consistent basis:", "Lo que acaba de leer es real y está completo por sí solo. Pero las situaciones cambian, y cuando cambian, para eso mismo fue creado el Bullyproof Parent Playbook: no una lista más larga, sino ayuda continua que evoluciona. Este es el tipo de apoyo que los padres encuentran más útil de manera constante:"); }
+function PLAYBOOK_BLURB() { return L("Being built to give you practical, personalized guidance based on your child's age, personality, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.", "Lo estamos creando para darle orientación práctica y personalizada según la edad y la personalidad de su hijo o hija y lo que está pasando ahora, con palabras para usar, conversaciones para tener y próximos pasos a seguir cuando surjan nuevos retos."); }
+function PLAYBOOK_SOON() { return L("Coming soon — and Bullyproof.Support members will be first in line.", "Próximamente, y los miembros de Bullyproof.Support serán los primeros en la fila."); }
 function playbookBoxImageUrl() {
   return `${window.location.origin}/assets/playbook-box.jpg`;
 }
@@ -1396,26 +1444,26 @@ const FIND_SUPPORT_URL = "https://www.psychologytoday.com/us/therapists";
 
 function whyThisMattersNote() {
   if (isPreventive()) {
-    return "Prevention works. A 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found they cut bullying by about 20%. What you do at home builds those same skills — right where your child spends the most time.";
+    return L("Prevention works. A 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found they cut bullying by about 20%. What you do at home builds those same skills — right where your child spends the most time.", "La prevención funciona. Una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que lo reducen cerca de un 20%. Lo que usted hace en casa desarrolla esas mismas habilidades, justo donde su hijo o hija pasa más tiempo.");
   }
   const status = communicationStatus();
   if (status === "behavior-only" || status === "no-signals") {
-    return "Here's something worth knowing: a child's relationships are one of their strongest protections. A 2022 study that followed nearly 500 teens for several years found that support from friends helped cushion the emotional hurt of being bullied. Confidence and friendships can be built at any age. If it feels like a gap right now, that's not a failure on your part — it's simply the next thing to work on together.";
+    return L("Here's something worth knowing: a child's relationships are one of their strongest protections. A 2022 study that followed nearly 500 teens for several years found that support from friends helped cushion the emotional hurt of being bullied. Confidence and friendships can be built at any age. If it feels like a gap right now, that's not a failure on your part — it's simply the next thing to work on together.", "Algo que vale la pena saber: las relaciones de un niño son una de sus protecciones más fuertes. Un estudio de 2022 que dio seguimiento a casi 500 adolescentes durante varios años encontró que el apoyo de los amigos ayudó a amortiguar el dolor emocional de sufrir bullying. La confianza y las amistades se pueden construir a cualquier edad. Si ahora siente que eso falta, no es un fracaso de su parte: es simplemente lo siguiente en lo que pueden trabajar juntos.");
   }
   if (onlineWeight() === "online") {
-    return "You're far from alone: Pew Research Center found that nearly half of U.S. teens (46%) have been bullied or harassed online. Knowing how to handle it — what to save, what to block, and who to tell — is a learned skill, not something kids are born knowing. That means it can be taught.";
+    return L("You're far from alone: Pew Research Center found that nearly half of U.S. teens (46%) have been bullied or harassed online. Knowing how to handle it — what to save, what to block, and who to tell — is a learned skill, not something kids are born knowing. That means it can be taught.", "Muchas familias pasan por esto: el Pew Research Center encontró que casi la mitad de los adolescentes de EE. UU. (46%) han sufrido bullying o acoso en internet. Saber cómo manejarlo (qué guardar, qué bloquear y a quién avisar) es una habilidad que se aprende, no algo con lo que los niños nacen. Eso significa que se puede enseñar.");
   }
-  return "Confidence and social skills can be built at any age — and they matter. A 2022 study that followed nearly 500 teens for several years found that support from friends helped cushion the emotional hurt of being bullied. Working on that together is one of the most powerful things a parent can do.";
+  return L("Confidence and social skills can be built at any age — and they matter. A 2022 study that followed nearly 500 teens for several years found that support from friends helped cushion the emotional hurt of being bullied. Working on that together is one of the most powerful things a parent can do.", "La confianza y las habilidades sociales se pueden desarrollar a cualquier edad, y importan. Un estudio de 2022 que dio seguimiento a casi 500 adolescentes durante varios años encontró que el apoyo de los amigos ayudó a amortiguar el dolor emocional de sufrir bullying. Trabajar en eso juntos es una de las cosas más poderosas que puede hacer un padre o una madre.");
 }
 
 function furtherStepsTeaser() {
   if (isPreventive()) {
     return [
-      "Knowing what to say so your child will communicate with you — instead of just giving one-word answers.",
-      "How to talk about kindness and boundaries — before there's a problem.",
-      "A simple weekly habit that builds your child's confidence over time",
-      "How to know when kids can work it out — and when they need your help.",
-      "How to keep the good things you learned growing up — and give your kids better tools for the rest."
+      L("Knowing what to say so your child will communicate with you — instead of just giving one-word answers.", "Saber qué decir para que su hijo o hija se comunique con usted, en lugar de dar solo respuestas de una palabra."),
+      L("How to talk about kindness and boundaries — before there's a problem.", "Cómo hablar de la bondad y los límites, antes de que haya un problema."),
+      L("A simple weekly habit that builds your child's confidence over time", "Un hábito semanal sencillo que fortalece la confianza de su hijo o hija con el tiempo"),
+      L("How to know when kids can work it out — and when they need your help.", "Cómo saber cuándo los niños pueden resolverlo solos y cuándo necesitan su ayuda."),
+      L("How to keep the good things you learned growing up — and give your kids better tools for the rest.", "Cómo conservar lo bueno que aprendió al crecer y darles a sus hijos mejores herramientas para todo lo demás.")
     ];
   }
 
@@ -1423,39 +1471,39 @@ function furtherStepsTeaser() {
   // emotional core (not feeling alone, not repeating what didn't work
   // growing up), not just tactical steps.
   const items = [
-    "Real-time backup for the moments this feels the most overwhelming — so you're never figuring out what to say by yourself",
-    "How to keep the good things you learned growing up — and give your kids better tools for the rest."
+    L("Real-time backup for the moments this feels the most overwhelming — so you're never figuring out what to say by yourself", "Respaldo en tiempo real para los momentos en que todo se siente más abrumador, para que nunca tenga que averiguar qué decir por su cuenta"),
+    L("How to keep the good things you learned growing up — and give your kids better tools for the rest.", "Cómo conservar lo bueno que aprendió al crecer y darles a sus hijos mejores herramientas para todo lo demás.")
   ];
 
   // A genuinely earned insight (only appears when the parent's own words
   // indicated it) — given priority over the generic fallbacks below.
   if (selfReflectionNote()) {
-    items.push("A gentle way to look at any patterns worth adjusting — without blame");
+    items.push(L("A gentle way to look at any patterns worth adjusting — without blame", "Una forma amable de revisar los patrones que valga la pena ajustar, sin culpas"));
   }
 
   // Situational pool — each only shown when it actually applies.
   const school = schoolStatus();
   if (school === "dismissed" || school === "no-change" || school === "not-reached-out") {
-    items.push("The exact words to say if the school pushes back or downplays it");
+    items.push(L("The exact words to say if the school pushes back or downplays it", "Las palabras exactas para decir si la escuela se resiste o le quita importancia"));
   }
   const comm = communicationStatus();
   if (comm === "clear" || comm === "hints") {
-    items.push("What to say to help, instead of what you've already tried that hasn't worked");
+    items.push(L("What to say to help, instead of what you've already tried that hasn't worked", "Qué decir para ayudar, en lugar de lo que ya intentó y no ha funcionado"));
   }
   if (["11–14", "15–18"].includes(state.answers.q1)) {
-    items.push("Age appropriate conversation guidance so your words are actually heard and received");
+    items.push(L("Age appropriate conversation guidance so your words are actually heard and received", "Guía de conversación adecuada a la edad para que sus palabras sean realmente escuchadas y recibidas"));
   }
   if (topicBranch() === "online") {
-    items.push("How to handle screens and monitoring without it turning into a fight");
+    items.push(L("How to handle screens and monitoring without it turning into a fight", "Cómo manejar las pantallas y la supervisión sin que se convierta en una pelea"));
   }
   if (["physical", "namecalling", "exclusion", "power"].includes(topicBranch())) {
-    items.push("What to say — and what not to say — if another family is involved");
+    items.push(L("What to say — and what not to say — if another family is involved", "Qué decir, y qué no decir, si hay otra familia involucrada"));
   }
 
   // Generic fallbacks — always relevant, but the most replaceable if
   // space runs out, since they're not situation-specific.
-  items.push("A week-by-week plan to help your child rebuild confidence");
-  items.push("A simple way to track whether things are actually getting better");
+  items.push(L("A week-by-week plan to help your child rebuild confidence", "Un plan semana a semana para ayudar a su hijo o hija a recuperar la confianza"));
+  items.push(L("A simple way to track whether things are actually getting better", "Una forma sencilla de saber si las cosas realmente están mejorando"));
 
   return items.slice(0, 5);
 }
@@ -1464,8 +1512,9 @@ function furtherStepsTeaser() {
 // that headline in bold on its own line, so a scanning parent sees the three
 // big ideas at a glance. Longer openings stay as plain paragraphs.
 function splitStepTitle(step) {
-  const m = step.match(/^(.{3,70}?[.!?]"?)\s+([\s\S]+)$/);
-  if (m && m[1].split(/\s+/).length <= 7) return [m[1], m[2]];
+  const es = getLang() === "es";            // Spanish runs ~20% longer than English
+  const m = step.match(new RegExp('^(.{3,' + (es ? 85 : 70) + '}?[.!?]"?)\\s+([\\s\\S]+)$'));
+  if (m && m[1].split(/\s+/).length <= (es ? 9 : 7)) return [m[1], m[2]];
   return [null, step];
 }
 // Headlines only when EVERY step in the set has one — a mix looks uneven.
@@ -1483,9 +1532,9 @@ function preventionSteps() {
   // Laninga-Wijnen et al. (2023) — victims with at least one defender reported higher belonging 9 months later; a 2021 meta-analysis found actively
   // encouraging peers to intervene as "upstanders" was linked to LESS program effectiveness, so this step favors quiet, private support.
   return [
-    "Make the \"no-panic promise.\" Most bullied kids never tell an adult at school — the U.S. Department of Education's most recent survey (2022) found only 44% did. The biggest reason is fear that the grown-up will overreact and make things worse. So say this, once, on an ordinary day: \"You can tell me anything. I promise I won't freak out, and I won't go to the school without talking with you first.\" Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust. This promise is how you become that adult before it's ever needed.",
-    "Help grow one solid friendship. Friends are real protection: a 2022 study that followed nearly 500 teens for several years found that support from friends helped cushion the emotional hurt of being bullied. Popularity doesn't matter here. One real friend does. This month, ask \"Who do you like sitting with at lunch?\" and invite that child over, even just for pizza and a movie.",
-    "Teach quiet kindness. When your child sees someone being picked on, newer research suggests the most helpful move usually isn't confronting the bully in front of everyone — that can put more eyes on the child being picked on. It's being on that child's side afterward. A 2023 study found that bullied kids who had at least one classmate on their side felt a stronger sense of belonging nine months later. Give your child two easy lines: \"Want to sit with us?\" and, privately later, \"That wasn't okay. Are you alright?\" Kids who make a habit of this build courage and real friendships — and they'll know what kindness looks like if it's ever them."
+    L("Make the \"no-panic promise.\" Most bullied kids never tell an adult at school — the U.S. Department of Education's most recent survey (2022) found only 44% did. The biggest reason is fear that the grown-up will overreact and make things worse. So say this, once, on an ordinary day: \"You can tell me anything. I promise I won't freak out, and I won't go to the school without talking with you first.\" Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust. This promise is how you become that adult before it's ever needed.", "Haga la \"promesa de no entrar en pánico.\" La mayoría de los niños que sufren bullying nunca se lo cuentan a un adulto en la escuela: la encuesta más reciente del Departamento de Educación de EE. UU. (2022) encontró que solo el 44% lo hizo. La razón principal es el miedo a que el adulto reaccione de forma exagerada y empeore las cosas. Así que diga esto, una sola vez, en un día cualquiera: \"Puedes contarme lo que sea. Te prometo que no me voy a alterar, y que no voy a ir a la escuela sin hablar contigo primero.\" El Center on the Developing Child de la Universidad de Harvard encontró que lo más común entre los niños que logran sobreponerse es contar con al menos un adulto estable en quien confían. Esta promesa es la manera de convertirse en ese adulto antes de que haga falta."),
+    L("Help grow one solid friendship. Friends are real protection: a 2022 study that followed nearly 500 teens for several years found that support from friends helped cushion the emotional hurt of being bullied. Popularity doesn't matter here. One real friend does. This month, ask \"Who do you like sitting with at lunch?\" and invite that child over, even just for pizza and a movie.", "Ayude a que crezca una amistad sólida. Los amigos son una protección real: un estudio de 2022 que dio seguimiento a casi 500 adolescentes durante varios años encontró que el apoyo de los amigos ayudó a amortiguar el dolor emocional de sufrir bullying. Aquí la popularidad no importa. Un amigo de verdad, sí. Este mes, pregunte: \"¿Con quién te gusta sentarte a la hora del almuerzo?\" e invite a ese niño a su casa, aunque sea solo para una pizza y una película."),
+    L("Teach quiet kindness. When your child sees someone being picked on, newer research suggests the most helpful move usually isn't confronting the bully in front of everyone — that can put more eyes on the child being picked on. It's being on that child's side afterward. A 2023 study found that bullied kids who had at least one classmate on their side felt a stronger sense of belonging nine months later. Give your child two easy lines: \"Want to sit with us?\" and, privately later, \"That wasn't okay. Are you alright?\" Kids who make a habit of this build courage and real friendships — and they'll know what kindness looks like if it's ever them.", "Enseñe la bondad discreta. Cuando su hijo o hija ve que se meten con alguien, investigaciones más recientes sugieren que lo más útil normalmente no es confrontar al agresor frente a todos, porque eso puede poner más miradas sobre el niño al que molestan. Lo útil es ponerse de su lado después. Un estudio de 2023 encontró que los niños que sufrían bullying y tenían al menos un compañero de su lado sintieron un mayor sentido de pertenencia nueve meses después. Dele a su hijo o hija dos frases fáciles: \"¿Quieres sentarte con nosotros?\" y, en privado más tarde, \"Eso no estuvo bien. ¿Estás bien?\" Los niños que hacen de esto un hábito desarrollan valentía y amistades de verdad, y sabrán cómo se ve la bondad si alguna vez les toca a ellos.")
   ];
 }
 
@@ -1496,13 +1545,13 @@ function preventionSteps() {
 function preventionWatchForNote() {
   if (!isPreventive()) return null;
   return {
-    intro: "Here's what's worth keeping half an eye on — not to worry over, just to notice:",
+    intro: L("Here's what's worth keeping half an eye on — not to worry over, just to notice:", "Esto es lo que vale la pena tener presente, no para preocuparse, solo para notar:"),
     items: [
-      "Physical: unexplained scratches or bruises, a sudden switch to long sleeves in warm weather, or frequent headaches/stomachaches with no clear cause",
-      "Sleep or appetite: trouble falling asleep, nightmares, or a real change in how much they're eating",
-      "Behavior: pulling back from things they used to enjoy, seeming more irritable or tearful than usual, or suddenly not wanting to go to school"
+      L("Physical: unexplained scratches or bruises, a sudden switch to long sleeves in warm weather, or frequent headaches/stomachaches with no clear cause", "Físico: rasguños o moretones sin explicación, un cambio repentino a mangas largas con clima cálido, o dolores frecuentes de cabeza o de estómago sin causa clara"),
+      L("Sleep or appetite: trouble falling asleep, nightmares, or a real change in how much they're eating", "Sueño o apetito: dificultad para dormirse, pesadillas, o un cambio real en cuánto come"),
+      L("Behavior: pulling back from things they used to enjoy, seeming more irritable or tearful than usual, or suddenly not wanting to go to school", "Comportamiento: alejarse de cosas que antes disfrutaba, mostrarse más irritable o llorar más que de costumbre, o de repente no querer ir a la escuela")
     ],
-    outro: "These are the same warning signs StopBullying.gov, the U.S. government's bullying resource, shares with parents. None of them mean something is definitely wrong — kids go through phases for all kinds of reasons. They're just the kind of thing worth a gentle check-in if you notice a few of them together."
+    outro: L("These are the same warning signs StopBullying.gov, the U.S. government's bullying resource, shares with parents. None of them mean something is definitely wrong — kids go through phases for all kinds of reasons. They're just the kind of thing worth a gentle check-in if you notice a few of them together.", "Estas son las mismas señales de alerta que StopBullying.gov, el recurso del gobierno de EE. UU. sobre el bullying, comparte con los padres. Ninguna significa con certeza que algo anda mal: los niños pasan por etapas por todo tipo de razones. Solo son el tipo de cosa que vale la pena revisar con suavidad si nota varias juntas.")
   };
 }
 
@@ -1556,7 +1605,7 @@ async function generatePDF() {
   doc.setFontSize(9.5); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
   doc.text("BULLYPROOF.GUIDE", pageWidth / 2, 32, { align: "center", charSpace: 0.5 });
   doc.setFontSize(17); doc.setTextColor(16, 27, 51);
-  doc.text("Your Personalized Action Plan", pageWidth / 2, 42, { align: "center" });
+  doc.text(L("Your Personalized Action Plan", "Su Plan de Acción Personalizado"), pageWidth / 2, 42, { align: "center" });
   doc.setFont(undefined, "normal");
   y = 64;
 
@@ -1564,23 +1613,26 @@ async function generatePDF() {
     const priority = ["selfHarmOrSuicide", "violenceRisk", "sexualOrPower", "physicalSigns"];
     const key = priority.find(k => state.safetyFlags.includes(k));
     const variant = SAFETY_VARIANTS[key];
-    ensureRoom(10 + variant.resources.length * 6);
+    doc.setFontSize(11);
+    const resLines = variant.resources.map(r => doc.splitTextToSize(resName(r) + " — " + resDetail(r), 176));
+    const resBoxH = 10 + resLines.reduce((n, ls) => n + ls.length * 5 + 1, 0);
+    ensureRoom(resBoxH);
     doc.setFillColor(253, 237, 237);
-    doc.rect(10, y - 6, 190, 10 + variant.resources.length * 6, "F");
-    doc.setFontSize(13); doc.setTextColor(197, 48, 48); doc.text("Please reach out to one of these resources first:", 15, y); y += 7;
+    doc.rect(10, y - 6, 190, resBoxH, "F");
+    doc.setFontSize(13); doc.setTextColor(197, 48, 48); doc.text(L("Please reach out to one of these resources first:", "Por favor, comuníquese primero con uno de estos recursos:"), 15, y); y += 7;
     doc.setFontSize(11); doc.setTextColor(40, 40, 40);
-    variant.resources.forEach(r => { doc.text(`${r.name} — ${r.detail}`, 15, y); y += 6; });
+    resLines.forEach(ls => { doc.text(ls, 15, y); y += ls.length * 5 + 1; });
     y += 6;
   }
 
   if (state.answers.q4) {
-    heading("You told us:");
+    heading(L("You told us:", "Usted nos dijo:"));
     body(`"${state.answers.q4}"`, { italic: true });
   }
 
   if (openingValidation()) body(openingValidation(), { color: [74, 109, 147] });
 
-  heading(isPreventive() ? "Where you're starting:" : "What's happening:");
+  heading(isPreventive() ? L("Where you're starting:", "Su punto de partida:") : L("What's happening:", "Qué está pasando:"));
   body(deriveSummary());
 
   if (focusLine()) body(focusLine(), { italic: true });
@@ -1599,16 +1651,16 @@ async function generatePDF() {
     y = qTop + ql.length * 7 + 8;
     body(w.reframeLead, { color: [90, 100, 120] });
     body("“" + w.reframe + "”", { italic: true });
-    body("Why it works: " + w.why, { color: [90, 100, 120] });
+    body(L("Why it works: ", "Por qué funciona: ") + w.why, { color: [90, 100, 120] });
     body(w.teaser, { color: [90, 100, 120] });
   }
   if (multiChildNote()) body(multiChildNote(), { color: [74, 109, 147] });
   if (selfReflectionNote()) body(selfReflectionNote(), { color: [74, 109, 147] });
 
-  heading("What actually helps:");
+  heading(L("What actually helps:", "Lo que de verdad ayuda:"));
   body(whyThisMattersNote());
 
-  heading("Your next 3 steps:");
+  heading(L("Your next 3 steps:", "Sus próximos 3 pasos:"));
   doc.setFontSize(11);
   stepParts().forEach(([stepTitle, stepRest], i) => {
     doc.setTextColor(40, 40, 40);
@@ -1631,21 +1683,21 @@ async function generatePDF() {
 
   const watchFor = preventionWatchForNote();
   if (watchFor) {
-    heading("What to watch for:");
+    heading(L("What to watch for:", "Qué debe observar:"));
     body(watchFor.intro);
     watchFor.items.forEach(item => body(`• ${item}`));
     body(watchFor.outro, { color: [130, 130, 130] });
   }
 
   const proNote = professionalSupportNote();
-  if (proNote) { heading("Worth considering:"); body(proNote); }
+  if (proNote) { heading(L("Worth considering:", "Vale la pena considerar:")); body(proNote); }
 
   // Recommended reading comes after the steps now — a natural answer to
   // "okay, now what do I actually go read," rather than a cold opener.
   // Two books now, each pointing at a specific chapter for their situation.
   const sunbeam = sunbeamResource();
   if (sunbeam) {
-    heading("A nightly opportunity");
+    heading(L("A nightly opportunity", "Una oportunidad cada noche"));
 
     const introParas = sunbeam.introCaption.split("\n\n");
     for (let pi = 0; pi < introParas.length; pi++) {
@@ -1677,7 +1729,7 @@ async function generatePDF() {
     ensureRoom(72); // label + spread image travel together, never split across pages
     doc.setFontSize(9.5); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
     doc.setCharSpace(0.6);
-    doc.text("START COLLECTING YOUR CHILD'S SHINING MOMENTS", 105, y, { align: "center" });
+    doc.text(L("START COLLECTING YOUR CHILD'S SHINING MOMENTS", "COMIENCE A JUNTAR LOS SHINING MOMENTS DE SU HIJO O HIJA"), 105, y, { align: "center" });
     doc.setCharSpace(0);
     doc.setFont(undefined, "normal");
     y += 6;
@@ -1695,7 +1747,7 @@ async function generatePDF() {
     doc.setFillColor(255, 251, 243); doc.setDrawColor(234, 223, 198); doc.setLineWidth(0.3);
     doc.roundedRect(15, y, 180, cardH, 2, 2, "FD");
     doc.setFontSize(9); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
-    doc.text("HOW IT WORKS", 21, y + 9);
+    doc.text(L("HOW IT WORKS", "CÓMO FUNCIONA"), 21, y + 9);
     doc.setFont(undefined, "normal");
     doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
     doc.text(howItWorksLines, 21, y + 16);
@@ -1713,8 +1765,8 @@ async function generatePDF() {
     doc.line(99, y + 7, 111, y + 7);
     doc.setFont("times", "italic"); doc.setFontSize(12); doc.setTextColor(74, 84, 112);
     // two short lines so the words stay clear of the oval's curved ends
-    doc.text("You'll find these pages waiting in the back of", 105, y + 14, { align: "center" });
-    doc.text("the award-winning children's book", 105, y + 19.5, { align: "center" });
+    doc.text(L("You'll find these pages waiting in the back of", "Encontrará estas páginas al final de"), 105, y + 14, { align: "center" });
+    doc.text(L("the award-winning children's book", "el libro infantil galardonado"), 105, y + 19.5, { align: "center" });
     doc.setFont("times", "normal"); doc.setFontSize(13); doc.setTextColor(16, 27, 51);
     doc.text("The Adventures of the", 105, y + 28.5, { align: "center" });
     doc.setFont("times", "bold"); doc.setFontSize(24); doc.setTextColor(168, 124, 42);
@@ -1756,22 +1808,22 @@ async function generatePDF() {
     if (coloringImg) {
       try { doc.addImage(coloringImg, "JPEG", colX[0] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
       doc.link(colX[0] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.coloringPagesUrl });
-      caption("Coloring book", colX[0]);
+      caption(L("Coloring book", "Libro para colorear"), colX[0]);
       centeredLink(sunbeam.coloringHint, colX[0], rowBaseline + 11, sunbeam.coloringPagesUrl);
-      smallButton("Buy now", colX[0], rowBaseline + 15, sunbeam.coloringUrl);
+      smallButton(L("Buy now", "Comprar ahora"), colX[0], rowBaseline + 15, sunbeam.coloringUrl);
     }
     if (rayImg) {
       try { doc.addImage(rayImg, "JPEG", colX[1] - RAY_W / 2, rowBaseline - RAY_H, RAY_W, RAY_H); } catch (e) {}
-      caption("Meet Ray, the Sunbeam plush toy", colX[1]);
+      caption(L("Meet Ray, the Sunbeam plush toy", "Conozca a Ray, el peluche Sunbeam"), colX[1]);
       smallButton(sunbeam.rayPreorderLabel, colX[1], rowBaseline + 15, sunbeam.rayPreorderUrl);
       doc.setFontSize(8.5); doc.setTextColor(90, 100, 120); doc.text(sunbeam.rayPreorderNote, colX[1], rowBaseline + 27, { align: "center" });
     }
     if (fullColorImg) {
       try { doc.addImage(fullColorImg, "JPEG", colX[2] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
       doc.link(colX[2] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.animatedCoverUrl });
-      caption("Full-color story book", colX[2]);
+      caption(L("Full-color story book", "Libro de cuentos a todo color"), colX[2]);
       centeredLink(sunbeam.fullColorHint, colX[2], rowBaseline + 11, sunbeam.animatedCoverUrl);
-      smallButton("Buy now", colX[2], rowBaseline + 15, sunbeam.fullColorUrl);
+      smallButton(L("Buy now", "Comprar ahora"), colX[2], rowBaseline + 15, sunbeam.fullColorUrl);
     }
     y = (fullColorImg || coloringImg || rayImg) ? rowBaseline + 34 : y;
 
@@ -1779,7 +1831,7 @@ async function generatePDF() {
     const blY = y;
     const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);
     if (bibaImg) { try { doc.addImage(bibaImg, "PNG", 15, blY - 3, 60, 25); } catch (e) {} }
-    [["Buy both books", sunbeam.bothBooksUrl, true], ["Book + Ray plush set (coming soon)", sunbeam.setUrl, false]].forEach(([label, url, strong], i) => {
+    [[L("Buy both books", "Comprar los dos libros"), sunbeam.bothBooksUrl, true], [L("Book + Ray plush set (coming soon)", "Paquete de libro + peluche de Ray (próximamente)"), sunbeam.setUrl, false]].forEach(([label, url, strong], i) => {
       doc.setFontSize(strong ? 11 : 10); doc.setFont(undefined, strong ? "bold" : "normal"); doc.setTextColor(27, 42, 74);
       const w = doc.getTextWidth(label), ly = blY + 7 + i * 8;
       doc.textWithLink(label, 195 - w, ly, { url });
@@ -1820,7 +1872,7 @@ async function generatePDF() {
     y += 6;
   }
 
-  heading("Recommended reading:");
+  heading(L("Recommended reading:", "Lecturas recomendadas:"));
 
   body(topicLabel());
 
@@ -1833,13 +1885,13 @@ async function generatePDF() {
       doc.setFontSize(11); doc.setTextColor(40, 40, 40);
       doc.text(doc.splitTextToSize(b.display, 140), 52, by + 8);
       doc.setFontSize(10); doc.setTextColor(90, 100, 120);
-      const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
+      const chapterText = b.chapter ? L(`Look for ${b.chapter}.`, `Busque ${b.chapter}.`) : L("Relevant throughout — worth reading in full.", "Es relevante de principio a fin; vale la pena leerlo completo.");
       doc.text(doc.splitTextToSize(chapterText, 140), 52, by + 20);
       // Same "Buy now on Amazon" button as the email (links to the book's own page, Associate tag included)
       doc.setFontSize(9.5); doc.setFont(undefined, "bold");
       const bw = doc.getTextWidth("Buy now on Amazon") + 10;
       doc.setFillColor(16, 27, 51); doc.roundedRect(52, by + 32, bw, 8, 1.6, 1.6, "F");
-      doc.setTextColor(255, 255, 255); doc.text("Buy now on Amazon", 57, by + 37.4);
+      doc.setTextColor(255, 255, 255); doc.text(L("Buy now on Amazon", "Comprar ahora en Amazon"), 57, by + 37.4);
       doc.link(52, by + 32, bw, 8, { url: b.url });
       doc.setFont(undefined, "normal");
       y = by + 50;
@@ -1848,10 +1900,10 @@ async function generatePDF() {
       doc.setFontSize(11); doc.setTextColor(40, 40, 40);
       doc.text(doc.splitTextToSize(b.display, 180), 15, y); y += 6;
       doc.setFontSize(10); doc.setTextColor(90, 100, 120);
-      const chapterText = b.chapter ? `Look for ${b.chapter}.` : "Relevant throughout — worth reading in full.";
+      const chapterText = b.chapter ? L(`Look for ${b.chapter}.`, `Busque ${b.chapter}.`) : L("Relevant throughout — worth reading in full.", "Es relevante de principio a fin; vale la pena leerlo completo.");
       doc.text(doc.splitTextToSize(chapterText, 180), 15, y); y += 6;
       doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-      doc.textWithLink("Buy now on Amazon", 15, y, { url: b.url });
+      doc.textWithLink(L("Buy now on Amazon", "Comprar ahora en Amazon"), 15, y, { url: b.url });
       y += 10;
     }
   }
@@ -1870,15 +1922,15 @@ async function generatePDF() {
     doc.setDrawColor(16, 27, 51); doc.setLineWidth(0.5); doc.setFillColor(255, 255, 255);
     doc.roundedRect(x, yy - 3.6, 4.2, 4.2, 0.7, 0.7, "FD");
     doc.setFont(undefined, "bold"); doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
-    doc.text("Reserve my copy", x + 6.2, yy);
+    doc.text(L("Reserve my copy", "Reservar mi copia"), x + 6.2, yy);
     doc.link(x - 1, yy - 5, 40, 7, { url: playbookInviteUrl() });
     doc.setFont(undefined, "normal");
   }
-  heading("What comes next:");
+  heading(L("What comes next:", "Lo que sigue:"));
   const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
   const colW = playbookImg ? 124 : 180;
   doc.setFontSize(11);
-  const introLines = doc.splitTextToSize(WHAT_COMES_NEXT_INTRO, colW);
+  const introLines = doc.splitTextToSize(WHAT_COMES_NEXT_INTRO(), colW);
   const bulletBlocks = furtherStepsTeaser().map(t => doc.splitTextToSize(`• ${t}`, colW));
   const LH = 5.2; // line spacing for this block
   const textH = introLines.length * LH + 6 + bulletBlocks.reduce((h, l) => h + l.length * LH + 3.5, 0);
@@ -1896,40 +1948,40 @@ async function generatePDF() {
   ensureRoom(78); // the Playbook details card and the start of the benefits list stay together
   doc.setFillColor(245, 246, 251); doc.setDrawColor(225, 228, 234); doc.setLineWidth(0.3);
   doc.setFontSize(9.5);
-  const blurbLines = doc.splitTextToSize(PLAYBOOK_BLURB, 168);
+  const blurbLines = doc.splitTextToSize(PLAYBOOK_BLURB(), 168);
   const cardH = 42 + blurbLines.length * 4.6;
   doc.roundedRect(15, y, 180, cardH, 3, 3, "FD");
   doc.setFontSize(14); doc.setFont(undefined, "bold"); doc.setTextColor(16, 27, 51);
   doc.text("The Bullyproof Parent Playbook", 21, y + 10);
   doc.setFontSize(10); doc.setTextColor(60, 70, 100);
-  doc.text("Personalized guidance that grows with your child.", 21, y + 17);
+  doc.text(L("Personalized guidance that grows with your child.", "Orientación personalizada que crece con su hijo o hija."), 21, y + 17);
   doc.setFont(undefined, "normal"); doc.setFontSize(9.5); doc.setTextColor(90, 100, 120);
   doc.text(blurbLines, 21, y + 25);
   const afterBlurb = y + 25 + blurbLines.length * 4.6;
-  doc.setFontSize(9); doc.text(PLAYBOOK_SOON, 21, afterBlurb + 2);
+  doc.setFontSize(9); doc.text(PLAYBOOK_SOON(), 21, afterBlurb + 2);
   doc.setFontSize(10.5); doc.setTextColor(66, 153, 225);
-  doc.textWithLink("Join Bullyproof.Support FREE today", 21, afterBlurb + 10, { url: NETWORK_HOME_URL });
+  doc.textWithLink(L("Join Bullyproof.Support FREE today", "Únase GRATIS hoy a Bullyproof.Support"), 21, afterBlurb + 10, { url: NETWORK_HOME_URL });
   y += cardH + 8;
   doc.setFontSize(10.5); doc.setFont(undefined, "bold"); doc.setTextColor(27, 42, 74);
-  doc.text("What membership includes, starting today:", 15, y); y += 7;
+  doc.text(L("What membership includes, starting today:", "Lo que incluye la membresía, desde hoy:"), 15, y); y += 7;
   doc.setFont(undefined, "normal"); doc.setFontSize(10); doc.setTextColor(60, 70, 100);
-  MEMBERSHIP_BENEFITS.forEach(b => {
+  MEMBERSHIP_BENEFITS().forEach(b => {
     const ls = doc.splitTextToSize("• " + b, 172);
     ensureRoom(ls.length * 5 + 3);
     doc.text(ls, 17, y); y += ls.length * 5 + 2;
   });
   y += 4;
   ensureRoom(34); // the trial note and the second reserve box stay together
-  body("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", { color: [140, 140, 140] });
+  body(L("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", "Su membresía no inicia hoy su prueba gratuita. Cuando el Playbook salga a la venta, recibirá una invitación para probarlo GRATIS durante una semana."), { color: [140, 140, 140] });
   if (!state.marketingConsent) { reserveBox(16, y + 2); y += 14; }
 
-  heading("Prefer to talk to a licensed professional?");
-  body("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:");
+  heading(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"));
+  body(L("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:", "Esa también es siempre una opción. Busque en la red de Bullyproof Support para encontrar a un profesional cerca de usted: solo escriba su ubicación; buscar no cuesta nada:"));
   ensureRoom(8);
   doc.setFontSize(11); doc.setTextColor(66, 153, 225);
   doc.textWithLink("bullyproof.support/getmatched", 15, y, { url: NETWORK_MATCH_URL });
   y += 12;
-  body("If your area doesn't have a strong match yet, Psychology Today's broader directory is a good backup:");
+  body(L("If your area doesn't have a strong match yet, Psychology Today's broader directory is a good backup:", "Si en su zona todavía no hay una buena coincidencia, el directorio más amplio de Psychology Today es una buena alternativa:"));
   ensureRoom(8);
   doc.setFontSize(11); doc.setTextColor(66, 153, 225);
   doc.textWithLink("psychologytoday.com/us/therapists", 15, y, { url: FIND_SUPPORT_URL });
@@ -1937,16 +1989,68 @@ async function generatePDF() {
 
   ensureRoom(10);
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);
-  body("This plan is for general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. Please use your own judgment and talk to a licensed professional about your specific situation. If your child is in immediate danger, call 911.", { color: [130, 130, 130] });
+  body(L("This plan is for general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. Please use your own judgment and talk to a licensed professional about your specific situation. If your child is in immediate danger, call 911.", "Este plan es solo para información general. No es asesoría médica, de salud mental ni legal, y no garantiza ningún resultado específico. Use su propio criterio y hable con un profesional con licencia sobre su situación específica. Si su hijo o hija está en peligro inmediato, llame al 911."), { color: [130, 130, 130] });
   doc.setFontSize(10); doc.setTextColor(100, 100, 100);
-  doc.text("If you need more help finding a vetted professional in your area, visit " + (CONFIG.SITE_URL || "bullyproof.guide") + ".", 15, y);
+  doc.text(L("If you need more help finding a vetted professional in your area, visit ", "Si necesita más ayuda para encontrar a un profesional verificado en su zona, visite ") + (CONFIG.SITE_URL || "bullyproof.guide") + ".", 15, y);
   y += 8;
   doc.setFontSize(9); doc.setTextColor(130, 130, 130);
   if (CONFIG.MAILING_ADDRESS) { doc.text(CONFIG.MAILING_ADDRESS, 15, y); y += 5; }
-  doc.textWithLink("Privacy policy: " + privacyUrl().replace(/^https?:\/\//, ""), 15, y, { url: privacyUrl() });
+  doc.textWithLink(L("Privacy policy: ", "Política de privacidad: ") + privacyUrl().replace(/^https?:\/\//, ""), 15, y, { url: privacyUrl() });
 
-  doc.save("bullyproof-action-plan.pdf");
+  doc.save(getLang() === "es" ? "plan-de-accion-bullyproof.pdf" : "bullyproof-action-plan.pdf");
 }
+
+// ============================================================
+// LANGUAGE SELECTION (English / Español)
+// ============================================================
+// Order of preference: ?lang=es (a shareable Spanish link) > the parent's saved choice > a phone set
+// to Spanish > English. The button in the page header lets them switch at any time; what they've
+// typed is kept, and every answer is stored as the English option text so nothing is lost.
+function detectInitialLanguage() {
+  try { const q = new URLSearchParams(window.location.search).get("lang"); if (q === "es" || q === "en") return q; } catch (e) { /* no URL params */ }
+  try { const s = localStorage.getItem("bp_lang"); if (s === "es" || s === "en") return s; } catch (e) { /* storage unavailable */ }
+  try { const langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ""]; if (/^es(-|$)/i.test(langs[0] || "")) return "es"; } catch (e) { /* no navigator */ }
+  return "en";
+}
+
+function applyStaticLanguage() {
+  try {
+    document.documentElement.lang = getLang() === "es" ? "es" : "en";
+    document.title = L("Bullyproof.Guide — Get Clarity On What's Happening", "Bullyproof.Guide — Entienda lo que está pasando");
+    const f = document.getElementById("siteFooter");
+    if (f) f.innerHTML = L(
+      `© Bullyproof.Guide — This tool does not replace professional help. If your child is in immediate danger, call 911.<br>Are you a helping professional? <a href="https://www.bullyproof.support/join">Join the Bullyproof Support network</a>`,
+      `© Bullyproof.Guide — Esta herramienta no reemplaza la ayuda profesional. Si su hijo o hija está en peligro inmediato, llame al 911.<br>¿Es usted un profesional que ayuda a otros? <a href="https://www.bullyproof.support/join">Únase a la red de Bullyproof Support</a>`);
+    const pt = document.getElementById("progressTrack");
+    if (pt) pt.setAttribute("aria-label", L("Assessment progress", "Progreso de la evaluación"));
+    document.querySelectorAll("#langToggle button").forEach(b => {
+      const on = b.dataset.lang === getLang();
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  } catch (e) { /* page chrome only — must never get in the way of the plan */ }
+}
+
+function switchLanguage(l) {
+  if (l === getLang()) return;
+  try {   // keep whatever the parent has typed before the screen is redrawn
+    const fe = document.getElementById("finalEmail"); if (fe) state.email = fe.value.trim();
+    const ti = document.getElementById("textInput"); const q = state.screen === "question" ? currentQuestion() : null;
+    if (ti && q && q.type === "text") state.answers[q.id] = ti.value;
+  } catch (e) { /* nothing to keep */ }
+  setLang(l);
+  try { localStorage.setItem("bp_lang", getLang()); } catch (e) { /* storage unavailable */ }
+  applyStaticLanguage();
+  render();
+}
+
+function wireLanguageToggle() {
+  document.querySelectorAll("#langToggle button").forEach(b => b.addEventListener("click", () => switchLanguage(b.dataset.lang)));
+}
+
+setLang(detectInitialLanguage());
+applyStaticLanguage();
+wireLanguageToggle();
 
 try { if (new URLSearchParams(window.location.search).get("invite") === "1") state.screen = "invite"; } catch (e) { /* no URL params — start normally */ }
 render();

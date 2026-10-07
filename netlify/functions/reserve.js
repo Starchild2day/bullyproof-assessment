@@ -16,7 +16,7 @@ function consentWording(lang) {
   try { const b = makePlanBundle("https://bullyproof.guide"); b.setLang("es"); return b.PLAYBOOK_INVITE_LABEL(); } catch (e) { return ENGLISH_CONSENT; }
 }
 
-const DEFAULT_ORIGINS = ["https://assessment.bullyproof.guide", "https://shimmering-pegasus-4a4a21.netlify.app"];
+const DEFAULT_ORIGINS = ["https://assessment.bullyproof.guide", "https://bullyproof-support-clarity-check.netlify.app", "https://shimmering-pegasus-4a4a21.netlify.app"];
 const hits = new Map();
 const respond = (statusCode, body) => ({ statusCode, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }, body: JSON.stringify(body) });
 

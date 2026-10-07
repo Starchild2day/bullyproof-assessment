@@ -36,7 +36,7 @@ let createPlanBuilder = null;
 let bundleError = null;
 try { createPlanBuilder = require("../lib/plan-bundle.js"); } catch (err) { bundleError = err; }
 
-const DEFAULT_ORIGINS = ["https://assessment.bullyproof.guide", "https://shimmering-pegasus-4a4a21.netlify.app"];
+const DEFAULT_ORIGINS = ["https://assessment.bullyproof.guide", "https://bullyproof-support-clarity-check.netlify.app", "https://shimmering-pegasus-4a4a21.netlify.app"];
 const IP_LIMIT = { max: 5, windowMs: 15 * 60 * 1000 };
 const RECIPIENT_LIMIT = { max: 3, windowMs: 24 * 60 * 60 * 1000 };
 const hits = { ip: new Map(), recipient: new Map() };

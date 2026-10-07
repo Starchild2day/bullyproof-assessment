@@ -144,8 +144,8 @@ const check = (name, ok, extra = "") => { (ok ? pass++ : fail++); console.log(`$
   check("request from another website is rejected (403)", r.statusCode === 403 && hooks.length === 0);
   reset(); const e3 = event(); delete e3.headers.origin; e3.headers.referer = ORIGIN + "/index.html"; r = await mod.handler(e3);
   check("allowed Referer is accepted when Origin is absent", r.statusCode === 200);
-  reset(); r = await mod.handler(event({ headers: { origin: "https://shimmering-pegasus-4a4a21.netlify.app" } }));
-  check("plan link follows the address the parent used (works before the custom domain is pointed)", hooks[0].plan_link.startsWith("https://shimmering-pegasus-4a4a21.netlify.app/plan/"));
+  reset(); r = await mod.handler(event({ headers: { origin: "https://bullyproof-support-clarity-check.netlify.app" } }));
+  check("plan link follows the address the parent used (works before the custom domain is pointed)", hooks[0].plan_link.startsWith("https://bullyproof-support-clarity-check.netlify.app/plan/"));
   for (const bad of ["a@b.com,c@d.com", "a@b.com\nBcc: x@y.com", "not-an-email", "", "a b@c.com", "<x@y.com>"]) {
     reset(); r = await mod.handler(event({ body: { to: bad } }));
     check(`bad recipient rejected: ${JSON.stringify(bad)}`, r.statusCode === 400 && hooks.length === 0, String(r.statusCode));

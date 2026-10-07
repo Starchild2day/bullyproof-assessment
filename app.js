@@ -560,6 +560,49 @@ function isPreventive() {
   return (state.answers.q2 || "").includes("prevent");
 }
 
+// ============================================================
+// THE BULLYPROOF QUICK HELP GUIDES — offered in the Action Plan as the thing parents can use NOW,
+// while the Playbook is being finished (per Mark: a precursor to the Playbook, not a replacement).
+// Never shown to safety-flagged parents: their plan stays focused on getting help, with no sales.
+// Titles are the guides the assessment can match (see quickHelpGuide()); the guides themselves are
+// in English for now.
+// ============================================================
+const QUICK_HELP_TITLES = {
+  "guide-01": "I Think My Child Is Being Bullied",
+  "guide-02": "My Child Won't Talk",
+  "guide-03": "My Child Finally Admits They're Being Bullied",
+  "guide-04": "My Child Says, \u201CPlease Don't Tell the School\u201D",
+  "guide-05": "My Child Tells Me Only Part of the Story",
+  "guide-10": "My Child Is Being Bullied Online",
+  "guide-11": "My Child Is Being Left Out",
+  "guide-16": "I Want to Lower the Odds Before Anything Happens",
+  "guide-19": "My Child Told the Teacher and Nothing Changed"
+};
+function quickHelpOffer() {
+  if (state.safetyFlags.length) return null;
+  const g = quickHelpGuide();
+  const num = parseInt(String(g).replace("guide-", ""), 10);
+  const title = QUICK_HELP_TITLES[g];
+  const url = (typeof CONFIG !== "undefined" && CONFIG.QUICK_HELP_URL) || "";
+  return {
+    url,
+    kicker: L("While you wait for the Playbook", "Mientras espera el Playbook"),
+    title: "The Bullyproof Quick Help Guides",
+    lead: L("The Playbook is still being finished. These are ready right now: 25 short guides for the moments parents face most, each with the exact words to say.",
+            "El Playbook todavía se está terminando. Estas guías ya están listas: 25 guías cortas para los momentos que los padres enfrentan con más frecuencia, cada una con las palabras exactas que puede decir. Por ahora, las guías están en inglés."),
+    matchLabel: L("Based on your answers, start with:", "Según sus respuestas, empiece con:"),
+    guideTitle: title ? `${L("Guide", "Guía")} ${num} \u2014 ${title}` : "",
+    bullets: [
+      L("A 45-second version first, with the words to use tonight", "Primero, una versión de 45 segundos con las palabras para usar esta noche"),
+      L("A deeper layer for when you want to know why those words work", "Después, una parte más profunda para cuando quiera saber por qué funcionan esas palabras"),
+      L("Each guide points you to the next one you'll need", "Cada guía le lleva a la siguiente que va a necesitar")
+    ],
+    button: L("Get the Guides \u2014 $37", "Obtener las guías \u2014 $37"),
+    soon: L("Opening soon \u2014 we'll email you the link.", "Muy pronto: le enviaremos el enlace por correo."),
+    note: L("$37, one time. Your free Playbook trial invitation still comes when the Playbook launches.", "$37, un solo pago. Su invitación para probar gratis el Playbook seguirá llegando cuando salga.")
+  };
+}
+
 // General, non-private labels SwipeOne can use to personalize emails, in the parent's language.
 // Deliberately LEFT OUT: physical signs (q3), behavior changes (q6), what was done to the child (q9),
 // and anything the parent typed (q4, q12). Each label comes as a short key (for automation rules)
@@ -818,7 +861,7 @@ function buildEmailHtml() {
           if (i === 0) return `<p style="color:${navyDeep};font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1.6;margin:0 0 18px;">${para}</p>`;
           if (i === 1) {
             return `<p style="color:${text};font-size:15.5px;line-height:1.75;margin:0 0 18px;">${para}</p>
-              <table role="presentation" style="width:100%;margin:0 0 22px;"><tr><td style="border-left:4px solid ${gold};padding:6px 0 6px 18px;"><p style="color:${navyDeep};font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:21px;font-weight:700;line-height:1.45;margin:0;">${sunbeamResource().pullQuote}</p></td></tr></table>`;
+              <table role="presentation" style="width:100%;margin:0 0 22px;"><tr><td style="border-left:4px solid ${gold};padding:6px 0 6px 18px;"><p style="color:${navyDeep};font-family:Arial,Helvetica,sans-serif;font-style:normal;font-size:20px;font-weight:700;line-height:1.45;letter-spacing:-0.005em;margin:0;">${sunbeamResource().pullQuote}</p></td></tr></table>`;
           }
           return `<p style="color:${text};font-size:15.5px;line-height:1.75;margin:0 0 18px;">${para}</p>`;
         }).join("")}
@@ -935,6 +978,25 @@ function buildEmailHtml() {
     </tr></table>
     <p style="color:${muted};font-size:13.5px;margin:0 0 14px;">${L(`Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.`, `Su membresía no inicia hoy su prueba gratuita. Cuando el Playbook salga a la venta, recibirá una invitación para probarlo GRATIS durante una semana.`)}</p>
     ${state.marketingConsent ? "" : `<p style="margin:0;">${reserveBox("left")}</p>`}
+  `);
+  const qh = quickHelpOffer();
+  if (qh) sections.push(`
+    <table role="presentation" style="width:100%;background:${navyDeep};border-top:4px solid ${gold};border-radius:12px;margin:24px 0 8px;"><tr><td style="padding:24px 22px 22px;">
+      <p style="color:${gold};font-size:11.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 8px;">${qh.kicker}</p>
+      <p style="color:#ffffff;font-size:20px;font-weight:800;line-height:1.3;margin:0 0 10px;">${qh.title}</p>
+      <p style="color:#D5DAE6;font-size:14.5px;line-height:1.55;margin:0 0 16px;">${qh.lead}</p>
+      ${qh.guideTitle ? `<table role="presentation" style="width:100%;background:#1C2A4A;border:1px solid #8A6D2E;border-radius:10px;"><tr><td style="padding:14px 16px;">
+        <p style="color:${gold};font-size:12.5px;font-weight:700;margin:0 0 4px;">${qh.matchLabel}</p>
+        <p style="color:#ffffff;font-size:16px;font-weight:700;line-height:1.4;margin:0;">${escapeHtml(qh.guideTitle)}</p>
+      </td></tr></table>` : ""}
+      <ul style="color:#D5DAE6;font-size:14px;line-height:1.5;padding-left:20px;margin:16px 0 18px;">
+        ${qh.bullets.map(b => `<li style="margin-bottom:5px;">${b}</li>`).join("")}
+      </ul>
+      ${qh.url
+        ? `<a href="${escapeAttr(qh.url)}" style="display:inline-block;background:${gold};color:${navyDeep};font-size:15.5px;font-weight:800;padding:13px 22px;border-radius:8px;text-decoration:none;">${qh.button}</a>`
+        : `<p style="color:${gold};font-size:15px;font-weight:700;margin:0;">${qh.soon}</p>`}
+      <p style="color:#AEB6C8;font-size:12.5px;line-height:1.5;margin:12px 0 0;">${qh.note}</p>
+    </td></tr></table>
   `);
   sections.push(`
     ${sectionHeader(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"))}
@@ -1900,7 +1962,7 @@ async function generatePDF() {
       }
       body(introParas[pi], { color: [31, 36, 48] });
       if (pi === 1) {
-        doc.setFont("times", "bolditalic"); doc.setFontSize(15.5);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(14.5);
         const quoteLines = doc.splitTextToSize(sunbeam.pullQuote, 162);
         ensureRoom(quoteLines.length * 7.2 + 12);
         const qBarTopY = y - 2;
@@ -2163,6 +2225,59 @@ async function generatePDF() {
   ensureRoom(34); // the trial note and the second reserve box stay together
   body(L("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", "Su membresía no inicia hoy su prueba gratuita. Cuando el Playbook salga a la venta, recibirá una invitación para probarlo GRATIS durante una semana."), { color: [140, 140, 140] });
   if (!state.marketingConsent) { reserveBox(16, y + 2); y += 14; }
+
+  // The Quick Help Guides: what parents can use now, while the Playbook is being finished.
+  const qhOffer = quickHelpOffer();
+  if (qhOffer) {
+    const X = 15, W = 180, PAD = 8, inner = W - PAD * 2;
+    doc.setFont(undefined, "normal"); doc.setFontSize(10.5);
+    const leadL = doc.splitTextToSize(qhOffer.lead, inner);
+    const bulletsL = qhOffer.bullets.map(b => doc.splitTextToSize("\u2022  " + b, inner - 4));
+    const noteL = doc.splitTextToSize(qhOffer.note, inner);
+    doc.setFont(undefined, "bold"); doc.setFontSize(12);
+    const guideL = qhOffer.guideTitle ? doc.splitTextToSize(qhOffer.guideTitle, inner - 10) : [];
+    const matchH = guideL.length ? 10 + guideL.length * 5.6 + 5 : 0;
+    const cardH = 10 + 6 + 9 + leadL.length * 5 + 5 + matchH + (matchH ? 6 : 0)
+      + bulletsL.reduce((h, l) => h + l.length * 5 + 1.5, 0) + 5 + 12 + 5 + noteL.length * 4.4 + 8;
+    ensureRoom(cardH + 8);
+    y += 4;
+    const top = y;
+    doc.setFillColor(16, 27, 51); doc.roundedRect(X, top, W, cardH, 3, 3, "F");
+    doc.setFillColor(200, 155, 60); doc.rect(X + 3, top, W - 6, 1.4, "F");
+    let cy = top + 11;
+    doc.setFont(undefined, "bold"); doc.setFontSize(8.5); doc.setTextColor(200, 155, 60);
+    doc.text(qhOffer.kicker.toUpperCase(), X + PAD, cy, { charSpace: 0.5 }); cy += 8;
+    doc.setFontSize(16); doc.setTextColor(255, 255, 255);
+    doc.text(qhOffer.title, X + PAD, cy); cy += 8;
+    doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
+    doc.text(leadL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += leadL.length * 5 + 4;
+    if (guideL.length) {
+      doc.setFillColor(28, 42, 74); doc.setDrawColor(138, 109, 46); doc.setLineWidth(0.4);
+      doc.roundedRect(X + PAD, cy, inner, matchH, 2, 2, "FD");
+      doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
+      doc.text(qhOffer.matchLabel, X + PAD + 5, cy + 7);
+      doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+      doc.text(guideL, X + PAD + 5, cy + 13.5, { lineHeightFactor: 1.3 });
+      cy += matchH + 6;
+    }
+    doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
+    bulletsL.forEach(l => { doc.text(l, X + PAD + 1, cy, { lineHeightFactor: 1.35 }); cy += l.length * 5 + 1.5; });
+    cy += 3;
+    if (qhOffer.url) {
+      doc.setFont(undefined, "bold"); doc.setFontSize(11.5);
+      const bw = doc.getTextWidth(qhOffer.button) + 14;
+      doc.setFillColor(200, 155, 60); doc.roundedRect(X + PAD, cy, bw, 11, 2, 2, "F");
+      doc.setTextColor(16, 27, 51); doc.text(qhOffer.button, X + PAD + 7, cy + 7.3);
+      doc.link(X + PAD, cy, bw, 11, { url: qhOffer.url });
+    } else {
+      doc.setFont(undefined, "bold"); doc.setFontSize(11.5); doc.setTextColor(200, 155, 60);
+      doc.text(qhOffer.soon, X + PAD, cy + 7.3);
+    }
+    cy += 16;
+    doc.setFont(undefined, "normal"); doc.setFontSize(9); doc.setTextColor(174, 182, 200);
+    doc.text(noteL, X + PAD, cy, { lineHeightFactor: 1.3 });
+    y = top + cardH + 10;
+  }
 
   heading(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"));
   body(L("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:", "Esa también es siempre una opción. Busque en la red de Bullyproof Support para encontrar a un profesional cerca de usted: solo escriba su ubicación; buscar no cuesta nada:"));

@@ -32,5 +32,9 @@ const CONFIG = {
 
   // --- 8. PRIVACY POLICY address. Blank = the copy hosted with this tool (/privacy/).
   // When the policy is also posted on bullyproof.guide, put that full address here. ---
-  PRIVACY_URL: ""
+  PRIVACY_URL: "",
+
+  // --- 9. QUICK HELP GUIDES checkout ($37). Paste the Stripe Payment Link here. Blank = the Action Plan
+  // shows the Quick Help Guides card with "Opening soon" instead of a Buy button. ---
+  QUICK_HELP_URL: ""
 };

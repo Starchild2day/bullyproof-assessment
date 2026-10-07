@@ -13,8 +13,9 @@
 //  1. The plan (answers + language) is saved under a long random ID in Netlify Blobs (store "plans").
 //     Its private page is  <our site>/plan/<ID>  — the same plan as the screen
 //     and the PDF, rebuilt from the answers by the same code, with a "Download PDF" button.
-//  2. SwipeOne (bullyproof.support workspace) gets a webhook with ONLY: email, tags, language and that
-//     link. Its automations send "your plan is ready", the safety alert to Mark (plan-safety), and the
+//  2. SwipeOne (bullyproof.support workspace) gets a webhook with ONLY: email, tags, language, that link,
+//     and general labels (age range, situation, how long, where, school status — never physical signs,
+//     behavior changes, what was done to the child, or anything the parent typed). Its automations send "your plan is ready", the safety alert to Mark (plan-safety), and the
 //     Quick Help Guides follow-ups (plan-standard + the matched guide-NN tag). Answers never leave our storage.
 //  3. If SwipeOne can't be reached, the webhook waits in the outbox and is retried every hour.
 //
@@ -164,6 +165,10 @@ exports.handler = async function (event) {
   const flags = builder.state.safetyFlags.slice();
   const flagged = flags.length > 0;
   const guide = flagged ? "" : builder.quickHelpGuide();   // safety-flagged parents never get the sales follow-ups
+  // General, non-private labels for personalizing the emails (age range, situation, how long, school…),
+  // in the parent's language. Safety-flagged plans send none: those emails stay simple and say nothing more.
+  let profile = {};
+  if (!flagged) { try { profile = builder.swipeoneProfile(); } catch (e) { profile = {}; } }
 
   // 9. Save the plan under a long random ID (144 bits — can't be guessed). This IS the parent's plan page.
   const planId = crypto.randomBytes(18).toString("base64url");
@@ -188,6 +193,7 @@ exports.handler = async function (event) {
       tags_text: tags.join(", "),
       plan_link: planUrl,
       language: lang,
+      ...profile,
       playbook_interest: marketingConsent ? "yes" : "no",
       source: "Parent Clarity Check",
       submitted_at: createdAt

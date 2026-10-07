@@ -560,6 +560,76 @@ function isPreventive() {
   return (state.answers.q2 || "").includes("prevent");
 }
 
+// General, non-private labels SwipeOne can use to personalize emails, in the parent's language.
+// Deliberately LEFT OUT: physical signs (q3), behavior changes (q6), what was done to the child (q9),
+// and anything the parent typed (q4, q12). Each label comes as a short key (for automation rules)
+// and a ready-to-use phrase (for the email text). Unanswered questions come back blank.
+function swipeoneProfile() {
+  const a = state.answers;
+  const pick = (val, table) => { const hit = table.find(([frag]) => (val || "").includes(frag)); return hit ? { key: hit[1], text: hit[2] } : { key: "", text: "" }; };
+  const age = pick(a.q1, [
+    ["Under 5", "under-5", L("under age 5", "menor de 5 años")],
+    ["5–7", "5-7", L("ages 5–7", "de 5 a 7 años")],
+    ["8–10", "8-10", L("ages 8–10", "de 8 a 10 años")],
+    ["11–14", "11-14", L("ages 11–14", "de 11 a 14 años")],
+    ["15–18", "15-18", L("ages 15–18", "de 15 a 18 años")]
+  ]);
+  const ageGroup = { "under-5": "young-child", "5-7": "young-child", "8-10": "kid", "11-14": "tween", "15-18": "teen" }[age.key] || "";
+  const situation = pick(a.q2, [
+    ["not sure yet", "unsure", L("you have a feeling something's off", "tiene la sensación de que algo no anda bien")],
+    ["concerning at school", "school", L("you've noticed something concerning at school", "ha notado algo preocupante en la escuela")],
+    ["online or on social media", "online", L("something happened online", "pasó algo en internet")],
+    ["treated badly", "told-me", L("your child told you they're being treated badly", "su hijo o hija le contó que está recibiendo mal trato")],
+    ["prevent", "prevention", L("you're focused on prevention", "está enfocándose en la prevención")]
+  ]);
+  const duration = pick(a.q5, [
+    ["Just noticed", "under-a-week", L("less than a week", "menos de una semana")],
+    ["A few weeks", "few-weeks", L("a few weeks", "unas semanas")],
+    ["A month or two", "1-2-months", L("a month or two", "uno o dos meses")],
+    ["Several months", "several-months", L("several months or longer", "varios meses o más")],
+    ["Not sure", "not-sure", L("not sure yet", "todavía no se sabe")]
+  ]);
+  const told = pick(a.q8, [
+    ["told me clearly", "told-clearly", L("your child has told you clearly what's going on", "su hijo o hija le ha contado claramente lo que pasa")],
+    ["only hints", "hints", L("your child has shared hints, but not the whole story", "su hijo o hija le ha dado pistas, pero no toda la historia")],
+    ["behavior tells me", "behavior-only", L("your child hasn't said anything, but their behavior has changed", "su hijo o hija no ha dicho nada, pero su comportamiento ha cambiado")],
+    ["don't have any behavioral", "no-signs", L("nothing concrete yet", "todavía nada concreto")]
+  ]);
+  const school = pick(a.q10, [
+    ["took it seriously", "helping", L("the school is helping", "la escuela está ayudando")],
+    ["nothing has changed", "no-change", L("you've talked to the school, but nothing has changed yet", "habló con la escuela, pero todavía nada ha cambiado")],
+    ["isn't bullying", "dismissed", L("the school said it isn't bullying", "la escuela dijo que no es bullying")],
+    ["doesn't want me to contact", "child-doesnt-want", L("your child doesn't want the school told", "su hijo o hija no quiere que se le avise a la escuela")],
+    ["haven't reached out", "not-yet", L("you haven't contacted the school yet", "todavía no se ha comunicado con la escuela")]
+  ]);
+  const online = pick(a.q11, [
+    ["primarily online", "online", L("mostly online", "sobre todo en internet")],
+    ["online for sure", "online-maybe-in-person", L("online, and maybe in person too", "en internet, y tal vez también en persona")],
+    ["both online and in person", "both", L("both online and in person", "en internet y en persona")],
+    ["only happening in person", "in-person", L("in person", "en persona")],
+    ["I'm not sure", "not-sure", L("not sure yet", "todavía no se sabe")]
+  ]);
+  const placeTable = [
+    ["At school", "school", L("at school", "en la escuela")],
+    ["school bus", "bus", L("on the school bus", "en el autobús escolar")],
+    ["after-school", "activities", L("in after-school activities", "en actividades después de clases")],
+    ["social media", "social-media", L("on social media", "en las redes sociales")],
+    ["text messages", "texts", L("in texts or group chats", "en mensajes de texto o chats de grupo")],
+    ["gaming platform", "gaming", L("in online games", "en videojuegos en línea")],
+    ["neighborhood", "neighborhood", L("in the neighborhood", "en el vecindario")]
+  ];
+  const places = placeTable.filter(([frag]) => (a.q7 || []).some(x => x.includes(frag)));
+  return {
+    child_age: age.key, child_age_text: age.text, age_group: ageGroup,
+    situation: situation.key, situation_text: situation.text,
+    how_long: duration.key, how_long_text: duration.text,
+    child_told: told.key, child_told_text: told.text,
+    school_status: school.key, school_status_text: school.text,
+    online: online.key, online_text: online.text,
+    where: places.map(p => p[1]).join(", "), where_text: places.map(p => p[2]).join(", ")
+  };
+}
+
 // Which Quick Help Guide fits this parent best (the SwipeOne tag "guide-NN" that picks their follow-up
 // emails). Safety-flagged parents get none — they never receive sales follow-ups.
 function quickHelpGuide() {

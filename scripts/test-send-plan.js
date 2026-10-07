@@ -49,7 +49,8 @@ const check = (name, ok, extra = "") => { (ok ? pass++ : fail++); console.log(`$
   check("happy path: 200 and exactly one SwipeOne webhook", r.statusCode === 200 && hooks.length === 1, r.body);
   const h = hooks[0] || {};
   check("  webhook has the parent's email, plan-standard, a guide tag and the language", h.email === "parent1@example.com" && h.plan_type === "plan-standard" && /^guide-\d\d$/.test(h.guide) && h.language === "en" && h.tags.includes("plan-standard") && h.tags.includes(h.guide));
-  check("  webhook NEVER carries the parent's answers about their child", !JSON.stringify(h).includes("quiet since") && !JSON.stringify(h).includes("8–10") && !("answers" in h) && !("summary" in h));
+  check("  webhook NEVER carries what the parent typed, behavior changes, or the full answers", !JSON.stringify(h).includes("quiet since") && !JSON.stringify(h).includes("feel better") && !/irritable|tearful|anxious/i.test(JSON.stringify(h)) && !("answers" in h) && !("summary" in h));
+  check("  general labels arrive for personalizing: age, situation, child told", h.child_age === "8-10" && h.child_age_text === "ages 8–10" && h.age_group === "kid" && h.situation === "told-me" && h.child_told === "told-clearly" && /told you/.test(h.child_told_text));
   check("  plan link is on the site the parent used, with a 24-character random ID", /^https:\/\/assessment\.bullyproof\.guide\/plan\/[A-Za-z0-9_-]{24}$/.test(h.plan_link) && body.planUrl === h.plan_link, h.plan_link);
   const id = (h.plan_link || "").split("/plan/")[1];
   check("  plan saved under that ID with the answers and language", plans().length === 1 && plans()[0][0] === id && plans()[0][1].answers.q4 === worried.q4 && plans()[0][1].lang === "en");
@@ -88,6 +89,17 @@ const check = (name, ok, extra = "") => { (ok ? pass++ : fail++); console.log(`$
     reset(); await mod.handler(event({ body: { answers: { ...worried, q12: phrase } } }));
     check(`everyday phrasing is NOT flagged: "${phrase}"`, hooks[0] && hooks[0].plan_type === "plan-standard");
   }
+
+  // Labels: the full set, Spanish phrasing, and the private questions kept out.
+  reset(); await mod.handler(event({ body: { lang: "es", answers: { q1: "11–14", q2: opt("q2", "Something happened online"), q3: [opt("q3", "headaches")], q5: opt("q5", "A few weeks"), q6: [opt("q6", "Withdrawing")], q7: [opt("q7", "social media"), opt("q7", "gaming platform")], q8: opt("q8", "only hints"), q9: [opt("q9", "called names")], q10: opt("q10", "nothing has changed"), q11: opt("q11", "both online and in person"), q12: "Que puedo hacer?" } } }));
+  const L1 = hooks[0] || {};
+  check("labels: every general field filled, keys stay English for automation rules", L1.child_age === "11-14" && L1.age_group === "tween" && L1.situation === "online" && L1.how_long === "few-weeks" && L1.child_told === "hints" && L1.school_status === "no-change" && L1.online === "both" && L1.where === "social-media, gaming", JSON.stringify(L1));
+  check("labels: phrases come in the parent's language (Spanish)", L1.child_age_text === "de 11 a 14 años" && L1.how_long_text === "unas semanas" && /escuela/.test(L1.school_status_text) && /redes sociales/.test(L1.where_text));
+  check("labels: physical signs, behavior changes and treatment type are never sent", !/headache|dolor|Withdraw|aleja|names|apodos|q3|q6|q9/i.test(JSON.stringify(L1)));
+  reset(); await mod.handler(event({ body: { answers: { ...worried, q12: "he doesn't want to be here anymore" } } }));
+  check("labels: safety-flagged plans send NO labels at all", hooks[0].plan_type === "plan-safety" && !("child_age" in hooks[0]) && !("situation" in hooks[0]));
+  reset(); await mod.handler(event({ body: { answers: { q1: "5–7", q2: opt("q2", "prevent"), q12: "How do I start?" } } }));
+  check("labels: questions a parent didn't see come back blank, not wrong", hooks[0].situation === "prevention" && hooks[0].age_group === "young-child" && hooks[0].school_status === "" && hooks[0].where === "");
 
   // --- Consent ---
   reset(); await mod.handler(event({ body: { marketingConsent: true } }));

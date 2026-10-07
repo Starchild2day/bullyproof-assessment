@@ -578,6 +578,18 @@ const QUICK_HELP_TITLES = {
   "guide-16": "I Want to Lower the Odds Before Anything Happens",
   "guide-19": "My Child Told the Teacher and Nothing Changed"
 };
+// The parent's primary issue, named in plain words (keyed by the matched guide).
+const QUICK_HELP_ISSUES = {
+  "guide-01": ["You sense something is wrong", "Siente que algo anda mal"],
+  "guide-02": ["Your child won't talk about it", "Su hijo o hija no quiere hablar de ello"],
+  "guide-03": ["Your child has told you they're being bullied", "Su hijo o hija le contó que sufre bullying"],
+  "guide-04": ["Your child doesn't want the school told", "Su hijo o hija no quiere que se le avise a la escuela"],
+  "guide-05": ["Your child has shared only part of the story", "Su hijo o hija le ha contado solo una parte"],
+  "guide-10": ["Bullying online", "Bullying en internet"],
+  "guide-11": ["Being left out", "Que lo excluyan"],
+  "guide-16": ["Building strength before problems start", "Fortalecer a su hijo o hija antes de que haya problemas"],
+  "guide-19": ["The school hasn't fixed it", "La escuela no lo ha resuelto"]
+};
 function quickHelpOffer() {
   if (state.safetyFlags.length) return null;
   const g = quickHelpGuide();
@@ -586,20 +598,22 @@ function quickHelpOffer() {
   const url = (typeof CONFIG !== "undefined" && CONFIG.QUICK_HELP_URL) || "";
   return {
     url,
-    kicker: L("While you wait for the Playbook", "Mientras espera el Playbook"),
+    kicker: L("Hands-on help, available today", "Ayuda práctica, disponible hoy"),
     title: "The Bullyproof Quick Help Guides",
-    lead: L("The Playbook is still being finished. These are ready right now: 25 short guides for the moments parents face most, each with the exact words to say.",
-            "El Playbook todavía se está terminando. Estas guías ya están listas: 25 guías cortas para los momentos que los padres enfrentan con más frecuencia, cada una con las palabras exactas que puede decir. Por ahora, las guías están en inglés."),
-    matchLabel: L("Based on your answers, start with:", "Según sus respuestas, empiece con:"),
+    lead: L("25 short, practical guides for the moments parents face most, each with the exact words to say. One digital download, organized by issue, so you can go straight to yours tonight.",
+            "25 guías cortas y prácticas para los momentos que los padres enfrentan con más frecuencia, cada una con las palabras exactas que puede decir. Una sola descarga digital, organizada por tema, para que vaya directo a la suya esta noche. Por ahora, las guías están en inglés."),
+    issueLabel: L("Your primary issue:", "Su tema principal:"),
+    issue: QUICK_HELP_ISSUES[g] ? L(QUICK_HELP_ISSUES[g][0], QUICK_HELP_ISSUES[g][1]) : "",
+    matchLabel: L("Start with:", "Empiece con:"),
     guideTitle: title ? `${L("Guide", "Guía")} ${num} \u2014 ${title}` : "",
     bullets: [
-      L("A 45-second version first, with the words to use tonight", "Primero, una versión de 45 segundos con las palabras para usar esta noche"),
-      L("A deeper layer for when you want to know why those words work", "Después, una parte más profunda para cuando quiera saber por qué funcionan esas palabras"),
-      L("Each guide points you to the next one you'll need", "Cada guía le lleva a la siguiente que va a necesitar")
+      L("Instant digital download, yours to keep", "Descarga digital inmediata, para quedársela"),
+      L("Organized by issue, so you find yours in seconds", "Organizada por tema, para encontrar el suyo en segundos"),
+      L("A 45-second version first, with the exact words to say", "Primero, una versión de 45 segundos con las palabras exactas que puede decir")
     ],
     button: L("Get the Guides \u2014 $37", "Obtener las guías \u2014 $37"),
     soon: L("Opening soon \u2014 we'll email you the link.", "Muy pronto: le enviaremos el enlace por correo."),
-    note: L("$37, one time. Your free Playbook trial invitation still comes when the Playbook launches.", "$37, un solo pago. Su invitación para probar gratis el Playbook seguirá llegando cuando salga.")
+    note: L("$37, one time. All 25 guides are included.", "$37, un solo pago. Incluye las 25 guías.")
   };
 }
 
@@ -947,6 +961,27 @@ function buildEmailHtml() {
   // after the full details below. Email can't hold a working checkbox, so both
   // open the reserve page, where the real checkbox is.
   const reserveBox = (align) => `<a href="${playbookInviteUrl()}" style="display:inline-block;text-decoration:none;color:${navyDeep};font-size:13.5px;font-weight:700;line-height:1.3;white-space:nowrap;text-align:${align};"><span style="display:inline-block;width:14px;height:14px;border:2px solid ${navyDeep};border-radius:3px;background:#ffffff;vertical-align:-3px;margin-right:7px;"></span>${L(`Reserve my copy`, `Reservar mi copia`)}</a>`;
+  const qh = quickHelpOffer();
+  if (qh) sections.push(`
+    <table role="presentation" style="width:100%;background:${navyDeep};border-top:4px solid ${gold};border-radius:12px;margin:28px 0 8px;"><tr><td style="padding:24px 22px 22px;">
+      <p style="color:${gold};font-size:11.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 8px;">${qh.kicker}</p>
+      <p style="color:#ffffff;font-size:20px;font-weight:800;line-height:1.3;margin:0 0 10px;">${qh.title}</p>
+      <p style="color:#D5DAE6;font-size:14.5px;line-height:1.55;margin:0 0 16px;">${qh.lead}</p>
+      ${qh.guideTitle ? `<table role="presentation" style="width:100%;background:#1C2A4A;border:1px solid #8A6D2E;border-radius:10px;"><tr><td style="padding:14px 16px;">
+        ${qh.issue ? `<p style="color:${gold};font-size:12.5px;font-weight:700;margin:0 0 3px;">${qh.issueLabel}</p>
+        <p style="color:#ffffff;font-size:16px;font-weight:700;line-height:1.4;margin:0 0 10px;">${qh.issue}</p>` : ""}
+        <p style="color:${gold};font-size:12.5px;font-weight:700;margin:0 0 4px;">${qh.matchLabel}</p>
+        <p style="color:#ffffff;font-size:16px;font-weight:700;line-height:1.4;margin:0;">${escapeHtml(qh.guideTitle)}</p>
+      </td></tr></table>` : ""}
+      <ul style="color:#D5DAE6;font-size:14px;line-height:1.5;padding-left:20px;margin:16px 0 18px;">
+        ${qh.bullets.map(b => `<li style="margin-bottom:5px;">${b}</li>`).join("")}
+      </ul>
+      ${qh.url
+        ? `<a href="${escapeAttr(qh.url)}" style="display:inline-block;background:${gold};color:${navyDeep};font-size:15.5px;font-weight:800;padding:13px 22px;border-radius:8px;text-decoration:none;">${qh.button}</a>`
+        : `<p style="color:${gold};font-size:15px;font-weight:700;margin:0;">${qh.soon}</p>`}
+      <p style="color:#AEB6C8;font-size:12.5px;line-height:1.5;margin:12px 0 0;">${qh.note}</p>
+    </td></tr></table>
+  `);
   sections.push(`
     ${sectionHeader(L("What comes next", "Lo que sigue"))}
     <table role="presentation" style="width:100%;border-collapse:collapse;"><tr>
@@ -979,25 +1014,7 @@ function buildEmailHtml() {
     <p style="color:${muted};font-size:13.5px;margin:0 0 14px;">${L(`Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.`, `Su membresía no inicia hoy su prueba gratuita. Cuando el Playbook salga a la venta, recibirá una invitación para probarlo GRATIS durante una semana.`)}</p>
     ${state.marketingConsent ? "" : `<p style="margin:0;">${reserveBox("left")}</p>`}
   `);
-  const qh = quickHelpOffer();
-  if (qh) sections.push(`
-    <table role="presentation" style="width:100%;background:${navyDeep};border-top:4px solid ${gold};border-radius:12px;margin:24px 0 8px;"><tr><td style="padding:24px 22px 22px;">
-      <p style="color:${gold};font-size:11.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 8px;">${qh.kicker}</p>
-      <p style="color:#ffffff;font-size:20px;font-weight:800;line-height:1.3;margin:0 0 10px;">${qh.title}</p>
-      <p style="color:#D5DAE6;font-size:14.5px;line-height:1.55;margin:0 0 16px;">${qh.lead}</p>
-      ${qh.guideTitle ? `<table role="presentation" style="width:100%;background:#1C2A4A;border:1px solid #8A6D2E;border-radius:10px;"><tr><td style="padding:14px 16px;">
-        <p style="color:${gold};font-size:12.5px;font-weight:700;margin:0 0 4px;">${qh.matchLabel}</p>
-        <p style="color:#ffffff;font-size:16px;font-weight:700;line-height:1.4;margin:0;">${escapeHtml(qh.guideTitle)}</p>
-      </td></tr></table>` : ""}
-      <ul style="color:#D5DAE6;font-size:14px;line-height:1.5;padding-left:20px;margin:16px 0 18px;">
-        ${qh.bullets.map(b => `<li style="margin-bottom:5px;">${b}</li>`).join("")}
-      </ul>
-      ${qh.url
-        ? `<a href="${escapeAttr(qh.url)}" style="display:inline-block;background:${gold};color:${navyDeep};font-size:15.5px;font-weight:800;padding:13px 22px;border-radius:8px;text-decoration:none;">${qh.button}</a>`
-        : `<p style="color:${gold};font-size:15px;font-weight:700;margin:0;">${qh.soon}</p>`}
-      <p style="color:#AEB6C8;font-size:12.5px;line-height:1.5;margin:12px 0 0;">${qh.note}</p>
-    </td></tr></table>
-  `);
+
   sections.push(`
     ${sectionHeader(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"))}
     <p style="color:${text};font-size:15px;margin:0;">
@@ -2177,14 +2194,76 @@ async function generatePDF() {
     doc.link(x - 1, yy - 5, 40, 7, { url: playbookInviteUrl() });
     doc.setFont(undefined, "normal");
   }
-  heading(L("What comes next:", "Lo que sigue:"));
+  // The Quick Help Guides: their own product, level one — hands-on and available today. The Playbook follows as the next level.
+  const qhOffer = quickHelpOffer();
+  if (qhOffer) {
+    const X = 15, W = 180, PAD = 8, inner = W - PAD * 2;
+    doc.setFont(undefined, "normal"); doc.setFontSize(10.5);
+    const leadL = doc.splitTextToSize(qhOffer.lead, inner);
+    const bulletsL = qhOffer.bullets.map(b => doc.splitTextToSize("\u2022  " + b, inner - 4));
+    const noteL = doc.splitTextToSize(qhOffer.note, inner);
+    doc.setFont(undefined, "bold"); doc.setFontSize(12);
+    const guideL = qhOffer.guideTitle ? doc.splitTextToSize(qhOffer.guideTitle, inner - 10) : [];
+    const issueL = (guideL.length && qhOffer.issue) ? doc.splitTextToSize(qhOffer.issue, inner - 10) : [];
+    const issueH = issueL.length ? 6 + issueL.length * 5.6 + 3 : 0;
+    const matchH = guideL.length ? 10 + issueH + guideL.length * 5.6 + 5 : 0;
+    const cardH = 10 + 6 + 9 + leadL.length * 5 + 5 + matchH + (matchH ? 6 : 0)
+      + bulletsL.reduce((h, l) => h + l.length * 5 + 1.5, 0) + 5 + 12 + 5 + noteL.length * 4.4 + 8;
+    ensureRoom(cardH + 8);
+    const top = y;
+    doc.setFillColor(16, 27, 51); doc.roundedRect(X, top, W, cardH, 3, 3, "F");
+    doc.setFillColor(200, 155, 60); doc.rect(X + 3, top, W - 6, 1.4, "F");
+    let cy = top + 11;
+    doc.setFont(undefined, "bold"); doc.setFontSize(8.5); doc.setTextColor(200, 155, 60);
+    doc.text(qhOffer.kicker.toUpperCase(), X + PAD, cy, { charSpace: 0.5 }); cy += 8;
+    doc.setFontSize(16); doc.setTextColor(255, 255, 255);
+    doc.text(qhOffer.title, X + PAD, cy); cy += 8;
+    doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
+    doc.text(leadL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += leadL.length * 5 + 4;
+    if (guideL.length) {
+      doc.setFillColor(28, 42, 74); doc.setDrawColor(138, 109, 46); doc.setLineWidth(0.4);
+      doc.roundedRect(X + PAD, cy, inner, matchH, 2, 2, "FD");
+      let my = cy + 7;
+      if (issueL.length) {
+        doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
+        doc.text(qhOffer.issueLabel, X + PAD + 5, my);
+        doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+        doc.text(issueL, X + PAD + 5, my + 6.5, { lineHeightFactor: 1.3 });
+        my += issueH;
+      }
+      doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
+      doc.text(qhOffer.matchLabel, X + PAD + 5, my);
+      doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+      doc.text(guideL, X + PAD + 5, my + 6.5, { lineHeightFactor: 1.3 });
+      cy += matchH + 6;
+    }
+    doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
+    bulletsL.forEach(l => { doc.text(l, X + PAD + 1, cy, { lineHeightFactor: 1.35 }); cy += l.length * 5 + 1.5; });
+    cy += 3;
+    if (qhOffer.url) {
+      doc.setFont(undefined, "bold"); doc.setFontSize(11.5);
+      const bw = doc.getTextWidth(qhOffer.button) + 14;
+      doc.setFillColor(200, 155, 60); doc.roundedRect(X + PAD, cy, bw, 11, 2, 2, "F");
+      doc.setTextColor(16, 27, 51); doc.text(qhOffer.button, X + PAD + 7, cy + 7.3);
+      doc.link(X + PAD, cy, bw, 11, { url: qhOffer.url });
+    } else {
+      doc.setFont(undefined, "bold"); doc.setFontSize(11.5); doc.setTextColor(200, 155, 60);
+      doc.text(qhOffer.soon, X + PAD, cy + 7.3);
+    }
+    cy += 16;
+    doc.setFont(undefined, "normal"); doc.setFontSize(9); doc.setTextColor(174, 182, 200);
+    doc.text(noteL, X + PAD, cy, { lineHeightFactor: 1.3 });
+    y = top + cardH + 10;
+  }
   const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
   const colW = playbookImg ? 124 : 180;
-  doc.setFontSize(11);
+  doc.setFont(undefined, "normal"); doc.setFontSize(11);
   const introLines = doc.splitTextToSize(WHAT_COMES_NEXT_INTRO(), colW);
   const bulletBlocks = furtherStepsTeaser().map(t => doc.splitTextToSize(`• ${t}`, colW));
   const LH = 5.2; // line spacing for this block
   const textH = introLines.length * LH + 6 + bulletBlocks.reduce((h, l) => h + l.length * LH + 3.5, 0);
+  ensureRoom(Math.max(textH, 72) + 22); // the heading never sits alone: it moves with its intro, list and picture
+  heading(L("What comes next:", "Lo que sigue:"));
   ensureRoom(Math.max(textH, 72) + 4); // keep the list and the picture together on one page
   const topY = y;
   if (playbookImg) {
@@ -2226,58 +2305,6 @@ async function generatePDF() {
   body(L("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", "Su membresía no inicia hoy su prueba gratuita. Cuando el Playbook salga a la venta, recibirá una invitación para probarlo GRATIS durante una semana."), { color: [140, 140, 140] });
   if (!state.marketingConsent) { reserveBox(16, y + 2); y += 14; }
 
-  // The Quick Help Guides: what parents can use now, while the Playbook is being finished.
-  const qhOffer = quickHelpOffer();
-  if (qhOffer) {
-    const X = 15, W = 180, PAD = 8, inner = W - PAD * 2;
-    doc.setFont(undefined, "normal"); doc.setFontSize(10.5);
-    const leadL = doc.splitTextToSize(qhOffer.lead, inner);
-    const bulletsL = qhOffer.bullets.map(b => doc.splitTextToSize("\u2022  " + b, inner - 4));
-    const noteL = doc.splitTextToSize(qhOffer.note, inner);
-    doc.setFont(undefined, "bold"); doc.setFontSize(12);
-    const guideL = qhOffer.guideTitle ? doc.splitTextToSize(qhOffer.guideTitle, inner - 10) : [];
-    const matchH = guideL.length ? 10 + guideL.length * 5.6 + 5 : 0;
-    const cardH = 10 + 6 + 9 + leadL.length * 5 + 5 + matchH + (matchH ? 6 : 0)
-      + bulletsL.reduce((h, l) => h + l.length * 5 + 1.5, 0) + 5 + 12 + 5 + noteL.length * 4.4 + 8;
-    ensureRoom(cardH + 8);
-    y += 4;
-    const top = y;
-    doc.setFillColor(16, 27, 51); doc.roundedRect(X, top, W, cardH, 3, 3, "F");
-    doc.setFillColor(200, 155, 60); doc.rect(X + 3, top, W - 6, 1.4, "F");
-    let cy = top + 11;
-    doc.setFont(undefined, "bold"); doc.setFontSize(8.5); doc.setTextColor(200, 155, 60);
-    doc.text(qhOffer.kicker.toUpperCase(), X + PAD, cy, { charSpace: 0.5 }); cy += 8;
-    doc.setFontSize(16); doc.setTextColor(255, 255, 255);
-    doc.text(qhOffer.title, X + PAD, cy); cy += 8;
-    doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
-    doc.text(leadL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += leadL.length * 5 + 4;
-    if (guideL.length) {
-      doc.setFillColor(28, 42, 74); doc.setDrawColor(138, 109, 46); doc.setLineWidth(0.4);
-      doc.roundedRect(X + PAD, cy, inner, matchH, 2, 2, "FD");
-      doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
-      doc.text(qhOffer.matchLabel, X + PAD + 5, cy + 7);
-      doc.setFontSize(12); doc.setTextColor(255, 255, 255);
-      doc.text(guideL, X + PAD + 5, cy + 13.5, { lineHeightFactor: 1.3 });
-      cy += matchH + 6;
-    }
-    doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
-    bulletsL.forEach(l => { doc.text(l, X + PAD + 1, cy, { lineHeightFactor: 1.35 }); cy += l.length * 5 + 1.5; });
-    cy += 3;
-    if (qhOffer.url) {
-      doc.setFont(undefined, "bold"); doc.setFontSize(11.5);
-      const bw = doc.getTextWidth(qhOffer.button) + 14;
-      doc.setFillColor(200, 155, 60); doc.roundedRect(X + PAD, cy, bw, 11, 2, 2, "F");
-      doc.setTextColor(16, 27, 51); doc.text(qhOffer.button, X + PAD + 7, cy + 7.3);
-      doc.link(X + PAD, cy, bw, 11, { url: qhOffer.url });
-    } else {
-      doc.setFont(undefined, "bold"); doc.setFontSize(11.5); doc.setTextColor(200, 155, 60);
-      doc.text(qhOffer.soon, X + PAD, cy + 7.3);
-    }
-    cy += 16;
-    doc.setFont(undefined, "normal"); doc.setFontSize(9); doc.setTextColor(174, 182, 200);
-    doc.text(noteL, X + PAD, cy, { lineHeightFactor: 1.3 });
-    y = top + cardH + 10;
-  }
 
   heading(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"));
   body(L("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:", "Esa también es siempre una opción. Busque en la red de Bullyproof Support para encontrar a un profesional cerca de usted: solo escriba su ubicación; buscar no cuesta nada:"));

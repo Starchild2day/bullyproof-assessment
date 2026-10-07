@@ -1,10 +1,11 @@
 // Netlify function — saves a "Reserve my copy" Playbook reservation (replaces Formspree).
 //
-// Saves the reservation to Netlify Blobs (store "reservations") and emails a short notice to
-// ALERT_EMAIL (or CONTACT_EMAIL). Only our own site may call it; honeypot + simple rate limit.
+// Saves the reservation to Netlify Blobs (store "reservations") and tells SwipeOne (bullyproof.support
+// workspace) with the tag "playbook-reserved", so the reservation list lives there too. Only our own site
+// may call it; honeypot + simple rate limit.
 "use strict";
 
-const { saveRecord, sendOrQueue, escapeHtml, alertAddress } = require("../lib/records.js");
+const { saveRecord, deliverOrQueue } = require("../lib/records.js");
 let CONFIG = {};
 let makePlanBundle = null;
 try { makePlanBundle = require("../lib/plan-bundle.js"); CONFIG = makePlanBundle("https://bullyproof.guide").CONFIG || {}; } catch (e) { /* defaults below */ }
@@ -49,20 +50,26 @@ exports.handler = async function (event) {
   if (recent.length >= 5) return respond(429, { error: "Too many requests. Please try again in a few minutes." });
   recent.push(now); hits.set(ip, recent);
 
+  const lang = payload.lang === "es" ? "es" : "en";
+  const createdAt = new Date().toISOString();
   const saved = await saveRecord(event, "reservations", {
-    createdAt: new Date().toISOString(),
+    createdAt,
     email,
-    consent: consentWording(payload.lang),
-    lang: payload.lang === "es" ? "es" : "en",
+    consent: consentWording(lang),
+    lang,
     source: "Playbook reserve page"
   });
-  const notice = await sendOrQueue(event, {
-    to: alertAddress(CONFIG),
-    subject: "New Playbook reservation",
-    html: `<p style="font-family:Arial,Helvetica,sans-serif;">A parent reserved a copy of the Bullyproof Parent Playbook: <strong>${escapeHtml(email)}</strong></p>`,
-    replyTo: email
-  }, 2, { kind: "reservation-notice" });
-  return (saved || notice !== "failed") ? respond(200, { success: true }) : respond(503, { error: "We couldn't save that just now." });
+  const told = await deliverOrQueue(event, {
+    event: "playbook_reserved",
+    email,
+    tags: ["playbook-reserved"],
+    tags_text: "playbook-reserved",
+    language: lang,
+    playbook_interest: "yes",
+    source: "Playbook reserve page",
+    submitted_at: createdAt
+  }, 2, { kind: "reservation" });
+  return (saved || told !== "failed") ? respond(200, { success: true }) : respond(503, { error: "We couldn't save that just now." });
 };
 
 exports.__test = { hits };

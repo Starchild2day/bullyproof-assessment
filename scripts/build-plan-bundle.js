@@ -25,7 +25,7 @@ module.exports = function createPlanBuilder(ORIGIN) {
   const console = { log() {}, info() {}, warn: globalThis.console.warn.bind(globalThis.console), error: globalThis.console.error.bind(globalThis.console) };
 `;
 const footer = `
-  return { CONFIG, state, QUESTIONS, SAFETY_VARIANTS, buildEmailHtml, buildReadableSummary, checkSafety, checkTextSafety, setLang, getLang, missingTranslations, PLAYBOOK_INVITE_LABEL };
+  return { CONFIG, state, QUESTIONS, SAFETY_VARIANTS, buildEmailHtml, buildReadableSummary, checkSafety, checkTextSafety, setLang, getLang, missingTranslations, PLAYBOOK_INVITE_LABEL, quickHelpGuide };
 };
 `;
 const out = header + config + "\n" + i18n + "\n" + data + "\n" + app + "\n" + footer;

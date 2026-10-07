@@ -8,7 +8,7 @@
 //     /.netlify/functions/leads-admin?key=ADMIN_KEY&list=reservations
 //   Download daily visit counts (how many parents reached each step):
 //     /.netlify/functions/leads-admin?key=ADMIN_KEY&list=counts
-//   Delete everything saved for one email address ("Delete my data" requests):
+//   Delete everything saved for one email address, including their private plan page ("Delete my data"):
 //     /.netlify/functions/leads-admin?key=ADMIN_KEY&delete=parent@example.com
 "use strict";
 
@@ -45,18 +45,19 @@ exports.handler = async function (event) {
   if (q.delete) {
     const target = String(q.delete).trim().toLowerCase();
     let removed = 0;
-    for (const name of ["leads", "reservations"]) {
+    for (const name of ["leads", "reservations", "plans"]) {
       const store = openStore(event, name);
       if (!store) continue;
       for (const rec of await allRecords(store)) {
         if (String(rec.email || "").toLowerCase() === target) { await store.delete(rec.key); removed++; }
       }
     }
-    // Also drop any not-yet-sent emails to that address waiting in the outbox.
+    // Also drop anything for that address still waiting in the outbox.
     const outbox = openStore(event, "outbox");
     if (outbox) {
       for (const rec of await allRecords(outbox)) {
-        if (rec.msg && String(rec.msg.to || "").toLowerCase() === target) { await outbox.delete(rec.key); removed++; }
+        const addr = (rec.payload && rec.payload.email) || (rec.msg && rec.msg.to) || "";
+        if (String(addr).toLowerCase() === target) { await outbox.delete(rec.key); removed++; }
       }
     }
     return text(200, `Deleted ${removed} record(s) for ${target}.`);
@@ -87,7 +88,7 @@ exports.handler = async function (event) {
 
   const cols = name === "reservations"
     ? ["createdAt", "email", "source"]
-    : ["createdAt", "email", "safetyFlags", "safetyResourcesAcknowledged", "emailDelivered", "summary"];
+    : ["createdAt", "email", "safetyFlags", "safetyResourcesAcknowledged", "guide", "emailDelivered", "planId", "summary"];
   const lines = [cols.join(",")].concat(rows.map((r) => cols.map((c) => csvCell(Array.isArray(r[c]) ? r[c].join("; ") : r[c])).join(",")));
   const stamp = new Date().toISOString().slice(0, 10);
   return text(200, lines.join("\n"), "text/csv; charset=utf-8", { "Content-Disposition": `attachment; filename="bullyproof-${name}-${stamp}.csv"` });

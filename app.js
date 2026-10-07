@@ -58,8 +58,11 @@ function checkTextSafety(rawText) {
   const folded = foldText(rawText);
   if (SPANISH_SELF_HARM.test(folded)) { addFlag("selfHarmOrSuicide"); return; }
   if (SPANISH_VIOLENCE.test(folded)) { addFlag("violenceRisk"); return; }
-  const text = rawText.toLowerCase();
-  const selfHarmPattern = /\b(suicide|suicidal)\b|\b(kill|hurt|harm)(ing)?\s+(myself|himself|herself|themselves)\b|\bwant(s|ed)?\s+to\s+die\b|\bend(ing)?\s+(my|his|her|their)\s+life\b|\bdon'?t\s+want\s+to\s+(live|be\s+here)\b/;
+  // Phones type curly apostrophes (doesn’t), so straighten them before matching.
+  const text = rawText.toLowerCase().replace(/[\u2018\u2019\u02BC]/g, "'");
+  // Covers first AND third person ("I don't want to be here", "he doesn't want to be here anymore"),
+  // since parents usually describe what their child said.
+  const selfHarmPattern = /\b(suicide|suicidal|self[-\s]?harm\w*)\b|\b(kill|hurt|harm)(s|ing)?\s+(myself|himself|herself|themselves|themself)\b|\b(cuts|cutting)\s+(myself|himself|herself|themselves|themself)\b|\bwant(s|ed)?\s+to\s+die\b|\bend(s|ing)?\s+(my|his|her|their)\s+(own\s+)?life\b|\b(do|does|did)\s*(n'?t|not)\s+want\s+to\s+(live|be\s+(here|alive|around)|exist|wake\s+up)\b|\bno\s+longer\s+wants?\s+to\s+(live|be\s+(here|alive))\b|\bbetter\s+off\s+dead\b|\bwish(es|ed)?\s+(i|he|she|they)\s+(was|were)\s+(dead|never\s+born)\b|\bend\s+it\s+all\b(?!\s+with)/;
   const violencePattern = /\bkill(ing)?\b|\b(hurt|harm)(ing)?\s+(him|her|them|someone|somebody)\b|\bwant(s|ed)?\s+to\s+hurt\b/;
   if (selfHarmPattern.test(text)) { addFlag("selfHarmOrSuicide"); return; }
   if (violencePattern.test(text)) { addFlag("violenceRisk"); }
@@ -78,6 +81,7 @@ function render() {
   if (state.screen === "question") return renderQuestion();
   if (state.screen === "results") return renderResults();
   if (state.screen === "invite") return renderInvite();
+  if (state.screen === "plan") return renderPlanView();
 }
 
 function renderLanding() {
@@ -340,7 +344,7 @@ function renderResults() {
         ${reflection ? `<p class="summary-reflection">${reflection}</p>` : ""}
       </div>
       <h2 class="question">${L(`Where should we send your action plan?`, `¿A dónde enviamos su plan de acción?`)}</h2>
-      <p class="sub">${L(`One email with your personalized plan, easy to read on your phone — plus a printable copy to keep.`, `Un correo con su plan personalizado, fácil de leer en su teléfono, más una copia para imprimir y guardar.`)}</p>
+      <p class="sub">${L(`One email with a private link to your personalized plan, easy to read on your phone — plus a printable copy to keep.`, `Un correo con un enlace privado a su plan personalizado, fácil de leer en su teléfono, más una copia para imprimir y guardar.`)}</p>
       <input type="email" id="finalEmail" placeholder="${L(`you@email.com`, `usted@correo.com`)}" value="${state.email || ""}">
       <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>${L(`Leave this empty`, `Deje esto vacío`)}<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
       <div id="turnstileBox" style="margin-top:12px;"></div>
@@ -359,7 +363,7 @@ function renderResults() {
           <li>${L(`...and more!`, `...¡y más!`)}</li>
         </ul>
       </div>
-      <p class="privacy-note">${L(`Your answers are only used to build your action plan, and we never sell your information. Every email includes a "Delete my data" link.`, `Sus respuestas solo se usan para crear su plan de acción, y nunca vendemos su información. Cada correo incluye un enlace de "Eliminar mis datos".`)} <a href="${privacyUrl()}" target="_blank" rel="noopener">${L(`Privacy policy`, `Política de privacidad`)}</a></p>
+      <p class="privacy-note">${L(`Your answers are only used to build your action plan, and we never sell your information. After your plan, we'll send a few short emails with more help for your situation — unsubscribe any time. Every email includes a "Delete my data" link.`, `Sus respuestas solo se usan para crear su plan de acción, y nunca vendemos su información. Después de su plan, le enviaremos algunos correos breves con más ayuda para su situación; puede cancelar la suscripción en cualquier momento. Cada correo incluye un enlace de "Eliminar mis datos".`)} <a href="${privacyUrl()}" target="_blank" rel="noopener">${L(`Privacy policy`, `Política de privacidad`)}</a></p>
       </div>
     </div>
   `;
@@ -382,6 +386,7 @@ function renderResults() {
     try { await generatePDF(); track("pdf_downloaded"); } catch (err) { pdfOk = false; console.warn("PDF creation failed:", err); }
     btn.disabled = false; btn.textContent = sent.ok ? L("Send it again", "Enviarlo de nuevo") : L("Try again", "Intentar de nuevo");
     setPlanStatus(planStatusMessage(sent, pdfOk, email), sent.ok ? "success" : "error");
+    if (sent.ok && sent.planUrl) showPlanLink(sent.planUrl);
     // Once the plan is on its way, the "what's included" preview has done its job — hide it.
     if (sent.ok || pdfOk) { const inc = document.getElementById("includedPreview"); if (inc) inc.style.display = "none"; }
   });
@@ -479,8 +484,97 @@ function renderInvite() {
   wirePlaybookInvite(true);
 }
 
+// ============================================================
+// PRIVATE PLAN PAGE  (/plan/<ID> — the link in the "your plan is ready" email)
+// Rebuilds the parent's plan from their saved answers with the SAME code as the email and PDF,
+// so all three always match. The ID is long and random; the page is kept out of search engines.
+// ============================================================
+async function loadSavedPlan() {
+  try {
+    const res = await fetch(`/.netlify/functions/plan?id=${encodeURIComponent(state.planId)}`, { cache: "no-store" });
+    if (!res.ok) return { ok: false, status: res.status };
+    const data = await res.json();
+    return { ok: true, data };
+  } catch (e) { return { ok: false, status: 0 }; }
+}
+
+function planPageMessage(title, body) {
+  appEl.innerHTML = `
+    <div class="card">
+      ${banner(RESULTS_ICON, { imageSrc: assetUrl("icon-results.png") })}
+      <div class="card-body">
+        <h2 class="question">${title}</h2>
+        <p class="sub">${body}</p>
+        <div class="nav-row" style="justify-content:flex-start;"><a class="primary-link" href="/">${L(`Take the Parent Clarity Check`, `Hacer el Chequeo de Claridad para Padres`)}</a></div>
+      </div>
+    </div>`;
+}
+
+async function renderPlanView() {
+  progressTrack.style.display = "none";
+  try { let m = document.querySelector('meta[name="robots"]'); if (!m) { m = document.createElement("meta"); m.name = "robots"; document.head.appendChild(m); } m.content = "noindex, nofollow"; } catch (e) { /* header also set by Netlify */ }
+
+  if (!state.planLoaded) {
+    appEl.innerHTML = `<div class="card"><div class="card-body"><p class="sub" style="margin:0;">${L(`Opening your plan…`, `Abriendo su plan…`)}</p></div></div>`;
+    const r = await loadSavedPlan();
+    if (!r.ok) {
+      if (r.status === 404 || r.status === 410) {
+        planPageMessage(L(`This plan link isn't available`, `Este enlace del plan no está disponible`),
+          L(`The link may have expired, or the plan was deleted at your request. You can take the check-in again any time — it takes about 3 minutes.`, `Es posible que el enlace haya vencido o que el plan se haya eliminado a petición suya. Puede hacer el chequeo de nuevo cuando quiera; toma unos 3 minutos.`));
+      } else {
+        planPageMessage(L(`We couldn't open your plan just now`, `No pudimos abrir su plan en este momento`),
+          L(`Please try again in a minute. If it keeps happening, the PDF copy you downloaded has your full plan.`, `Por favor, inténtelo de nuevo en un minuto. Si sigue pasando, la copia en PDF que descargó tiene su plan completo.`));
+      }
+      return;
+    }
+    const d = r.data || {};
+    state.answers = d.answers || {};
+    state.safetyFlags = Array.isArray(d.safetyFlags) ? d.safetyFlags : [];
+    state.marketingConsent = d.marketingConsent === true;
+    state.planView = true;
+    state.planLoaded = true;
+    if (!state.langChosenOnPlan) { setLang(d.lang === "es" ? "es" : "en"); applyStaticLanguage(); }
+    track("plan_page_viewed");
+  }
+
+  appEl.innerHTML = `
+    <div class="card plan-toolbar">
+      <div class="card-body">
+        <p class="plan-kicker">${L(`Your private plan page`, `La página privada de su plan`)}</p>
+        <p class="sub" style="margin:4px 0 14px;">${L(`Bookmark this page to come back any time. Want a copy to print or keep?`, `Guarde esta página en favoritos para volver cuando quiera. ¿Quiere una copia para imprimir o guardar?`)}</p>
+        <button class="primary" id="planPdfBtn">${L(`Download printable PDF`, `Descargar PDF para imprimir`)}</button>
+        <p id="planStatus" role="status" aria-live="polite" style="display:none;margin:12px 0 0;font-size:14.5px;line-height:1.5;"></p>
+      </div>
+    </div>
+    <div class="card plan-sheet">${buildEmailHtml()}</div>`;
+  const btn = document.getElementById("planPdfBtn");
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try { await generatePDF(); track("pdf_downloaded"); setPlanStatus(L(`Your PDF is downloading.`, `Su PDF se está descargando.`), "success"); }
+    catch (e) { setPlanStatus(L(`We couldn't create the PDF just now. Please try again in a moment.`, `No pudimos crear el PDF en este momento. Inténtelo de nuevo en un momento.`), "error"); }
+    btn.disabled = false;
+  });
+}
+
 function isPreventive() {
   return (state.answers.q2 || "").includes("prevent");
+}
+
+// Which Quick Help Guide fits this parent best (the SwipeOne tag "guide-NN" that picks their follow-up
+// emails). Safety-flagged parents get none — they never receive sales follow-ups.
+function quickHelpGuide() {
+  if (state.safetyFlags.length) return "";
+  if (isPreventive()) return "guide-16";
+  if (onlineWeight() === "online") return "guide-10";
+  if ((state.answers.q9 || []).some(t => t.includes("left out, ignored, or excluded"))) return "guide-11";
+  const school = schoolStatus();
+  if (school === "no-change" || school === "dismissed") return "guide-19";
+  if (school === "child-doesnt-want") return "guide-04";
+  const comm = communicationStatus();
+  if (comm === "clear") return "guide-03";
+  if (comm === "hints") return "guide-05";
+  if (comm === "behavior-only") return "guide-01";
+  return "guide-02";
 }
 
 // Sunbeam/Shining Moments is valuable beyond the prevention path — anywhere
@@ -787,8 +881,11 @@ function buildEmailHtml() {
 
   const footContact = (typeof CONFIG !== "undefined" && CONFIG.CONTACT_EMAIL) || "";
   const footAddress = (typeof CONFIG !== "undefined" && CONFIG.MAILING_ADDRESS) || "";
-  const footIntro = L("You're receiving this email because this address was entered at Bullyproof.Guide to get an action plan.",
-    "Usted recibe este correo porque esta dirección se ingresó en Bullyproof.Guide para obtener un plan de acción.");
+  const footIntro = state.planView
+    ? L("This is your private plan page from Bullyproof.Guide. Anyone with the link can open it, so share it only with people you trust.",
+        "Esta es la página privada de su plan de Bullyproof.Guide. Cualquier persona con el enlace puede abrirla, así que compártala solo con personas de confianza.")
+    : L("You're receiving this email because this address was entered at Bullyproof.Guide to get an action plan.",
+        "Usted recibe este correo porque esta dirección se ingresó en Bullyproof.Guide para obtener un plan de acción.");
   const footConsent = state.marketingConsent
     ? L(`You also asked to hear about the Bullyproof Parent Playbook and occasional updates. To stop them, just reply with the word "unsubscribe".`,
         `También pidió recibir información sobre el Bullyproof Parent Playbook y novedades ocasionales. Para dejar de recibirlas, simplemente responda con la palabra "cancelar".`)
@@ -829,16 +926,34 @@ function setPlanStatus(msg, kind) {
 function planStatusMessage(sent, pdfOk, email) {
   if (sent.ok && sent.queued) {
     return pdfOk
-      ? L(`Your PDF just downloaded, so you have your full plan right now. Today has been a busy day, so your email copy to ${email} is in line and will arrive automatically, usually within a day.`, `Su PDF acaba de descargarse, así que ya tiene su plan completo. Hoy hubo mucha actividad, por lo que su copia por correo a ${email} está en fila y llegará automáticamente, normalmente en un día.`)
-      : L(`Today has been a busy day, so your email copy to ${email} is in line and will arrive automatically, usually within a day.`, `Hoy hubo mucha actividad, por lo que su copia por correo a ${email} está en fila y llegará automáticamente, normalmente en un día.`);
+      ? L(`Your PDF just downloaded, so you have your full plan right now. Your email to ${email} is in line and will arrive automatically, usually within the hour.`, `Su PDF acaba de descargarse, así que ya tiene su plan completo. Su correo a ${email} está en fila y llegará automáticamente, normalmente en menos de una hora.`)
+      : L(`Your email to ${email} is in line and will arrive automatically, usually within the hour.`, `Su correo a ${email} está en fila y llegará automáticamente, normalmente en menos de una hora.`);
   }
   if (sent.ok) {
     return pdfOk
-      ? L(`Your plan is on its way to ${email}. It usually arrives within a minute — if you don't see it, check your spam or promotions folder. The email is the easiest version to read on your phone. The PDF that just downloaded is your printable copy.`, `Su plan va en camino a ${email}. Normalmente llega en un minuto; si no lo ve, revise su carpeta de spam o de promociones. El correo es la versión más fácil de leer en su teléfono. El PDF que se acaba de descargar es su copia para imprimir.`)
+      ? L(`Your plan is on its way to ${email}. It usually arrives within a few minutes — if you don't see it, check your spam or promotions folder. The email has a private link to your plan, easy to read on your phone. The PDF that just downloaded is your printable copy.`, `Su plan va en camino a ${email}. Normalmente llega en unos minutos; si no lo ve, revise su carpeta de spam o de promociones. El correo tiene un enlace privado a su plan, fácil de leer en su teléfono. El PDF que se acaba de descargar es su copia para imprimir.`)
       : L(`Your plan is on its way to ${email}. We couldn't create the PDF copy this time; tap the button to try again.`, `Su plan va en camino a ${email}. Esta vez no pudimos crear la copia en PDF; toque el botón para intentarlo de nuevo.`);
   }
   if (sent.status === 429) return L("We're getting a lot of requests right now. Please wait a few minutes and tap the button to try again.", "Estamos recibiendo muchas solicitudes en este momento. Espere unos minutos y toque el botón para intentarlo de nuevo.") + (pdfOk ? L(" Your PDF copy did download, so you still have your plan.", " Su copia en PDF sí se descargó, así que todavía tiene su plan.") : "");
   return L("We couldn't send the email just now.", "No pudimos enviar el correo en este momento.") + (pdfOk ? L(" Your PDF copy did download, so you still have your plan. You can tap the button to try the email again in a minute.", " Su copia en PDF sí se descargó, así que todavía tiene su plan. Puede tocar el botón para volver a intentar el correo en un minuto.") : L(" Please tap the button to try again in a minute.", " Por favor, toque el botón para intentarlo de nuevo en un minuto."));
+}
+
+// A link to the parent's private plan page, shown right under the status message once it's saved.
+// Built with DOM methods (never innerHTML), and only for a link on our own site.
+function showPlanLink(url) {
+  try {
+    const u = new URL(url);
+    if (u.origin !== window.location.origin || !/^\/plan\/[A-Za-z0-9_-]{24}$/.test(u.pathname)) return;
+    const status = document.getElementById("planStatus"); if (!status) return;
+    let p = document.getElementById("planLinkRow");
+    if (!p) { p = document.createElement("p"); p.id = "planLinkRow"; p.style.cssText = "margin:10px 0 0;font-size:14.5px;"; status.insertAdjacentElement("afterend", p); }
+    p.textContent = "";
+    const a = document.createElement("a");
+    a.href = u.href; a.target = "_blank"; a.rel = "noopener";
+    a.style.cssText = "color:var(--navy);font-weight:700;";
+    a.textContent = L("Open your plan page now →", "Abrir la página de su plan ahora →");
+    p.appendChild(a);
+  } catch (e) { /* the email has the link too */ }
 }
 
 // Optional bot check (Cloudflare Turnstile). Does nothing until CONFIG.TURNSTILE_SITE_KEY is filled in.
@@ -875,10 +990,10 @@ async function sendPlanByEmail() {
       })
     });
     if (res.ok) {
-      let queued = false;
-      try { queued = res.status === 202 && (await res.json()).queued === true; } catch (e) { /* plain success */ }
+      let body = {};
+      try { body = await res.json(); } catch (e) { /* plain success */ }
       track("plan_email_sent");
-      return { ok: true, queued, status: res.status };
+      return { ok: true, queued: res.status === 202 && body.queued === true, planUrl: typeof body.planUrl === "string" ? body.planUrl : "", status: res.status };
     }
     console.warn("Email delivery failed with status", res.status);
     return { ok: false, status: res.status };
@@ -2043,6 +2158,7 @@ function switchLanguage(l) {
     if (ti && q && q.type === "text") state.answers[q.id] = ti.value;
   } catch (e) { /* nothing to keep */ }
   setLang(l);
+  if (state.screen === "plan") state.langChosenOnPlan = true;
   try { localStorage.setItem("bp_lang", getLang()); } catch (e) { /* storage unavailable */ }
   applyStaticLanguage();
   render();
@@ -2057,4 +2173,8 @@ applyStaticLanguage();
 wireLanguageToggle();
 
 try { if (new URLSearchParams(window.location.search).get("invite") === "1") state.screen = "invite"; } catch (e) { /* no URL params — start normally */ }
+try {
+  const m = window.location.pathname.match(/^\/plan\/([A-Za-z0-9_-]{24})\/?$/);
+  if (m) { state.screen = "plan"; state.planId = m[1]; }
+} catch (e) { /* not a plan page */ }
 render();

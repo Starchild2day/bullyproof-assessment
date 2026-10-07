@@ -19,3 +19,17 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Private plan pages: /plan/<ID> shows the same page as the assessment, which loads that saved plan.
+[[redirects]]
+  from = "/plan/*"
+  to = "/index.html"
+  status = 200
+
+# Keep plan pages out of search engines, never leak the link to other sites, and never cache them.
+[[headers]]
+  for = "/plan/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "no-referrer"
+    Cache-Control = "no-store"

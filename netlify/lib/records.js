@@ -1,12 +1,19 @@
-// Shared helpers for the Netlify functions: saving records to Netlify Blobs (Netlify's built-in storage)
-// and sending email through Resend. Replaces Formspree entirely — no monthly submission ceiling.
+// Shared helpers for the Netlify functions:
+//  * saving records to Netlify Blobs (Netlify's built-in storage), and
+//  * telling SwipeOne about a new plan or reservation through its incoming webhook.
+//
+// SwipeOne (the bullyproof.support workspace) sends ALL the emails: the "your plan is ready" email,
+// the safety alert to Mark, and the Quick Help Guides follow-ups. Resend is no longer used.
+//
+// PRIVACY: the webhook carries only what SwipeOne needs to send the right emails — the email address,
+// tags, language, and the private plan link. A parent's answers about their child are NEVER sent to
+// SwipeOne; they stay in our own storage.
 "use strict";
 
 let blobs = null;
-try { blobs = require("@netlify/blobs"); } catch (err) { /* only missing in local tests */ }
+try { blobs = require("@netlify/blobs"); } catch (err) { console.error("@netlify/blobs is missing — is package.json in the repo?"); }
 
-// Open a named store. Returns null (and the caller carries on) if storage isn't available,
-// so a storage hiccup can never stop a parent from getting their plan.
+// Open a named store. Returns null (and the caller carries on) if storage isn't available.
 function openStore(event, name) {
   if (!blobs) return null;
   try {
@@ -22,99 +29,80 @@ function newKey() {
   return `${new Date().toISOString()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-async function saveRecord(event, storeName, record) {
+async function saveRecord(event, storeName, record, key) {
   const store = openStore(event, storeName);
   if (!store) return false;
-  try { await store.setJSON(newKey(), record); return true; }
+  try { await store.setJSON(key || newKey(), record); return true; }
   catch (err) { console.error(`Could not save to "${storeName}":`, err && err.message); return false; }
 }
 
 const escapeHtml = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-function fromAddress() {
-  return process.env.FROM_EMAIL || "Bullyproof.Guide <onboarding@resend.dev>";
-}
-
-// Where alerts and new-reservation notices go: ALERT_EMAIL if set, otherwise the contact email.
-function alertAddress(config) {
-  return process.env.ALERT_EMAIL || (config && config.CONTACT_EMAIL) || "";
-}
-
-// Resend's "you've used today's (or this month's) allowance" answer. Those emails go to the outbox
-// and are sent automatically later; anything else is a real failure.
-function isQuotaError(status, body) {
-  const name = String((body && (body.name || body.code)) || "").toLowerCase();
-  const msg = String((body && body.message) || "").toLowerCase();
-  return status === 429 && (name.includes("quota") || msg.includes("quota") || msg.includes("limit"));
-}
-
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Send one email through Resend. Returns { ok, quota } — quota=true means "over the plan's
-// allowance right now", so the caller should queue it rather than give up.
-async function sendEmailResult({ to, subject, html, replyTo, headers }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey || !to) return { ok: false, quota: false };
+// Post one event to SwipeOne. Returns { ok }. Tries twice before giving up for now.
+async function sendWebhook(payload) {
+  const url = process.env.SWIPEONE_WEBHOOK_URL;
+  if (!url) { console.error("SWIPEONE_WEBHOOK_URL is not set in this site's environment variables."); return { ok: false }; }
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch("https://api.resend.com/emails", {
+      const res = await fetch(url, {
         method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: fromAddress(), to: [to], subject, html, ...(replyTo ? { reply_to: replyTo } : {}), ...(headers ? { headers } : {}) })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(10000)
       });
-      if (res.ok) return { ok: true, quota: false };
-      let body = {}; try { body = await res.json(); } catch (e) { /* ignore */ }
-      if (isQuotaError(res.status, body)) return { ok: false, quota: true };
-      if (res.status === 429 && attempt === 0) { await sleep(1100); continue; }   // brief speed limit: try once more
-      console.error("Resend rejected an email:", res.status, JSON.stringify(body));
-      return { ok: false, quota: res.status === 429 };
+      if (res.ok) return { ok: true };
+      console.error("SwipeOne did not accept the webhook:", res.status);   // never log the payload (it has an email address)
     } catch (err) {
-      console.error("Could not reach Resend:", err && err.message);
-      return { ok: false, quota: false };
+      console.error("Could not reach SwipeOne:", err && err.message);
     }
+    if (attempt === 0) await sleep(1200);
   }
-  return { ok: false, quota: true };
+  return { ok: false };
 }
 
-async function sendEmail(msg) { return (await sendEmailResult(msg)).ok; }
-
-// ---- Outbox: emails held back by the daily limit, sent automatically by the scheduled send-queue job ----
-// priority 0 = safety alert (always first), 1 = parent's plan, 2 = notices to Mark
-async function queueEmail(event, msg, priority, meta = {}) {
+// ---- Outbox: webhooks SwipeOne didn't accept yet, retried every hour by the scheduled send-queue job ----
+// priority 0 = safety-flagged plan (always first), 1 = parent's plan, 2 = Playbook reservations
+async function queueWebhook(event, payload, priority, meta = {}) {
   const store = openStore(event, "outbox");
   if (!store) return false;
   const key = `p${priority}/${new Date().toISOString()}_${Math.random().toString(36).slice(2, 8)}`;
-  try { await store.setJSON(key, { createdAt: new Date().toISOString(), priority, msg, ...meta }); return true; }
-  catch (err) { console.error("Could not queue an email:", err && err.message); return false; }
+  try { await store.setJSON(key, { createdAt: new Date().toISOString(), priority, payload, ...meta }); return true; }
+  catch (err) { console.error("Could not queue a webhook:", err && err.message); return false; }
 }
 
-// Send or, if the limit is reached, queue. Returns "sent" | "queued" | "failed".
-async function sendOrQueue(event, msg, priority, meta) {
-  const r = await sendEmailResult(msg);
+// Send now or, if SwipeOne can't be reached, queue it for the hourly retry. Returns "sent" | "queued" | "failed".
+async function deliverOrQueue(event, payload, priority, meta, send = sendWebhook) {
+  const r = await send(payload);
   if (r.ok) return "sent";
-  if (r.quota && await queueEmail(event, msg, priority, meta)) return "queued";
+  if (await queueWebhook(event, payload, priority, meta)) return "queued";
   return "failed";
 }
 
-// Work through the outbox, most important and oldest first. Stops as soon as the limit is still in effect.
-async function processOutbox(store, send = sendEmailResult, pauseMs = 600) {
-  const { blobs } = await store.list();
-  const keys = blobs.map((b) => b.key).sort();      // "p0/..." before "p1/...", and oldest first within each
-  const result = { sent: 0, failed: 0, remaining: keys.length, stoppedForLimit: false };
+const MAX_TRIES = 72;   // hourly retries for three days, then give up (the lead itself is still saved)
+
+// Work through the outbox, most important and oldest first.
+async function processOutbox(store, send = sendWebhook, pauseMs = 300) {
+  const { blobs: items } = await store.list();
+  const keys = items.map((b) => b.key).sort();      // "p0/..." before "p1/...", and oldest first within each
+  const result = { sent: 0, failed: 0, remaining: keys.length };
   for (const key of keys) {
     const item = await store.get(key, { type: "json" });
     if (!item) { result.remaining--; continue; }
-    const r = await send(item.msg);
+    if (!item.payload) {   // an old Resend email from before the switch to SwipeOne — can't be sent any more
+      await store.delete(key); result.failed++; result.remaining--; continue;
+    }
+    const r = await send(item.payload);
     if (r.ok) { await store.delete(key); result.sent++; result.remaining--; }
-    else if (r.quota) { result.stoppedForLimit = true; break; }
     else {
       const tries = (item.tries || 0) + 1;
-      if (tries >= 5) { await store.delete(key); result.failed++; result.remaining--; console.error("Gave up on a queued email after 5 tries."); }
+      if (tries >= MAX_TRIES) { await store.delete(key); result.failed++; result.remaining--; console.error("Gave up on a queued webhook after 3 days."); }
       else await store.setJSON(key, { ...item, tries });
     }
-    if (pauseMs) await sleep(pauseMs);   // stay under Resend's per-second speed limit
+    if (pauseMs) await sleep(pauseMs);
   }
   return result;
 }
 
-module.exports = { openStore, saveRecord, sendEmail, sendEmailResult, sendOrQueue, queueEmail, processOutbox, isQuotaError, escapeHtml, alertAddress, fromAddress };
+module.exports = { openStore, saveRecord, sendWebhook, queueWebhook, deliverOrQueue, processOutbox, escapeHtml };

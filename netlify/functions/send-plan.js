@@ -1,33 +1,35 @@
-// Netlify serverless function — emails a parent their personalized action plan.
+// Netlify serverless function — saves a parent's personalized action plan and hands it to SwipeOne,
+// which emails the parent a private link to it.
 //
 // SECURITY MODEL (why it is built this way):
 //  * The browser sends the parent's ANSWERS, never HTML. This function checks every answer against the
-//    real question list and builds the email itself from our approved template. So the endpoint cannot be
-//    used to send arbitrary content from our domain.
+//    real question list, so nothing arbitrary can be stored or sent from our site.
 //  * Requests must come from our own site (Origin check), pass a hidden honeypot field, and — once
 //    TURNSTILE_SECRET_KEY is set in Netlify — a Cloudflare Turnstile bot check.
 //  * Per-visitor and per-recipient rate limits (per running instance; see note below).
 //  * No parent email addresses or answers are ever written to the logs.
 //
+// HOW A PLAN TRAVELS:
+//  1. The plan (answers + language) is saved under a long random ID in Netlify Blobs (store "plans").
+//     Its private page is  <our site>/plan/<ID>  — the same plan as the screen
+//     and the PDF, rebuilt from the answers by the same code, with a "Download PDF" button.
+//  2. SwipeOne (bullyproof.support workspace) gets a webhook with ONLY: email, tags, language and that
+//     link. Its automations send "your plan is ready", the safety alert to Mark (plan-safety), and the
+//     Quick Help Guides follow-ups (plan-standard + the matched guide-NN tag). Answers never leave our storage.
+//  3. If SwipeOne can't be reached, the webhook waits in the outbox and is retried every hour.
+//
 // ENVIRONMENT VARIABLES (Netlify > Site configuration > Environment variables):
-//   RESEND_API_KEY         required
-//   FROM_EMAIL             required for real parents, e.g.  Bullyproof.Guide <plans@bullyproof.guide>
-//                          (bullyproof.guide must be VERIFIED in Resend first — Resend's shared test sender
-//                          can only deliver to the Resend account owner's own address)
-//   REPLY_TO               optional; defaults to CONTACT_EMAIL from config.js
+//   SWIPEONE_WEBHOOK_URL   required — SwipeOne > bullyproof.support workspace > incoming webhook
 //   ALLOWED_ORIGINS        optional, comma-separated extra sites allowed to call this function
 //   TURNSTILE_SECRET_KEY   optional; when set, every request must carry a valid Turnstile token
-//   ALERT_EMAIL            optional; where "⚠️ safety flag" alerts go (defaults to CONTACT_EMAIL in config.js)
-//
-// LEADS: every plan request is saved to Netlify Blobs (store "leads") — this replaced Formspree, so there
-// is no monthly submission limit. When answers raise a safety flag, an alert email goes straight to
-// ALERT_EMAIL through Resend. Download or delete records with the leads-admin function.
+//   PUBLIC_SITE_URL        optional; the address used in plan links (default: the site the parent is on)
 //
 // NOTE on rate limits: they are kept in memory, so each warm function instance counts separately. That
 // blocks casual abuse; for a hard limit also add a Netlify/Cloudflare rate-limiting rule on this path.
 "use strict";
 
-const { saveRecord, sendOrQueue, escapeHtml, alertAddress } = require("../lib/records.js");
+const crypto = require("crypto");
+const { saveRecord, deliverOrQueue } = require("../lib/records.js");
 
 let createPlanBuilder = null;
 let bundleError = null;
@@ -135,22 +137,15 @@ exports.handler = async function (event) {
   }
 
   // 7. Service configuration.
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) { console.error("RESEND_API_KEY is not set in this site's environment variables."); return respond(503, { error: "Email is not available right now." }); }
   if (!createPlanBuilder) { console.error("plan-bundle.js could not be loaded — did the build command run?", bundleError && bundleError.message); return respond(503, { error: "Email is not available right now." }); }
-  let fromAddress = process.env.FROM_EMAIL;
-  if (!fromAddress) {
-    console.error("FROM_EMAIL is not set. Falling back to Resend's TEST sender, which can only deliver to the Resend account owner. Verify bullyproof.guide in Resend, then set FROM_EMAIL.");
-    fromAddress = "Bullyproof.Guide <onboarding@resend.dev>";
-  }
 
-  // 8. Validate the answers, then build the email ourselves from the approved template.
+  // 8. Validate the answers and work out the safety flags with the same code the browser uses.
   let builder;
   try { builder = createPlanBuilder(origin); } catch (err) { console.error("Could not start the plan builder:", err && err.message); return respond(500, { error: "Email is not available right now." }); }
   const answers = cleanAnswers(builder.QUESTIONS, payload.answers);
   if (!answers) return respond(400, { error: "We couldn't read those answers." });
 
-  // The plan is built in the language the parent was using ("es" = Spanish); anything else is English.
+  // The plan is shown in the language the parent was using ("es" = Spanish); anything else is English.
   const lang = payload.lang === "es" ? "es" : "en";
   builder.setLang(lang);
   builder.state.answers = answers;
@@ -164,59 +159,62 @@ exports.handler = async function (event) {
   (Array.isArray(payload.safetyFlags) ? payload.safetyFlags : []).forEach((k) => {
     if (typeof k === "string" && builder.SAFETY_VARIANTS[k] && !builder.state.safetyFlags.includes(k)) builder.state.safetyFlags.push(k);
   });
-  builder.state.marketingConsent = payload.marketingConsent === true;
-
-  let html;
-  try { html = builder.buildEmailHtml(); } catch (err) { console.error("Could not build the plan email:", err && err.message); return respond(500, { error: "Email is not available right now." }); }
-  const flagged = builder.state.safetyFlags.length > 0;
-  const subject = lang === "es"
-    ? (flagged ? "Su Plan de Acción de Bullyproof.Guide (por favor, léalo)" : "Su Plan de Acción de Bullyproof.Guide")
-    : (flagged ? "Your Bullyproof.Guide Action Plan (please read)" : "Your Bullyproof.Guide Action Plan");
-  const replyTo = process.env.REPLY_TO || builder.CONFIG.CONTACT_EMAIL || undefined;
-
-  // 9. Send the parent's plan. If today's email allowance is used up, it goes to the outbox and the
-  //    scheduled send-queue job delivers it automatically as soon as the allowance resets.
-  const delivery = await sendOrQueue(event, {
-    to, subject, html,
-    ...(replyTo ? { replyTo, headers: { "List-Unsubscribe": `<mailto:${replyTo}?subject=unsubscribe>` } } : {})
-  }, 1, { kind: "plan" });
-  const emailSent = delivery === "sent";
-
-  // 10. Save the lead (always — even if the email failed, so no family is ever lost).
+  const marketingConsent = payload.marketingConsent === true;
+  builder.state.marketingConsent = marketingConsent;
   const flags = builder.state.safetyFlags.slice();
+  const flagged = flags.length > 0;
+  const guide = flagged ? "" : builder.quickHelpGuide();   // safety-flagged parents never get the sales follow-ups
+
+  // 9. Save the plan under a long random ID (144 bits — can't be guessed). This IS the parent's plan page.
+  const planId = crypto.randomBytes(18).toString("base64url");
+  const createdAt = new Date().toISOString();
+  const planSaved = await saveRecord(event, "plans", { createdAt, email: to, lang, answers, safetyFlags: flags, marketingConsent }, planId);
+  // The link uses the address the parent is on (already checked against our own sites above), so it always
+  // works — even before assessment.bullyproof.guide points at Netlify. PUBLIC_SITE_URL overrides it.
+  const site = (process.env.PUBLIC_SITE_URL || origin).replace(/\/$/, "");
+  const planUrl = `${site}/plan/${planId}`;
+
+  // 10. Hand it to SwipeOne (or queue it for the hourly retry). No answers — only what the emails need.
+  let delivery = "failed";
+  if (planSaved) {
+    const planType = flagged ? "plan-safety" : "plan-standard";
+    const tags = [planType].concat(guide ? [guide] : []).concat(marketingConsent ? ["playbook-interest"] : []);
+    delivery = await deliverOrQueue(event, {
+      event: "plan_created",
+      email: to,
+      plan_type: planType,
+      guide,
+      tags,
+      tags_text: tags.join(", "),
+      plan_link: planUrl,
+      language: lang,
+      playbook_interest: marketingConsent ? "yes" : "no",
+      source: "Parent Clarity Check",
+      submitted_at: createdAt
+    }, flagged ? 0 : 1, { kind: flagged ? "plan-safety" : "plan" });
+  }
+
+  // 11. Save the lead for Mark's records (always — even if something failed, so no family is ever lost).
   let summary = "";
   builder.setLang("en");   // the summary is for our own team, so it is always written in English
   try { summary = builder.buildReadableSummary(); } catch (e) { /* summary is optional */ }
   await saveRecord(event, "leads", {
-    createdAt: new Date().toISOString(),
+    createdAt,
     email: to,
     lang,
+    planId: planSaved ? planId : "",
+    guide,
     safetyFlags: flags,
-    safetyResourcesAcknowledged: flags.length ? payload.safetyAcknowledged === true : null,
+    safetyResourcesAcknowledged: flagged ? payload.safetyAcknowledged === true : null,
     consentGiven: payload.consentGiven === true,
+    marketingConsent,
     emailDelivered: delivery === "sent" ? true : (delivery === "queued" ? "queued" : false),
     answers,
     summary
   });
 
-  // 11. Safety alert straight to Mark's inbox (does not depend on any form service).
-  if (flags.length) {
-    const alertTo = alertAddress(builder.CONFIG);
-    const html = `
-      <div style="font-family:Arial,Helvetica,sans-serif;max-width:640px;">
-        <h2 style="color:#B23A48;margin:0 0 10px;">⚠️ Safety flag on a Parent Clarity Check</h2>
-        <p><strong>Flags:</strong> ${escapeHtml(flags.join(", "))}<br>
-        <strong>Parent saw and acknowledged the safety resources:</strong> ${payload.safetyAcknowledged === true ? "yes" : "no"}<br>
-        <strong>Parent's plan email delivered:</strong> ${emailSent ? "yes" : (delivery === "queued" ? "queued — the daily email limit was reached, so it will go out automatically when it resets (the parent has their PDF)" : "NO — the parent may not have received their plan")}<br>
-        <strong>Language of the plan:</strong> ${lang === "es" ? "Spanish (Español)" : "English"}<br>
-        <strong>Parent's email:</strong> ${escapeHtml(to)} (reply to this message to write to them)</p>
-        <pre style="white-space:pre-wrap;font-family:Arial,Helvetica,sans-serif;background:#F5F6F8;border-radius:8px;padding:14px;font-size:14px;line-height:1.5;">${escapeHtml(summary)}</pre>
-      </div>`;
-    await sendOrQueue(event, { to: alertTo, subject: "⚠️ Bullyproof Assessment — safety flag triggered", html, replyTo: to }, 0, { kind: "safety-alert" });
-  }
-
-  if (delivery === "sent") return respond(200, { success: true });
-  if (delivery === "queued") return respond(202, { success: true, queued: true });
+  if (delivery === "sent") return respond(200, { success: true, planUrl });
+  if (delivery === "queued") return respond(202, { success: true, queued: true, planUrl });
   return respond(502, { error: "We couldn't send the email." });
 };
 

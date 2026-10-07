@@ -1,11 +1,11 @@
-// Tests for lead saving, safety alerts, reservations and the admin download — no real services touched.
+// Tests for lead saving, reservations, the hourly retry and the admin download — no real services touched.
 // Run:  node scripts/build-plan-bundle.js && node scripts/test-leads.js
 const path = require("path");
 const ORIGIN = "https://assessment.bullyproof.guide";
-process.env.RESEND_API_KEY = "test_key";
-process.env.FROM_EMAIL = "Bullyproof.Guide <plans@mail.bullyproof.guide>";
+const HOOK = "https://integrations-api.swipeone.com/webhooks/apps/generic-webhooks/TESTHOOK";
+process.env.SWIPEONE_WEBHOOK_URL = HOOK;
 process.env.ADMIN_KEY = "a-very-long-test-admin-key-123";
-delete process.env.ALERT_EMAIL; delete process.env.TURNSTILE_SECRET_KEY;
+delete process.env.TURNSTILE_SECRET_KEY;
 
 // Fake Netlify Blobs: in-memory stores.
 const stores = {};
@@ -24,11 +24,11 @@ const fakeBlobs = {
 };
 require.cache[require.resolve("@netlify/blobs", { paths: [path.join(__dirname, "../netlify/lib")] })] = { exports: fakeBlobs, loaded: true };
 
-let sent = [], resendStatus = 200, resendBody = {};
+let sent = [], hookStatus = 200;
 global.fetch = async (url, opts) => {
-  if (String(url).includes("api.resend.com")) {
-    if (resendStatus < 400) sent.push(JSON.parse(opts.body));
-    return { ok: resendStatus < 400, status: resendStatus, json: async () => resendBody };
+  if (String(url) === HOOK) {
+    if (hookStatus < 400) sent.push(JSON.parse(opts.body));
+    return { ok: hookStatus < 400, status: hookStatus };
   }
   throw new Error("unexpected fetch " + url);
 };
@@ -47,56 +47,40 @@ const risky = { ...calm, q12: "Learn how to keep from killing someone" };
 let ip = 0, pass = 0, fail = 0;
 const ev = (body, fn = "plan", hdr = {}) => ({ httpMethod: "POST", headers: { origin: ORIGIN, "content-type": "application/json", "x-nf-client-connection-ip": `10.1.0.${++ip}`, ...hdr }, body: JSON.stringify(body) });
 const check = (name, ok) => { ok ? pass++ : fail++; console.log(`${ok ? "PASS" : "FAIL"}  ${name}`); };
-const reset = () => { sent = []; resendStatus = 200; resendBody = {}; Object.keys(stores).forEach((k) => delete stores[k]); sendPlan.__test.hits.ip.clear(); sendPlan.__test.hits.recipient.clear(); reserve.__test.hits.clear(); };
+const reset = () => { sent = []; hookStatus = 200; Object.keys(stores).forEach((k) => delete stores[k]); sendPlan.__test.hits.ip.clear(); sendPlan.__test.hits.recipient.clear(); reserve.__test.hits.clear(); };
 const leads = () => [...(stores.leads || new Map()).values()];
 
 (async () => {
   let r;
-  // 1. Calm plan: parent email sent, lead saved, no alert.
+  // 1. Calm plan: one webhook, lead saved with the guide and plan ID.
   reset(); r = await sendPlan.handler(ev({ to: "a@example.com", answers: calm, safetyFlags: [], consentGiven: true }));
   check("calm plan returns 200", r.statusCode === 200);
-  check("calm plan: exactly one email (the parent's)", sent.length === 1 && sent[0].to[0] === "a@example.com");
-  check("calm plan: lead saved with answers and summary", leads().length === 1 && leads()[0].email === "a@example.com" && leads()[0].answers.q1 === "8–10" && leads()[0].summary.includes("A:"));
-  check("calm plan: lead marks email delivered", leads()[0].emailDelivered === true && leads()[0].safetyFlags.length === 0);
+  check("calm plan: exactly one webhook (plan-standard)", sent.length === 1 && sent[0].email === "a@example.com" && sent[0].plan_type === "plan-standard");
+  check("calm plan: lead saved with answers, summary, guide and plan ID", leads().length === 1 && leads()[0].answers.q1 === "8–10" && leads()[0].summary.includes("A:") && leads()[0].guide === "guide-03" && leads()[0].planId.length === 24);
+  check("calm plan: lead marks delivered", leads()[0].emailDelivered === true && leads()[0].safetyFlags.length === 0);
 
-  // 2. Flagged plan: parent email + alert to Mark, reply-to the parent.
+  // 2. Flagged plan: ONE webhook tagged plan-safety (SwipeOne sends the parent's email AND Mark's alert).
   reset(); r = await sendPlan.handler(ev({ to: "b@example.com", answers: risky, safetyFlags: [], safetyAcknowledged: true }));
-  const alert = sent.find((m) => m.subject.includes("safety flag"));
-  check("flagged plan returns 200", r.statusCode === 200);
-  check("flagged plan: alert email sent to mark@bullyproof.guide", !!alert && alert.to[0] === "mark@bullyproof.guide");
-  check("flagged plan: alert replies go to the parent", alert && alert.reply_to === "b@example.com");
-  check("flagged plan: alert includes the answers", alert && alert.html.includes("killing someone"));
-  check("flagged plan: lead saved with flags + acknowledged", leads().length === 1 && leads()[0].safetyFlags.length > 0 && leads()[0].safetyResourcesAcknowledged === true);
+  check("flagged plan returns 200 with one plan-safety webhook", r.statusCode === 200 && sent.length === 1 && sent[0].plan_type === "plan-safety");
+  check("flagged plan: lead saved with flags + acknowledged, no guide", leads().length === 1 && leads()[0].safetyFlags.length > 0 && leads()[0].safetyResourcesAcknowledged === true && leads()[0].guide === "");
 
-  // 3. ALERT_EMAIL overrides the destination.
-  reset(); process.env.ALERT_EMAIL = "alerts@example.org";
-  await sendPlan.handler(ev({ to: "c@example.com", answers: risky }));
-  check("ALERT_EMAIL setting is respected", sent.some((m) => m.subject.includes("safety flag") && m.to[0] === "alerts@example.org"));
-  delete process.env.ALERT_EMAIL;
-
-  // 4. Resend down: parent sees an error, but the lead is STILL saved.
-  reset(); resendStatus = 500;
-  r = await sendPlan.handler(ev({ to: "d@example.com", answers: risky }));
-  check("email failure returns 502 to the browser", r.statusCode === 502);
-  check("email failure: lead still saved, marked not delivered", leads().length === 1 && leads()[0].emailDelivered === false);
-
-  // 5. Honeypot / bad origin: nothing saved, nothing sent.
+  // 3. Honeypot / bad origin: nothing saved, nothing sent.
   reset(); await sendPlan.handler(ev({ to: "e@example.com", answers: calm, website: "spam.example" }));
   check("bot (honeypot) saves nothing and sends nothing", leads().length === 0 && sent.length === 0);
   reset(); r = await sendPlan.handler(ev({ to: "e@example.com", answers: calm }, "plan", { origin: "https://evil.example" }));
   check("other websites are blocked and save nothing", r.statusCode === 403 && leads().length === 0);
 
-  // 6. Reservations.
+  // 4. Reservations: saved, and SwipeOne gets the playbook-reserved tag.
   reset(); r = await reserve.handler(ev({ email: "r@example.com", consent: true }));
   check("reservation returns 200", r.statusCode === 200);
   check("reservation saved", stores.reservations && [...stores.reservations.values()][0].email === "r@example.com");
-  check("reservation notice emailed to Mark", sent.length === 1 && sent[0].subject === "New Playbook reservation");
+  check("reservation sent to SwipeOne with the playbook-reserved tag", sent.length === 1 && sent[0].event === "playbook_reserved" && sent[0].tags[0] === "playbook-reserved");
   reset(); r = await reserve.handler(ev({ email: "r@example.com", consent: false }));
-  check("reservation without the box ticked is refused", r.statusCode === 400 && !stores.reservations);
+  check("reservation without the box ticked is refused", r.statusCode === 400 && !stores.reservations && sent.length === 0);
   reset(); r = await reserve.handler(ev({ email: "r@example.com", consent: true }, "r", { origin: "https://evil.example" }));
   check("reservation from another website is blocked", r.statusCode === 403);
 
-  // 7. Admin download and delete.
+  // 5. Admin download and delete (lead, plan page AND reservation).
   reset();
   await sendPlan.handler(ev({ to: "keep@example.com", answers: calm }));
   await sendPlan.handler(ev({ to: "gone@example.com", answers: risky }));
@@ -106,14 +90,14 @@ const leads = () => [...(stores.leads || new Map()).values()];
   r = await admin.handler({ queryStringParameters: { key: "wrong-key-wrong-key-wrong" } });
   check("admin: wrong key is refused", r.statusCode === 403);
   r = await admin.handler({ queryStringParameters: { key: process.env.ADMIN_KEY } });
-  check("admin: leads download as a spreadsheet with both parents", r.statusCode === 200 && /text\/csv/.test(r.headers["Content-Type"]) && r.body.includes("keep@example.com") && r.body.includes("gone@example.com"));
+  check("admin: leads download as a spreadsheet with both parents and their guides", r.statusCode === 200 && /text\/csv/.test(r.headers["Content-Type"]) && r.body.includes("keep@example.com") && r.body.includes("gone@example.com") && r.body.includes("guide-03"));
   r = await admin.handler({ queryStringParameters: { key: process.env.ADMIN_KEY, list: "reservations" } });
   check("admin: reservations download", r.body.includes("gone@example.com"));
   r = await admin.handler({ queryStringParameters: { key: process.env.ADMIN_KEY, delete: "GONE@example.com" } });
-  check("admin: delete removes the lead AND the reservation", r.body.startsWith("Deleted 2"));
-  check("admin: other families untouched", leads().length === 1 && leads()[0].email === "keep@example.com" && stores.reservations.size === 0);
+  check("admin: delete removes the lead, the plan page AND the reservation", r.body.startsWith("Deleted 3"));
+  check("admin: other families untouched", leads().length === 1 && leads()[0].email === "keep@example.com" && stores.reservations.size === 0 && stores.plans.size === 1);
 
-  // 8. Visit counts.
+  // 6. Visit counts.
   reset(); track.__test.hits.clear();
   const tev = (body, hdr = {}) => ({ httpMethod: "POST", headers: { origin: ORIGIN, "content-type": "application/json", "x-nf-client-connection-ip": "10.9.9.9", ...hdr }, body: JSON.stringify(body) });
   r = await track.handler(tev({ e: "assessment_started" }));
@@ -130,42 +114,42 @@ const leads = () => [...(stores.leads || new Map()).values()];
   r = await admin.handler({ queryStringParameters: { key: process.env.ADMIN_KEY, list: "counts" } });
   check("counts: daily totals download as a spreadsheet", r.statusCode === 200 && /assessment_started","2"/.test(r.body) && /question_answered:q3","1"/.test(r.body));
 
-  // 9. Daily limit reached -> outbox -> automatic delivery later.
-  reset();
-  resendStatus = 429; resendBody = { name: "daily_quota_exceeded", message: "You have reached your daily email sending quota." };
+  // 7. SwipeOne unreachable -> outbox -> hourly retry, safety-flagged plans first.
+  reset(); hookStatus = 503;
+  r = await sendPlan.handler(ev({ to: "calm@example.com", answers: calm }));
   r = await sendPlan.handler(ev({ to: "busy@example.com", answers: risky, safetyAcknowledged: true }));
+  check("SwipeOne down: parent is told it's on its way (202), not an error", r.statusCode === 202 && JSON.parse(r.body).queued === true);
   const ob = stores.outbox || new Map();
-  check("limit reached: parent is told it's queued (202), not an error", r.statusCode === 202 && JSON.parse(r.body).queued === true);
-  check("limit reached: plan AND safety alert both waiting in the outbox", ob.size === 2 && [...ob.keys()].some((k) => k.startsWith("p0/")) && [...ob.keys()].some((k) => k.startsWith("p1/")));
-  check("limit reached: lead still saved, marked queued", leads().length === 1 && leads()[0].emailDelivered === "queued");
+  check("SwipeOne down: both plans waiting, the safety one marked most urgent", ob.size === 2 && [...ob.keys()].some((k) => k.startsWith("p0/")) && [...ob.keys()].some((k) => k.startsWith("p1/")));
+  check("SwipeOne down: leads still saved, marked queued", leads().length === 2 && leads().every((l) => l.emailDelivered === "queued"));
   r = await reserve.handler(ev({ email: "res@example.com", consent: true }));
-  check("limit reached: reservation still saved and its notice queued", r.statusCode === 200 && stores.reservations.size === 1 && ob.size === 3);
+  check("SwipeOne down: reservation still saved and queued", r.statusCode === 200 && stores.reservations.size === 1 && ob.size === 3);
 
-  // Hourly job while the limit is STILL in effect: nothing lost, nothing sent.
-  let res1 = await records.processOutbox(fakeBlobs.getStore("outbox"), records.sendEmailResult, 0);
-  check("hourly job, still limited: stops and keeps everything", res1.stoppedForLimit === true && ob.size === 3 && sent.length === 0);
+  let res1 = await records.processOutbox(fakeBlobs.getStore("outbox"), records.sendWebhook, 0);
+  check("hourly job while SwipeOne is still down: keeps everything", res1.sent === 0 && ob.size === 3 && sent.length === 0);
+  hookStatus = 200;
+  res1 = await records.processOutbox(fakeBlobs.getStore("outbox"), records.sendWebhook, 0);
+  check("SwipeOne back: all 3 sent and the outbox is empty", res1.sent === 3 && ob.size === 0);
+  check("safety-flagged plan goes first, then the calm plan, then the reservation", sent[0].plan_type === "plan-safety" && sent[1].email === "calm@example.com" && sent[2].event === "playbook_reserved");
 
-  // Allowance resets: everything goes out, safety alert FIRST.
-  resendStatus = 200; resendBody = {};
-  res1 = await records.processOutbox(fakeBlobs.getStore("outbox"), records.sendEmailResult, 0);
-  check("allowance back: all 3 sent and the outbox is empty", res1.sent === 3 && ob.size === 0);
-  check("safety alert goes out first, then the parent's plan, then the notice", sent[0].subject.includes("safety flag") && sent[1].to[0] === "busy@example.com" && sent[2].subject === "New Playbook reservation");
-  check("queued plan is the real plan email", sent[1].subject.includes("Action Plan") && sent[1].html.length > 5000);
-
-  // A broken email (not a limit problem) is retried, then dropped after 5 tries so it can't block the line.
+  // A webhook SwipeOne keeps refusing is retried hourly for 3 days, then dropped so it can't block the line.
   reset();
-  await records.queueEmail({}, { to: "x@example.com", subject: "s", html: "h" }, 1);
-  const failing = async () => ({ ok: false, quota: false });
-  for (let i = 0; i < 4; i++) await records.processOutbox(fakeBlobs.getStore("outbox"), failing, 0);
-  check("broken email retried (still waiting after 4 tries)", stores.outbox.size === 1);
+  await records.queueWebhook({}, { email: "x@example.com", tags: ["plan-standard"] }, 1);
+  const failing = async () => ({ ok: false });
+  for (let i = 0; i < 71; i++) await records.processOutbox(fakeBlobs.getStore("outbox"), failing, 0);
+  check("refused webhook still waiting after 71 hourly tries", stores.outbox.size === 1);
   await records.processOutbox(fakeBlobs.getStore("outbox"), failing, 0);
-  check("broken email dropped after 5 tries", stores.outbox.size === 0);
+  check("refused webhook dropped after 3 days", stores.outbox.size === 0);
+  // Old Resend emails left from before the switch are cleared, not sent anywhere.
+  reset(); await fakeBlobs.getStore("outbox").setJSON("p1/old", { msg: { to: "old@example.com", subject: "s", html: "h" } });
+  res1 = await records.processOutbox(fakeBlobs.getStore("outbox"), records.sendWebhook, 0);
+  check("leftover Resend emails are cleared without sending", stores.outbox.size === 0 && sent.length === 0);
 
   // "Delete my data" also clears anything waiting in the outbox.
-  reset(); resendStatus = 429; resendBody = { name: "daily_quota_exceeded" };
+  reset(); hookStatus = 503;
   await sendPlan.handler(ev({ to: "wipe@example.com", answers: calm }));
   r = await admin.handler({ queryStringParameters: { key: process.env.ADMIN_KEY, delete: "wipe@example.com" } });
-  check("delete my data also removes waiting outbox emails", r.body.startsWith("Deleted 2") && stores.outbox.size === 0);
+  check("delete my data also removes the plan page and the waiting webhook", r.body.startsWith("Deleted 3") && stores.outbox.size === 0 && stores.plans.size === 0);
 
   console.log(`\n${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);

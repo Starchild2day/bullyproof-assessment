@@ -176,6 +176,17 @@ function renderQuestion() {
   track("question_answered_view", { question: q.id });
 }
 
+// The bedtime essay's key phrase, picked out in bold (both languages).
+function dreamtimeEmphasis(para) {
+  return para.replace("Call it dreamtime programming:", "<strong>Call it dreamtime programming:</strong>")
+             .replace("Llámelo programación de ensueño:", "<strong>Llámelo programación de ensueño:</strong>");
+}
+// Splits off a paragraph's last sentence, so it can be set apart as the takeaway line.
+function splitClosingSentence(para) {
+  const m = String(para).match(/^([\s\S]*[.!?])\s+([^.!?]+[.!?])$/);
+  return m ? [m[1], m[2]] : [para, ""];
+}
+
 // Short, tappable versions of each crisis resource for the thin line shown after the notice is closed.
 function crisisLineItems(variant) {
   const short = {
@@ -891,21 +902,36 @@ function buildEmailHtml() {
             return `<p style="color:${text};font-size:15.5px;line-height:1.75;margin:0 0 18px;">${para}</p>
               <table role="presentation" style="width:100%;margin:0 0 22px;"><tr><td style="border-left:4px solid ${gold};padding:6px 0 6px 18px;"><p style="color:${navyDeep};font-family:Arial,Helvetica,sans-serif;font-style:normal;font-size:20px;font-weight:700;line-height:1.45;letter-spacing:-0.005em;margin:0;">${sunbeamResource().pullQuote}</p></td></tr></table>`;
           }
+          if (i === 2) {
+            // "Every night…" — set as a featured passage: a small gold label, larger navy text,
+            // and the key idea ("dreamtime programming") picked out in bold.
+            return `<p style="color:#A87C2A;font-size:11.5px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;margin:6px 0 8px;">${L(`What happens at bedtime`, `Lo que pasa a la hora de dormir`)}</p>
+              <p style="color:${navyDeep};font-size:17px;line-height:1.75;margin:0 0 16px;">${dreamtimeEmphasis(para)}</p>`;
+          }
+          if (i === 3) {
+            // "Which means…" — the turn of the argument, then its last line set apart as the takeaway.
+            const [body, closer] = splitClosingSentence(para);
+            return `<p style="color:${navyDeep};font-size:17px;line-height:1.75;margin:0 0 20px;">${body}</p>
+              ${closer ? `<table role="presentation" style="width:100%;margin:0 0 6px;"><tr><td style="text-align:center;padding:4px 10px 0;">
+                <table role="presentation" style="margin:0 auto 12px;"><tr><td style="width:44px;border-top:2px solid ${gold};font-size:0;line-height:0;">&nbsp;</td></tr></table>
+                <p style="color:${navyDeep};font-size:19px;font-weight:800;line-height:1.4;letter-spacing:-0.005em;margin:0;">${closer}</p>
+              </td></tr></table>` : ""}`;
+          }
           return `<p style="color:${text};font-size:15.5px;line-height:1.75;margin:0 0 18px;">${para}</p>`;
         }).join("")}
-        <p style="color:#A87C2A;font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;text-align:center;margin:26px 0 12px;">${L(`Start collecting your child's Shining Moments`, `Comience a juntar los Shining Moments (Momentos Brillantes) de su hijo o hija`)}</p>
-        <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="${L(`Shining Moments pages from the back of the book`, `Páginas de Shining Moments al final del libro`)}" width="100%" style="border-radius:8px;display:block;max-width:100%;">
-        <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #EADFC6;border-radius:8px;margin:16px 0 24px;"><tr><td style="padding:16px 18px;">
-          <p style="color:#A87C2A;font-size:11px;font-weight:800;letter-spacing:0.12em;margin:0 0 6px;text-transform:uppercase;">${L(`How it works`, `Cómo funciona`)}</p>
-          <p style="color:${navyDeep};font-size:15px;line-height:1.65;margin:0;">${sunbeamResource().closeupCaption}</p>
-        </td></tr></table>
-        <table role="presentation" style="width:100%;background:${navyDeep};border-radius:10px;"><tr><td style="padding:30px 22px 32px;text-align:center;">
+        <table role="presentation" style="width:100%;background:${navyDeep};border-radius:10px;margin:26px 0 0;"><tr><td style="padding:30px 22px 32px;text-align:center;">
           <table role="presentation" style="margin:0 auto 16px;"><tr><td style="width:44px;border-top:2px solid ${gold};font-size:0;line-height:0;">&nbsp;</td></tr></table>
           <p style="color:#DCE3F2;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:16px;line-height:1.55;margin:0 0 14px;">${L(`You'll find these pages waiting in the back of the award-winning children's book`, `Encontrará estas páginas al final del libro infantil galardonado`)}</p>
           <p style="color:#ffffff;font-family:Georgia,'Times New Roman',serif;font-size:18px;letter-spacing:0.04em;margin:0 0 2px;">The Adventures of the</p>
           <p style="color:#E3B85A;font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:700;letter-spacing:0.03em;line-height:1.15;margin:0;">True Sunbeam</p>
           <table role="presentation" style="margin:16px auto 0;"><tr><td style="width:44px;border-top:2px solid ${gold};font-size:0;line-height:0;">&nbsp;</td></tr></table>
         </td></tr></table>
+        <table role="presentation" style="width:100%;background:#ffffff;border:1px solid #EADFC6;border-radius:8px;margin:16px 0 0;"><tr><td style="padding:16px 18px;">
+          <p style="color:#A87C2A;font-size:11px;font-weight:800;letter-spacing:0.12em;margin:0 0 6px;text-transform:uppercase;">${L(`How it works`, `Cómo funciona`)}</p>
+          <p style="color:${navyDeep};font-size:15px;line-height:1.65;margin:0;">${sunbeamResource().closeupCaption}</p>
+        </td></tr></table>
+        <p style="color:#A87C2A;font-size:12px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;text-align:center;margin:24px 0 12px;">${L(`Start collecting your child's Shining Moments`, `Comience a juntar los Shining Moments (Momentos Brillantes) de su hijo o hija`)}</p>
+        <img src="${sunbeamResource().shiningMomentsSpreadImg}" alt="${L(`Shining Moments pages from the back of the book`, `Páginas de Shining Moments al final del libro`)}" width="100%" style="border-radius:8px;display:block;max-width:100%;">
           <!-- Coloring book (left) · Ray (center) · Story book (right), each with its own caption, link and button -->
           <table role="presentation" style="width:100%;margin:22px 0 0;border-collapse:collapse;">
             <tr>
@@ -1333,10 +1359,10 @@ function selfReflectionNote() {
 function stepOpening() {
   const status = communicationStatus();
   if (status === "clear") {
-    return L("Write it down today. Use your child's own words, and add the date. Keep this note — you can show it to a counselor or the school later. StopBullying.gov, the U.S. government's bullying resource, recommends keeping exactly this kind of record: the date, what happened, and who was involved.", "Anótelo hoy. Use las palabras de su hijo o hija y agregue la fecha. Guarde esta nota: podrá mostrarla más adelante a un consejero o a la escuela. StopBullying.gov, el recurso del gobierno de EE. UU. sobre el bullying, recomienda llevar justo este tipo de registro: la fecha, lo que pasó y quiénes estuvieron involucrados.");
+    return L("Write it down today. You told us your child has told you clearly what's going on, so capture it while it's fresh: use your child's own words, and add the date. Keep this note — you can show it to a counselor or the school later. StopBullying.gov, the U.S. government's bullying resource, recommends keeping exactly this kind of record: the date, what happened, and who was involved.", "Anótelo hoy. Usted nos dijo que su hijo o hija le contó claramente lo que pasa, así que regístrelo mientras está fresco: use sus propias palabras y agregue la fecha. Guarde esta nota: podrá mostrarla más adelante a un consejero o a la escuela. StopBullying.gov, el recurso del gobierno de EE. UU. sobre el bullying, recomienda llevar justo este tipo de registro: la fecha, lo que pasó y quiénes estuvieron involucrados.");
   }
   if (status === "hints") {
-    return L(`Keep the door open. Try saying: "You told me something was bothering you. I've been thinking about it. I'm here if you want to say more." Don't push for the whole story yet — let them go at their own pace. That patience matters: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school, so a child who has hinted is already trusting you more than most.`, `Mantenga la puerta abierta. Pruebe decir: "Me dijiste que algo te molestaba. He estado pensando en eso. Aquí estoy si quieres contarme más." No insista todavía en saber toda la historia; deje que su hijo o hija avance a su propio ritmo. Esa paciencia importa: la encuesta más reciente del Departamento de Educación de EE. UU. (2022) encontró que más de la mitad de los niños que sufren bullying nunca se lo contaron a un adulto en la escuela, así que un niño que ya insinuó algo confía en usted más que la mayoría.`);
+    return L(`Keep the door open. You told us your child has shared only hints or pieces so far. Try saying: "You told me something was bothering you. I've been thinking about it. I'm here if you want to say more." Don't push for the whole story yet — let them go at their own pace. That patience matters: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school, so a child who has hinted is already trusting you more than most.`, `Mantenga la puerta abierta. Usted nos dijo que su hijo o hija solo le ha dado pistas o partes de la historia. Pruebe decir: "Me dijiste que algo te molestaba. He estado pensando en eso. Aquí estoy si quieres contarme más." No insista todavía en saber toda la historia; deje que su hijo o hija avance a su propio ritmo. Esa paciencia importa: la encuesta más reciente del Departamento de Educación de EE. UU. (2022) encontró que más de la mitad de los niños que sufren bullying nunca se lo contaron a un adulto en la escuela, así que un niño que ya insinuó algo confía en usted más que la mayoría.`);
   }
   if (status === "behavior-only") {
     const named = (state.answers.q6 || []).filter(b => b !== "No noticeable changes");
@@ -1359,21 +1385,21 @@ function stepOpening() {
     const sideBySide = (age1 === "11–14" || age1 === "15–18")
       ? L(`"Want to go for a drive?" or "Want to go for a walk?"`, `"¿Quieres dar una vuelta en el carro?" o "¿Quieres salir a caminar?"`)
       : L(`"Want to build something with me?" or "Want to go for a walk?"`, `"¿Quieres armar algo conmigo?" o "¿Quieres salir a caminar?"`);
-    return L(`Say what you see, without asking why. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: ${sideBySide} — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school.`, `Diga lo que ve, sin preguntar por qué. Pruebe: "He notado que ${behavior}. No tienes que explicármelo ahora; solo quiero que sepas que lo veo y que aquí estoy." O, si un momento lado a lado le resulta más natural a su hijo o hija: ${sideBySide}. A veces es más fácil para los niños abrirse cuando tienen las manos o los pies ocupados, y no sentados cara a cara. Observar de cerca importa, porque el comportamiento suele ser la única pista que tendrá: la encuesta más reciente del Departamento de Educación de EE. UU. (2022) encontró que más de la mitad de los niños que sufren bullying nunca se lo contaron a un adulto en la escuela.`);
+    return L(`Say what you see, without asking why. You told us your child hasn't said anything, but their behavior tells you something's wrong. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: ${sideBySide} — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school.`, `Diga lo que ve, sin preguntar por qué. Usted nos dijo que su hijo o hija no ha dicho nada, pero su comportamiento le dice que algo anda mal. Pruebe: "He notado que ${behavior}. No tienes que explicármelo ahora; solo quiero que sepas que lo veo y que aquí estoy." O, si un momento lado a lado le resulta más natural a su hijo o hija: ${sideBySide}. A veces es más fácil para los niños abrirse cuando tienen las manos o los pies ocupados, y no sentados cara a cara. Observar de cerca importa, porque el comportamiento suele ser la única pista que tendrá: la encuesta más reciente del Departamento de Educación de EE. UU. (2022) encontró que más de la mitad de los niños que sufren bullying nunca se lo contaron a un adulto en la escuela.`);
   }
   if (status === "no-signals") {
-    return L("Start with easy time together. Nothing has been said yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — and ordinary time like this is how that trust gets built.", "Comience con tiempo tranquilo juntos. Todavía no se ha dicho nada, así que no pregunte directamente de inmediato: eso puede hacer que los niños se cierren más. En cambio, pasen tiempo sin presión: un paseo en carro, una caminata, cocinar uno al lado del otro. Los niños suelen hablar más cuando no tienen a alguien mirándolos directamente. El Center on the Developing Child de la Universidad de Harvard encontró que lo más común entre los niños que logran sobreponerse es contar con al menos un adulto estable en quien confían; y el tiempo cotidiano como este es lo que construye esa confianza.");
+    return L("Start with easy time together. You told us nothing has been said and you haven't seen clear signs yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — and ordinary time like this is how that trust gets built.", "Comience con tiempo tranquilo juntos. Usted nos dijo que todavía no se ha dicho nada y que no ha visto señales claras, así que no pregunte directamente de inmediato: eso puede hacer que los niños se cierren más. En cambio, pasen tiempo sin presión: un paseo en carro, una caminata, cocinar uno al lado del otro. Los niños suelen hablar más cuando no tienen a alguien mirándolos directamente. El Center on the Developing Child de la Universidad de Harvard encontró que lo más común entre los niños que logran sobreponerse es contar con al menos un adulto estable en quien confían; y el tiempo cotidiano como este es lo que construye esa confianza.");
   }
   return L("Check in, side by side. Find an easy, low-pressure time to check in with your child this week. Talking side by side, not face to face, often works better than a direct sit-down. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — these small check-ins are how you stay that adult.", "Converse, lado a lado. Busque un momento tranquilo y sin presión esta semana para ver cómo está su hijo o hija. Hablar lado a lado, y no cara a cara, muchas veces funciona mejor que sentarse a conversar directamente. El Center on the Developing Child de la Universidad de Harvard encontró que lo más común entre los niños que logran sobreponerse es contar con al menos un adulto estable en quien confían; estas pequeñas conversaciones son la manera de seguir siendo ese adulto.");
 }
 
 function stepSchool() {
   const map = {
-    "helping": L("Keep the school in the loop. Check in with the school contact again this week. Ask what they're seeing, and if there's a follow-up plan. It's worth the effort: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.", "Mantenga informada a la escuela. Comuníquese de nuevo esta semana con su contacto en la escuela. Pregunte qué están observando y si hay un plan de seguimiento. Vale la pena el esfuerzo: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%."),
-    "no-change": L(`Ask for a real plan. Nothing has changed yet, so ask for a new meeting. Get a clear plan with a real date — not just "we'll keep an eye on it." Research is on your side: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.`, `Pida un plan de verdad. Todavía nada ha cambiado, así que pida una nueva reunión. Consiga un plan claro con una fecha real, no solo un "vamos a estar pendientes". La investigación está de su lado: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%.`),
-    "dismissed": L("You can still push back. If the school said this isn't bullying, ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes. It's worth pressing for: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.", "Todavía puede insistir. Si la escuela dijo que esto no es bullying, pida reunirse con un consejero o con la dirección de la escuela, no solo con la primera persona con la que habló. Lleve sus notas escritas. Vale la pena insistir: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%."),
-    "not-reached-out": L(`Loop in the school counselor. Contact the counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in." It's worth that small step: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20% — and a short note from you can be how that action starts.`, `Incluya al consejero escolar. Comuníquese con el consejero esta semana. Un correo corto funciona bien: "Me gustaría tener 15 minutos para hablar de unos cambios que estoy viendo en mi hijo o hija. Nada urgente, solo quiero ponerle al tanto." Vale la pena ese pequeño paso: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%, y una nota breve suya puede ser el comienzo de esa acción.`),
-    "child-doesnt-want": L("Ask what they're afraid of. Ask your child what they're afraid will happen if you talk to the school. Their answer will help you decide how — or whether — to bring the school in without it feeling like a betrayal.", "Pregunte a qué le tiene miedo. Pregúntele a su hijo o hija qué teme que pase si usted habla con la escuela. Su respuesta le ayudará a decidir cómo, o si, involucrar a la escuela sin que se sienta como una traición.")
+    "helping": L("Keep the school in the loop. You told us the school took this seriously and is helping, which is great news. Check in with your school contact again this week. Ask what they're seeing, and if there's a follow-up plan. It's worth the effort: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.", "Mantenga informada a la escuela. Usted nos dijo que la escuela lo tomó en serio y está ayudando, lo cual es una gran noticia. Comuníquese de nuevo esta semana con su contacto en la escuela. Pregunte qué están observando y si hay un plan de seguimiento. Vale la pena el esfuerzo: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%."),
+    "no-change": L(`Ask for a real plan. You told us you've already talked to the school, but nothing has changed yet. So ask for a new meeting, and leave with a clear plan and a real date — not just "we'll keep an eye on it." Research is on your side: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.`, `Pida un plan de verdad. Usted nos dijo que ya habló con la escuela, pero todavía nada ha cambiado. Así que pida una nueva reunión y salga con un plan claro y una fecha real, no solo un "vamos a estar pendientes". La investigación está de su lado: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%.`),
+    "dismissed": L("You can still push back. You told us the school said this isn't bullying, or told you to handle it at home. Ask to meet with a counselor or the principal, not just the first person you talked to. Bring your written notes. It's worth pressing for: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20%.", "Todavía puede insistir. Usted nos dijo que la escuela dijo que esto no es bullying, o que lo resolvieran en casa. Pida reunirse con un consejero o con la dirección de la escuela, no solo con la primera persona con la que habló. Lleve sus notas escritas. Vale la pena insistir: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%."),
+    "not-reached-out": L(`Loop in the school counselor. You told us you haven't reached out to the school yet because you're not sure how to start. Here's an easy way: contact the counselor this week. A short email works well: "I'd like 15 minutes to talk about some changes I'm seeing in my child. Nothing urgent, just want to loop you in." It's worth that small step: a 2019 review of 100 school anti-bullying programs (Gaffney, Ttofi & Farrington) found that when schools take real action, bullying drops by about 20% — and a short note from you can be how that action starts.`, `Incluya al consejero escolar. Usted nos dijo que todavía no se ha comunicado con la escuela porque no sabe cómo empezar. Esta es una manera fácil: comuníquese con el consejero esta semana. Un correo corto funciona bien: "Me gustaría tener 15 minutos para hablar de unos cambios que estoy viendo en mi hijo o hija. Nada urgente, solo quiero ponerle al tanto." Vale la pena ese pequeño paso: una revisión de 2019 de 100 programas escolares contra el bullying (Gaffney, Ttofi y Farrington) encontró que, cuando las escuelas toman medidas reales, el bullying baja cerca de un 20%, y una nota breve suya puede ser el comienzo de esa acción.`),
+    "child-doesnt-want": L("Ask what they're afraid of. You told us your child doesn't want you to contact the school. Before deciding anything, ask your child what they're afraid will happen if you talk to the school. Their answer will help you decide how — or whether — to bring the school in without it feeling like a betrayal.", "Pregunte a qué le tiene miedo. Usted nos dijo que su hijo o hija no quiere que se comunique con la escuela. Antes de decidir nada, pregúntele qué teme que pase si usted habla con la escuela. Su respuesta le ayudará a decidir cómo, o si, involucrar a la escuela sin que se sienta como una traición.")
   };
   return map[schoolStatus()] || L("Get another set of eyes on it. Reach out to a counselor or trusted adult at school this week. Adults at school often see things you can't — especially in the busy, crowded parts of the day.", "Consiga otro par de ojos. Comuníquese esta semana con un consejero o un adulto de confianza en la escuela. Los adultos de la escuela a menudo ven cosas que usted no puede, sobre todo en los momentos del día con más gente y movimiento.");
 }
@@ -1384,17 +1410,24 @@ function stepContext() {
     const so = communicationStatus() === "clear"
       ? L("StopBullying.gov also", "StopBullying.gov también")
       : L("StopBullying.gov, the U.S. government's bullying resource,", "StopBullying.gov, el recurso del gobierno de EE. UU. sobre el bullying,");
-    return L(`Save the evidence first. Take screenshots and note the dates before anything gets deleted. Then sit down with your child and look at the app's report and block settings together — as a team, not as spying. That's exactly the order ${so} recommends: keep the evidence, then report and block.`, `Primero guarde las pruebas. Tome capturas de pantalla y anote las fechas antes de que algo se borre. Luego siéntese con su hijo o hija y revisen juntos las opciones de denuncia y bloqueo de la aplicación: como equipo, no como espionaje. Ese es justo el orden que ${so} recomienda: guardar las pruebas, y luego denunciar y bloquear.`);
+    return L(`Save the evidence first. You told us this is happening online. Take screenshots and note the dates before anything gets deleted. Then sit down with your child and look at the app's report and block settings together — as a team, not as spying. That's exactly the order ${so} recommends: keep the evidence, then report and block.`, `Primero guarde las pruebas. Usted nos dijo que esto está pasando en internet. Tome capturas de pantalla y anote las fechas antes de que algo se borre. Luego siéntese con su hijo o hija y revisen juntos las opciones de denuncia y bloqueo de la aplicación: como equipo, no como espionaje. Ese es justo el orden que ${so} recomienda: guardar las pruebas, y luego denunciar y bloquear.`);
   }
-  if (weight === "in-person") {
+  const saidInPerson = (state.answers.q11 || "").startsWith("No — this is only happening in person");
+  if (weight === "in-person" || saidInPerson) {
     const age = state.answers.q1 || "";
     const teen = age === "11–14" || age === "15–18";
     // "Recess" means nothing to a parent of a teenager — the real equivalent
     // at that age is the hallway between classes, not a playground period.
     const spots = teen ? L("passing periods between classes, lunch, the bus", "los cambios de clase, el almuerzo, el autobús") : L("recess, lunch, the bus", "el recreo, el almuerzo, el autobús");
-    return L(`Find the hot spots. Ask your child if certain times or places feel worse — ${spots}. This helps the school watch the right spots instead of everywhere. The most recent federal data (2019–20) show bullying at school happens most in classrooms, then hallways and the cafeteria — busy places where adults can't see everything at once.`, `Encuentre los puntos críticos. Pregúntele a su hijo o hija si hay momentos o lugares que se sienten peor: ${spots}. Eso ayuda a que la escuela vigile los lugares correctos en lugar de todos. Los datos federales más recientes (2019–20) muestran que el bullying en la escuela ocurre sobre todo en los salones de clase, y luego en los pasillos y la cafetería: lugares concurridos donde los adultos no pueden ver todo a la vez.`);
+    return L(`Find the hot spots. You told us this is happening in person. Ask your child if certain times or places feel worse — ${spots}. This helps the school watch the right spots instead of everywhere. The most recent federal data (2019–20) show bullying at school happens most in classrooms, then hallways and the cafeteria — busy places where adults can't see everything at once.`, `Encuentre los puntos críticos. Usted nos dijo que esto está pasando en persona. Pregúntele a su hijo o hija si hay momentos o lugares que se sienten peor: ${spots}. Eso ayuda a que la escuela vigile los lugares correctos en lugar de todos. Los datos federales más recientes (2019–20) muestran que el bullying en la escuela ocurre sobre todo en los salones de clase, y luego en los pasillos y la cafetería: lugares concurridos donde los adultos no pueden ver todo a la vez.`);
   }
-  return L("Keep a short daily note. Just one line, no pressure — write down your child's mood and anything small they say. Patterns often show up after a week or two.", "Lleve una breve nota diaria. Solo una línea, sin presión: anote el estado de ánimo de su hijo o hija y cualquier cosa pequeña que diga. Los patrones suelen aparecer después de una o dos semanas.");
+  if (wordsAnswer()) {
+    return L(`Say it, then listen. You asked what to say to help, so start with the words in "You asked what to say" above, said calmly at a quiet moment like a car ride or bedtime. Then stop talking and just listen. Whatever your child shares, answer with "Thank you for telling me" before anything else. Feeling heard is what lets those words sink in and begin to ease the hurt.`, `Dígalo y luego escuche. Usted preguntó qué decir para ayudar, así que empiece con las palabras de "Usted preguntó qué decir", más arriba, dichas con calma en un momento tranquilo, como un paseo en carro o la hora de dormir. Luego deje de hablar y solo escuche. Cuente lo que cuente su hijo o hija, responda primero: "Gracias por contármelo". Sentirse escuchado es lo que permite que esas palabras calen y empiecen a aliviar el dolor.`);
+  }
+  const saidNotSure = (state.answers.q7 || []).some(x => x.startsWith("I'm not sure")) || (state.answers.q11 || "").startsWith("I'm not sure");
+  return saidNotSure
+    ? L("Keep a short daily note. You told us you're not sure yet where this is happening, so a one-line note each day helps you find out. Write down your child's mood and anything small they say. Patterns often show up after a week or two.", "Lleve una breve nota diaria. Usted nos dijo que todavía no sabe dónde está pasando esto, así que una nota de una línea cada día le ayudará a averiguarlo. Anote el estado de ánimo de su hijo o hija y cualquier cosa pequeña que diga. Los patrones suelen aparecer después de una o dos semanas.")
+    : L("Keep a short daily note. It isn't clear yet where or when this is happening, so a one-line note each day helps you find out. Write down your child's mood and anything small they say. Patterns often show up after a week or two.", "Lleve una breve nota diaria. Todavía no está claro dónde o cuándo está pasando esto, así que una nota de una línea cada día le ayudará a averiguarlo. Anote el estado de ánimo de su hijo o hija y cualquier cosa pequeña que diga. Los patrones suelen aparecer después de una o dos semanas.");
 }
 
 function professionalSupportNote() {
@@ -1659,7 +1692,7 @@ Eso significa que cada hora de dormir también es una oportunidad: la posibilida
   return {
     text,
     introCaption,
-    pullQuote: L("By age 7, up to 70% of what a child's subconscious mind has been programmed with is self-sabotaging, negative, or limiting.", "Para los 7 años, hasta el 70% de lo que ha quedado programado en la mente subconsciente de un niño lo lleva a sabotearse a sí mismo, es negativo o lo limita."),
+    pullQuote: L("By age 7, up to 70% of what a child's subconscious mind has been programmed with is either self-sabotaging, negative, or limiting.", "Para los 7 años, hasta el 70% de lo que ha quedado programado en la mente subconsciente de un niño lo lleva a sabotearse a sí mismo, es negativo o lo limita."),
     closeupCaption: L(`It only takes a few minutes: naming one good moment from the day, and letting that be the last thing on their mind before sleep. Do it most nights, and something happens beneath the surface — confidence builds, worry loosens its grip, and it happens so gradually your child may never notice it's working.`, `Solo toma unos minutos: nombrar un buen momento del día y dejar que eso sea lo último en su mente antes de dormir. Hágalo casi todas las noches y algo sucede por debajo de la superficie: la confianza crece, la preocupación afloja su control, y ocurre tan poco a poco que su hijo o hija quizá nunca note que está funcionando.`),
     setUrl: SUNBEAM_SET_URL,
     bothBooksUrl: amazonBothBooksUrl(),
@@ -1991,6 +2024,35 @@ async function generatePDF() {
         doc.setFont("helvetica", "normal");
         continue;
       }
+      if (pi === 2) {
+        // "Every night…": small gold label, larger navy text (matches the plan page)
+        doc.setFont("helvetica", "normal"); doc.setFontSize(12);
+        const lines = doc.splitTextToSize(introParas[pi], 180);
+        ensureRoom(6 + lines.length * 6.1 + 5); // the label always travels with its paragraph
+        doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); doc.setTextColor(168, 124, 42);
+        doc.setCharSpace(0.5); doc.text(L("WHAT HAPPENS AT BEDTIME", "LO QUE PASA A LA HORA DE DORMIR"), 15, y); doc.setCharSpace(0);
+        y += 6;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
+        doc.text(lines, 15, y, { lineHeightFactor: 1.45 }); y += lines.length * 6.1 + 5;
+        continue;
+      }
+      if (pi === 3) {
+        // "Which means…": the argument, then its last line set apart, centered, as the takeaway
+        const [paraBody, closer] = splitClosingSentence(introParas[pi]);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
+        const lines = doc.splitTextToSize(paraBody, 180);
+        ensureRoom(lines.length * 6 + 26);
+        doc.text(lines, 15, y, { lineHeightFactor: 1.45 }); y += lines.length * 6.1 + 6;
+        if (closer) {
+          doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.6); doc.line(99, y, 111, y);
+          doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(16, 27, 51);
+          const cl = doc.splitTextToSize(closer, 170);
+          doc.text(cl, 105, y + 8, { align: "center", lineHeightFactor: 1.3 });
+          y += 8 + cl.length * 6.5 + 6;
+        }
+        doc.setFont("helvetica", "normal");
+        continue;
+      }
       body(introParas[pi], { color: [31, 36, 48] });
       if (pi === 1) {
         doc.setFont("helvetica", "bold"); doc.setFontSize(14.5);
@@ -2007,36 +2069,13 @@ async function generatePDF() {
       }
     }
 
-    ensureRoom(72); // label + spread image travel together, never split across pages
-    doc.setFontSize(9.5); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
-    doc.setCharSpace(0.6);
-    doc.text(L("START COLLECTING YOUR CHILD'S SHINING MOMENTS", "COMIENCE A JUNTAR LOS SHINING MOMENTS DE SU HIJO O HIJA"), 105, y, { align: "center" });
-    doc.setCharSpace(0);
-    doc.setFont(undefined, "normal");
-    y += 6;
-
-    const introSpreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
-    if (introSpreadImg) {
-      try { doc.addImage(introSpreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
-      y += 58;
-    }
-
-    doc.setFontSize(10.5);
-    const howItWorksLines = doc.splitTextToSize(sunbeam.closeupCaption, 170);
-    const cardH = howItWorksLines.length * 5.6 + 13;
-    ensureRoom(cardH + 8);
-    doc.setFillColor(255, 251, 243); doc.setDrawColor(234, 223, 198); doc.setLineWidth(0.3);
-    doc.roundedRect(15, y, 180, cardH, 2, 2, "FD");
-    doc.setFontSize(9); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
-    doc.text(L("HOW IT WORKS", "CÓMO FUNCIONA"), 21, y + 9);
-    doc.setFont(undefined, "normal");
-    doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
-    doc.text(howItWorksLines, 21, y + 16);
-    y += cardH + 8;
-
     // The reveal: a centered navy band with the book title set as a title lockup.
     const bandH = 52;
-    ensureRoom(bandH + 8 + 90); // the reveal always stays on the same page as the books under it
+    // Per Mark: the reveal comes first, then "How it works", then the picture of the pages, kept together
+    // as one block on the same page (moved to a fresh page only when the whole block won't fit).
+    doc.setFontSize(10.5);
+    const blockH = bandH + 8 + (doc.splitTextToSize(sunbeam.closeupCaption, 170).length * 5.6 + 13) + 8 + 6 + 58;
+    ensureRoom(blockH);
     // Print-friendly reveal (per Mark): navy oval outline with a gold inner line.
     doc.setDrawColor(16, 27, 51); doc.setLineWidth(0.9);
     doc.roundedRect(15, y, 180, bandH, 23, 23, "S");
@@ -2055,7 +2094,34 @@ async function generatePDF() {
     doc.line(99, y + 45.5, 111, y + 45.5);
     doc.setFont("helvetica", "normal");
     y += bandH + 8;
-    // Right under the reveal: coloring book (left), Ray (center), story book
+    doc.setFontSize(10.5);
+    const howItWorksLines = doc.splitTextToSize(sunbeam.closeupCaption, 170);
+    const cardH = howItWorksLines.length * 5.6 + 13;
+    ensureRoom(cardH + 8);
+    doc.setFillColor(255, 251, 243); doc.setDrawColor(234, 223, 198); doc.setLineWidth(0.3);
+    doc.roundedRect(15, y, 180, cardH, 2, 2, "FD");
+    doc.setFontSize(9); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
+    doc.text(L("HOW IT WORKS", "CÓMO FUNCIONA"), 21, y + 9);
+    doc.setFont(undefined, "normal");
+    doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
+    doc.text(howItWorksLines, 21, y + 16);
+    y += cardH + 8;
+
+    ensureRoom(72); // label + spread image travel together, never split across pages
+    doc.setFontSize(9.5); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
+    doc.setCharSpace(0.6);
+    doc.text(L("START COLLECTING YOUR CHILD'S SHINING MOMENTS", "COMIENCE A JUNTAR LOS SHINING MOMENTS DE SU HIJO O HIJA"), 105, y, { align: "center" });
+    doc.setCharSpace(0);
+    doc.setFont(undefined, "normal");
+    y += 6;
+
+    const introSpreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
+    if (introSpreadImg) {
+      try { doc.addImage(introSpreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
+      y += 58;
+    }
+
+    // After the pages picture: coloring book (left), Ray (center), story book
     // (right) — each with its caption, link and its own button underneath —
     // then the award badge with "buy both" and the set, the how-to, and the
     // section ends on the picture of a child writing in the book (per Mark).

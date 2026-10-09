@@ -178,8 +178,8 @@ function renderQuestion() {
 
 // The bedtime essay's key phrase, picked out in bold (both languages).
 function dreamtimeEmphasis(para) {
-  return para.replace("Call it dreamtime programming:", "<strong>Call it dreamtime programming:</strong>")
-             .replace("Llámelo programación de ensueño:", "<strong>Llámelo programación de ensueño:</strong>");
+  return para.replace('Think of it as "Dreamtime Programming":', '<strong>Think of it as "Dreamtime Programming":</strong>')
+             .replace('Piense en ello como "programación de ensueño":', '<strong>Piense en ello como "programación de ensueño":</strong>');
 }
 // Splits off a paragraph's last sentence, so it can be set apart as the takeaway line.
 function splitClosingSentence(para) {
@@ -844,7 +844,7 @@ function buildEmailHtml() {
       <table role="presentation" style="width:100%;margin:0 0 16px;"><tr><td style="background:#EEF2F7;border-left:4px solid ${gold};border-radius:6px;padding:16px 18px;"><p style="color:${navyDeep};font-size:18px;font-weight:700;line-height:1.5;margin:0;">“${w.quote}”</p></td></tr></table>
       <p style="color:${muted};font-size:13px;font-weight:700;margin:0 0 4px;">${w.reframeLead}</p>
       <p style="color:${text};font-size:15px;font-style:italic;margin:0 0 14px;">“${w.reframe}”</p>
-      <p style="color:${muted};font-size:14px;margin:0 0 10px;"><strong style="color:${navy};">${L(`Why it works:`, `Por qué funciona:`)}</strong> ${w.why}</p>
+      <p style="color:${muted};font-size:14px;margin:0 0 10px;"><strong style="color:${navy};">${L(`Why it helps:`, `Por qué ayuda:`)}</strong> ${w.why}</p>
       <p style="color:${muted};font-size:13.5px;margin:0;">${w.teaser}</p>`);
   }
   if (multiChildNote()) {
@@ -1314,15 +1314,15 @@ function wordsAnswer() {
       : L("What someone does to you tells you about them. It doesn't tell you who you are.", "Lo que alguien te hace dice cómo es esa persona. No dice quién eres tú."));
   const why = prevent
     ? L("Kids often stay quiet because they're afraid of getting in trouble or upsetting their parent. Saying this ahead of time answers both worries before they ever have to ask.", "Los niños suelen quedarse callados por miedo a meterse en problemas o a molestar a sus padres. Decir esto con anticipación responde a las dos preocupaciones antes de que tengan que preguntar.")
-    : L("Kids who are hurting usually wonder two things first: \"Am I in trouble?\" and \"Is my parent upset with me?\" These words answer both, so they can breathe and start to talk.", "Los niños que sufren suelen preguntarse primero dos cosas: \"¿Estoy en problemas?\" y \"¿Mi papá o mi mamá está enojado conmigo?\" Estas palabras responden a ambas, para que puedan respirar y empezar a hablar.");
+    : L("Kids who are hurting often wonder two things first: \"Am I in trouble?\" and \"Is my parent upset with me?\" Words like these answer both, which can make it easier for them to relax and start talking.", "Los niños que sufren suelen preguntarse primero dos cosas: \"¿Estoy en problemas?\" y \"¿Mi papá o mi mamá está enojado conmigo?\" Palabras como estas responden a ambas, y eso les puede ayudar a tranquilizarse y empezar a hablar.");
   return {
-    title: L("You asked what to say. Here it is.", "Usted preguntó qué decir. Aquí está."),
-    lead: L("You don't have to sound like an expert. Calm and simple works better than clever. If you only say one thing, say this:", "No tiene que tener todas las respuestas. Lo tranquilo y sencillo funciona mejor que lo ingenioso. Si solo dice una cosa, diga esto:"),
+    title: L("Words that can help", "Palabras que pueden ayudar"),
+    lead: L("You asked what to say. There's no perfect script, and you know your child best. Many parents find it helps to start simply, with something like this:", "Usted preguntó qué decir. No hay un guion perfecto, y nadie conoce a su hijo o hija mejor que usted. A muchos padres les ayuda empezar de forma sencilla, con algo como esto:"),
     quote,
-    reframeLead: L("Then, to help them see it a different way:", "Luego, para ayudarle a verlo de otra manera:"),
+    reframeLead: L("Later, if it feels right, you might add:", "Más adelante, si le parece bien, podría agregar:"),
     reframe,
     why,
-    teaser: L("The Bullyproof Parent Playbook will give you words like these matched to your child's age, personality, and exactly what happened, so you're never left wondering what to say.", "El Bullyproof Parent Playbook le dará palabras como estas, adaptadas a la edad y la personalidad de su hijo o hija y a lo que pasó exactamente, para que nunca se quede sin saber qué decir.")
+    teaser: L("The Bullyproof Parent Playbook will offer words like these, matched to your child's age, personality, and what happened, so you'll have support whenever you're not sure what to say.", "El Bullyproof Parent Playbook le ofrecerá palabras como estas, adaptadas a la edad y la personalidad de su hijo o hija y a lo que pasó, para que tenga apoyo siempre que no esté seguro de qué decir.")
   };
 }
 
@@ -1383,9 +1383,9 @@ function stepOpening() {
     // child, not a 16-year-old — a drive together is the teen equivalent of
     // the same side-by-side, hands-or-eyes-busy idea.
     const sideBySide = (age1 === "11–14" || age1 === "15–18")
-      ? L(`"Want to go for a drive?" or "Want to go for a walk?"`, `"¿Quieres dar una vuelta en el carro?" o "¿Quieres salir a caminar?"`)
-      : L(`"Want to build something with me?" or "Want to go for a walk?"`, `"¿Quieres armar algo conmigo?" o "¿Quieres salir a caminar?"`);
-    return L(`Say what you see, without asking why. You told us your child hasn't said anything, but their behavior tells you something's wrong. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child: ${sideBySide} — sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school.`, `Diga lo que ve, sin preguntar por qué. Usted nos dijo que su hijo o hija no ha dicho nada, pero su comportamiento le dice que algo anda mal. Pruebe: "He notado que ${behavior}. No tienes que explicármelo ahora; solo quiero que sepas que lo veo y que aquí estoy." O, si un momento lado a lado le resulta más natural a su hijo o hija: ${sideBySide}. A veces es más fácil para los niños abrirse cuando tienen las manos o los pies ocupados, y no sentados cara a cara. Observar de cerca importa, porque el comportamiento suele ser la única pista que tendrá: la encuesta más reciente del Departamento de Educación de EE. UU. (2022) encontró que más de la mitad de los niños que sufren bullying nunca se lo contaron a un adulto en la escuela.`);
+      ? L(`"Want to grab a burger?" or "Show me that game you've been playing." Pick the thing they love that you rarely get time to join in on.`, `"¿Vamos por una hamburguesa?" o "Enséñame ese juego que has estado jugando." Elija lo que a su hijo o hija le encanta y en lo que usted casi nunca tiene tiempo de acompañarle.`)
+      : L(`"I've got some time right now. Want to ___ together?" Fill in the blank with their favorite thing, the one you rarely get time for: a board game, building with Legos, shooting hoops, baking cookies.`, `"Tengo un rato libre. ¿Quieres que ___ juntos?" Llene el espacio con su actividad favorita, esa para la que casi nunca hay tiempo: un juego de mesa, armar con Legos, tirar canastas, hornear galletas.`);
+    return L(`Say what you see, without asking why. You told us your child hasn't said anything, but their behavior tells you something's wrong. Try: "I've noticed ${behavior}. You don't have to explain it right now — I just want you to know I see it, and I'm here." Or, if a side-by-side moment feels more natural for your child, try: ${sideBySide} Sometimes it's easier for kids to open up when their hands or feet are busy, not sitting face to face. Watching closely matters, because behavior is often the only clue you'll get: the U.S. Department of Education's most recent survey (2022) found more than half of bullied kids never told an adult at school.`, `Diga lo que ve, sin preguntar por qué. Usted nos dijo que su hijo o hija no ha dicho nada, pero su comportamiento le dice que algo anda mal. Pruebe: "He notado que ${behavior}. No tienes que explicármelo ahora; solo quiero que sepas que lo veo y que aquí estoy." O, si un momento lado a lado le resulta más natural a su hijo o hija, pruebe: ${sideBySide} A veces es más fácil para los niños abrirse cuando tienen las manos o los pies ocupados, y no sentados cara a cara. Observar de cerca importa, porque el comportamiento suele ser la única pista que tendrá: la encuesta más reciente del Departamento de Educación de EE. UU. (2022) encontró que más de la mitad de los niños que sufren bullying nunca se lo contaron a un adulto en la escuela.`);
   }
   if (status === "no-signals") {
     return L("Start with easy time together. You told us nothing has been said and you haven't seen clear signs yet, so don't ask directly right away — that can make kids close up more. Instead, spend easy time together: a car ride, a walk, cooking side by side. Kids often talk more when they aren't looking right at you. Harvard's Center on the Developing Child found that the most common thing kids who bounce back share is at least one steady adult they trust — and ordinary time like this is how that trust gets built.", "Comience con tiempo tranquilo juntos. Usted nos dijo que todavía no se ha dicho nada y que no ha visto señales claras, así que no pregunte directamente de inmediato: eso puede hacer que los niños se cierren más. En cambio, pasen tiempo sin presión: un paseo en carro, una caminata, cocinar uno al lado del otro. Los niños suelen hablar más cuando no tienen a alguien mirándolos directamente. El Center on the Developing Child de la Universidad de Harvard encontró que lo más común entre los niños que logran sobreponerse es contar con al menos un adulto estable en quien confían; y el tiempo cotidiano como este es lo que construye esa confianza.");
@@ -1422,7 +1422,7 @@ function stepContext() {
     return L(`Find the hot spots. You told us this is happening in person. Ask your child if certain times or places feel worse — ${spots}. This helps the school watch the right spots instead of everywhere. The most recent federal data (2019–20) show bullying at school happens most in classrooms, then hallways and the cafeteria — busy places where adults can't see everything at once.`, `Encuentre los puntos críticos. Usted nos dijo que esto está pasando en persona. Pregúntele a su hijo o hija si hay momentos o lugares que se sienten peor: ${spots}. Eso ayuda a que la escuela vigile los lugares correctos en lugar de todos. Los datos federales más recientes (2019–20) muestran que el bullying en la escuela ocurre sobre todo en los salones de clase, y luego en los pasillos y la cafetería: lugares concurridos donde los adultos no pueden ver todo a la vez.`);
   }
   if (wordsAnswer()) {
-    return L(`Say it, then listen. You asked what to say to help, so start with the words in "You asked what to say" above, said calmly at a quiet moment like a car ride or bedtime. Then stop talking and just listen. Whatever your child shares, answer with "Thank you for telling me" before anything else. Feeling heard is what lets those words sink in and begin to ease the hurt.`, `Dígalo y luego escuche. Usted preguntó qué decir para ayudar, así que empiece con las palabras de "Usted preguntó qué decir", más arriba, dichas con calma en un momento tranquilo, como un paseo en carro o la hora de dormir. Luego deje de hablar y solo escuche. Cuente lo que cuente su hijo o hija, responda primero: "Gracias por contármelo". Sentirse escuchado es lo que permite que esas palabras calen y empiecen a aliviar el dolor.`);
+    return L(`Say it, then listen. You asked what to say to help, so start with the words in "Words that can help" above, said calmly at a quiet moment like a car ride or bedtime. Then stop talking and just listen. Whatever your child shares, answer with "Thank you for telling me" before anything else. Feeling heard is what lets those words sink in and begin to ease the hurt.`, `Dígalo y luego escuche. Usted preguntó qué decir para ayudar, así que empiece con las palabras de "Palabras que pueden ayudar", más arriba, dichas con calma en un momento tranquilo, como un paseo en carro o la hora de dormir. Luego deje de hablar y solo escuche. Cuente lo que cuente su hijo o hija, responda primero: "Gracias por contármelo". Sentirse escuchado es lo que permite que esas palabras calen y empiecen a aliviar el dolor.`);
   }
   const saidNotSure = (state.answers.q7 || []).some(x => x.startsWith("I'm not sure")) || (state.answers.q11 || "").startsWith("I'm not sure");
   return saidNotSure
@@ -1680,20 +1680,20 @@ function sunbeamResource() {
 
 Here's why that moment matters more than it seems. Cellular biologist Bruce Lipton has spent decades studying how a child's subconscious mind forms. By his account:
 
-Every night, as your child drifts toward sleep, their mind passes through the same open, impressionable state that makes early childhood so absorbent in the first place. Call it dreamtime programming: whatever's on their mind in those last few minutes has an outsized chance of settling in.
+Every night, as your child drifts toward sleep, their mind passes through the same open, impressionable state that makes early childhood so absorbent in the first place. Think of it as "Dreamtime Programming": whatever's on their mind in those last few moments of the day can shape how well they sleep, what they dream about, and often how the next day goes.
 
 Which means every bedtime is also an opportunity — a nightly chance to interrupt that programming before it takes hold, and redirect it toward something that builds your child up instead. That's the entire idea behind Shining Moments.`, `La mente de un niño puede quedarse atascada. Lo que le preocupa (un mal día, un momento que dolió, una inquietud sin respuesta fácil) suele dar más vueltas justo a la hora de dormir, cuando ya no hay nada que lo distraiga.
 
 Por eso ese momento importa más de lo que parece. El biólogo celular Bruce Lipton lleva décadas estudiando cómo se forma la mente subconsciente de un niño. Según él:
 
-Cada noche, mientras su hijo o hija se acerca al sueño, su mente pasa por el mismo estado abierto e impresionable que hace que la primera infancia absorba tanto. Llámelo programación de ensueño: lo que tenga en la mente en esos últimos minutos tiene más probabilidad de quedarse grabado.
+Cada noche, mientras su hijo o hija se acerca al sueño, su mente pasa por el mismo estado abierto e impresionable que hace que la primera infancia absorba tanto. Piense en ello como "programación de ensueño": lo que tenga en la mente en esos últimos momentos del día puede influir en lo bien que duerme, en lo que sueña y, muchas veces, en cómo le va al día siguiente.
 
 Eso significa que cada hora de dormir también es una oportunidad: la posibilidad, cada noche, de interrumpir esa programación antes de que se asiente y redirigirla hacia algo que fortalezca a su hijo o hija. Esa es toda la idea detrás de Shining Moments.`);
   return {
     text,
     introCaption,
     pullQuote: L("By age 7, up to 70% of what a child's subconscious mind has been programmed with is either self-sabotaging, negative, or limiting.", "Para los 7 años, hasta el 70% de lo que ha quedado programado en la mente subconsciente de un niño lo lleva a sabotearse a sí mismo, es negativo o lo limita."),
-    closeupCaption: L(`It only takes a few minutes: naming one good moment from the day, and letting that be the last thing on their mind before sleep. Do it most nights, and something happens beneath the surface — confidence builds, worry loosens its grip, and it happens so gradually your child may never notice it's working.`, `Solo toma unos minutos: nombrar un buen momento del día y dejar que eso sea lo último en su mente antes de dormir. Hágalo casi todas las noches y algo sucede por debajo de la superficie: la confianza crece, la preocupación afloja su control, y ocurre tan poco a poco que su hijo o hija quizá nunca note que está funcionando.`),
+    closeupCaption: L(`It only takes a few minutes: naming one good moment from the day, and letting that be the last thing on their mind before sleep. Do it most nights, and watch for what starts to happen: your child falls asleep more easily, wakes up in a better mood, and carries a little more confidence into the day. That's what focusing on their light, instead of their shadows, can do.`, `Solo toma unos minutos: nombrar un buen momento del día y dejar que eso sea lo último en su mente antes de dormir. Hágalo casi todas las noches y fíjese en lo que empieza a pasar: su hijo o hija se duerme con más facilidad, se despierta de mejor humor y lleva un poco más de confianza a su día. Eso es lo que puede lograr enfocarse en su luz, en lugar de en sus sombras.`),
     setUrl: SUNBEAM_SET_URL,
     bothBooksUrl: amazonBothBooksUrl(),
     animatedCoverUrl: assetUrl("sunbeam-cover-animated-full.gif"),
@@ -1965,7 +1965,7 @@ async function generatePDF() {
     y = qTop + ql.length * 7 + 8;
     body(w.reframeLead, { color: [90, 100, 120] });
     body("“" + w.reframe + "”", { italic: true });
-    body(L("Why it works: ", "Por qué funciona: ") + w.why, { color: [90, 100, 120] });
+    body(L("Why it helps: ", "Por qué ayuda: ") + w.why, { color: [90, 100, 120] });
     body(w.teaser, { color: [90, 100, 120] });
   }
   if (multiChildNote()) body(multiChildNote(), { color: [74, 109, 147] });

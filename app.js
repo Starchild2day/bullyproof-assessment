@@ -76,6 +76,7 @@ function render() {
   const useFixedShell = state.screen === "question" && (state.safetyFlags.length === 0 || state.safetyAcknowledged);
   document.body.classList.toggle("question-mode", useFixedShell);
   document.body.classList.toggle("landing-mode", state.screen === "landing");
+  if (state.screen !== "question") document.body.classList.remove("safety-mini");
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (state.screen === "landing") return renderLanding();
   if (state.screen === "question") return renderQuestion();
@@ -140,7 +141,11 @@ function renderQuestion() {
   const q = currentQuestion();
   if (!q) { state.screen = "results"; return render(); }
   renderProgress();
-  let safetyHTML = state.safetyFlags.length ? renderSafetyBanner() : "";
+  const miniSafety = state.safetyFlags.length > 0 && !!state.safetyAcknowledged;
+  document.body.classList.toggle("safety-mini", miniSafety);
+  // Full notice (not yet closed) sits above the card; once closed, the thin line goes inside the card under the banner.
+  let safetyHTML = state.safetyFlags.length && !miniSafety ? renderSafetyBanner() : "";
+  const crisisLine = miniSafety ? renderSafetyBanner() : "";
   let bodyHTML = "";
   if (q.type === "choice") bodyHTML = renderChoice(q);
   else if (q.type === "multi") bodyHTML = renderMulti(q);
@@ -149,6 +154,7 @@ function renderQuestion() {
     ${safetyHTML}
     <div class="card">
       ${q.icon ? banner(q.icon, { imageSrc: questionIconUrl(q.id) }) : ""}
+      ${crisisLine}
       <div class="card-body">
       <div class="card-fixed">
         <h2 class="question">${qTitle(q)}</h2>
@@ -170,17 +176,25 @@ function renderQuestion() {
   track("question_answered_view", { question: q.id });
 }
 
+// Short, tappable versions of each crisis resource for the thin line shown after the notice is closed.
+function crisisLineItems(variant) {
+  const short = {
+    "988 Suicide & Crisis Lifeline": L(`<a href="tel:988">Call or text 988</a>`, `<a href="tel:988">Llame o envíe AYUDA al 988</a>`),
+    "Crisis Text Line": L(`<a href="sms:741741">Text HOME to 741741</a>`, `<a href="sms:741741">Envíe AYUDA al 741741</a>`),
+    "Childhelp National Child Abuse Hotline": L(`Childhelp <a href="tel:18004224453">1-800-422-4453</a>`, `Childhelp <a href="tel:18004224453">1-800-422-4453</a>`)
+  };
+  return variant.resources.map(r => short[r.name] || `${resName(r)}: ${resDetail(r)}`);
+}
+
 function renderSafetyBanner() {
   const priority = ["selfHarmOrSuicide", "violenceRisk", "sexualOrPower", "physicalSigns"];
   const key = priority.find(k => state.safetyFlags.includes(k));
   const variant = SAFETY_VARIANTS[key];
 
   if (state.safetyAcknowledged) {
-    return `
-      <div class="safety-banner safety-banner-mini">
-        <strong>${L(`Crisis resources:`, `Recursos de crisis:`)}</strong> ${variant.resources.map(r => resName(r) + " — " + resDetail(r)).join(" · ")}
-      </div>
-    `;
+    // After the parent has read and closed the full notice: one thin line, tucked directly under the
+    // (shrunken) banner, with tap-to-call / tap-to-text links — so the answers keep most of the screen.
+    return `<div class="crisis-line" role="note"><strong>${L(`Help now:`, `Ayuda ahora:`)}</strong> ${crisisLineItems(variant).join(`<span class="sep"> · </span>`)}</div>`;
   }
 
   return `

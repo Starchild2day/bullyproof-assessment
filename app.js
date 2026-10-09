@@ -623,19 +623,20 @@ function quickHelpOffer() {
   const url = (typeof CONFIG !== "undefined" && CONFIG.QUICK_HELP_URL) || "";
   return {
     url,
-    kicker: L("Hands-on help, available today", "Ayuda práctica, disponible hoy"),
+    kicker: L("Available now", "Disponible ahora"),
     title: "The Bullyproof Quick Help Guides",
-    lead: L("25 short, practical guides for the moments parents face most, each with the exact words to say. One digital download, organized by issue, so you can go straight to yours tonight.",
-            "25 guías cortas y prácticas para los momentos que los padres enfrentan con más frecuencia, cada una con las palabras exactas que puede decir. Una sola descarga digital, organizada por tema, para que vaya directo a la suya esta noche. Por ahora, las guías están en inglés."),
+    lead: L("Ready to use today, while the Bullyproof Parent Playbook is being completed. In the big moments, what we feel like saying isn't always what helps. These 25 short guides show you what to say, what to avoid, and why it works better, so you can skip the words parents often wish they could take back.",
+            "Listas para usar hoy, mientras se termina el Bullyproof Parent Playbook. En los momentos importantes, lo que sentimos ganas de decir no siempre es lo que ayuda. Estas 25 guías cortas le muestran qué decir, qué evitar y por qué funciona mejor, para que pueda evitar las palabras que muchos padres después desearían no haber dicho. Por ahora, las guías están en inglés."),
     issueLabel: L("Your primary issue:", "Su tema principal:"),
     issue: QUICK_HELP_ISSUES[g] ? L(QUICK_HELP_ISSUES[g][0], QUICK_HELP_ISSUES[g][1]) : "",
     matchLabel: L("Start with:", "Empiece con:"),
     guideTitle: title ? `${L("Guide", "Guía")} ${num} \u2014 ${title}` : "",
     bullets: [
-      L("Instant digital download, yours to keep", "Descarga digital inmediata, para quedársela"),
-      L("Organized by issue, so you find yours in seconds", "Organizada por tema, para encontrar el suyo en segundos"),
-      L("A 45-second version first, with the exact words to say", "Primero, una versión de 45 segundos con las palabras exactas que puede decir")
+      L("What to say, and just as important, what not to say", "Qué decir y, igual de importante, qué no decir"),
+      L("Why it works better than our first instinct in the moment", "Por qué funciona mejor que nuestro primer impulso en el momento"),
+      L("Organized by issue, as an instant digital download", "Organizadas por tema, en una descarga digital inmediata")
     ],
+    closer: L("When your child's emotional well-being is on the line, having a trusted guide for these moments can be priceless.", "Cuando está en juego el bienestar emocional de su hijo o hija, contar con una guía de confianza para estos momentos puede no tener precio."),
     button: L("Get the Guides \u2014 $37", "Obtener las guías \u2014 $37"),
     soon: L("Opening soon \u2014 we'll email you the link.", "Muy pronto: le enviaremos el enlace por correo."),
     note: L("$37, one time. All 25 guides are included.", "$37, un solo pago. Incluye las 25 guías.")
@@ -1016,6 +1017,7 @@ function buildEmailHtml() {
       <ul style="color:#D5DAE6;font-size:14px;line-height:1.5;padding-left:20px;margin:16px 0 18px;">
         ${qh.bullets.map(b => `<li style="margin-bottom:5px;">${b}</li>`).join("")}
       </ul>
+      <p style="color:#F1E4C3;font-size:15px;font-weight:600;line-height:1.5;margin:0 0 18px;">${qh.closer}</p>
       ${qh.url
         ? `<a href="${escapeAttr(qh.url)}" style="display:inline-block;background:${gold};color:${navyDeep};font-size:15.5px;font-weight:800;padding:13px 22px;border-radius:8px;text-decoration:none;">${qh.button}</a>`
         : `<p style="color:${gold};font-size:15px;font-weight:700;margin:0;">${qh.soon}</p>`}
@@ -2282,13 +2284,15 @@ async function generatePDF() {
     const leadL = doc.splitTextToSize(qhOffer.lead, inner);
     const bulletsL = qhOffer.bullets.map(b => doc.splitTextToSize("\u2022  " + b, inner - 4));
     const noteL = doc.splitTextToSize(qhOffer.note, inner);
+    doc.setFont(undefined, "bold"); doc.setFontSize(10.5);
+    const closerL = doc.splitTextToSize(qhOffer.closer, inner);
     doc.setFont(undefined, "bold"); doc.setFontSize(12);
     const guideL = qhOffer.guideTitle ? doc.splitTextToSize(qhOffer.guideTitle, inner - 10) : [];
     const issueL = (guideL.length && qhOffer.issue) ? doc.splitTextToSize(qhOffer.issue, inner - 10) : [];
     const issueH = issueL.length ? 6 + issueL.length * 5.6 + 3 : 0;
     const matchH = guideL.length ? 10 + issueH + guideL.length * 5.6 + 5 : 0;
     const cardH = 10 + 6 + 9 + leadL.length * 5 + 5 + matchH + (matchH ? 6 : 0)
-      + bulletsL.reduce((h, l) => h + l.length * 5 + 1.5, 0) + 5 + 12 + 5 + noteL.length * 4.4 + 8;
+      + bulletsL.reduce((h, l) => h + l.length * 5 + 1.5, 0) + 3 + closerL.length * 5.2 + 5 + 12 + 5 + noteL.length * 4.4 + 8;
     ensureRoom(cardH + 8);
     const top = y;
     doc.setFillColor(16, 27, 51); doc.roundedRect(X, top, W, cardH, 3, 3, "F");
@@ -2320,6 +2324,8 @@ async function generatePDF() {
     doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
     bulletsL.forEach(l => { doc.text(l, X + PAD + 1, cy, { lineHeightFactor: 1.35 }); cy += l.length * 5 + 1.5; });
     cy += 3;
+    doc.setFont(undefined, "bold"); doc.setFontSize(10.5); doc.setTextColor(241, 228, 195);
+    doc.text(closerL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += closerL.length * 5.2 + 3;
     if (qhOffer.url) {
       doc.setFont(undefined, "bold"); doc.setFontSize(11.5);
       const bw = doc.getTextWidth(qhOffer.button) + 14;

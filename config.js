@@ -36,5 +36,9 @@ const CONFIG = {
 
   // --- 9. QUICK HELP GUIDES checkout ($37). Paste the Stripe Payment Link here. Blank = the Action Plan
   // shows the Quick Help Guides card with "Opening soon" instead of a Buy button. ---
-  QUICK_HELP_URL: ""
+  QUICK_HELP_URL: "",
+
+  // --- 10. "HELP ANOTHER PARENT" share link. Blank = this site's landing page (/landing/). When
+  // bullyproof.support/parent-clarity-check is set up, put that full address here. ---
+  SHARE_URL: ""
 };

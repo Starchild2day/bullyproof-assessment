@@ -101,6 +101,14 @@ const check = (name, ok, extra = "") => { (ok ? pass++ : fail++); console.log(`$
   reset(); await mod.handler(event({ body: { answers: { q1: "5–7", q2: opt("q2", "prevent"), q12: "How do I start?" } } }));
   check("labels: questions a parent didn't see come back blank, not wrong", hooks[0].situation === "prevention" && hooks[0].age_group === "young-child" && hooks[0].school_status === "" && hooks[0].where === "");
 
+  // --- Referral source (?ref=…) ---
+  reset(); await mod.handler(event({ body: { ref: "parent-share" } }));
+  check("referral: a shared-link visit is tagged on the webhook and the lead", hooks[0].referral_source === "parent-share");
+  reset(); await mod.handler(event({ body: { ref: "<script>x</script>" } }));
+  check("referral: anything that isn't plain short words is dropped", hooks[0].referral_source === "");
+  reset(); await mod.handler(event());
+  check("referral: no ref -> blank", hooks[0].referral_source === "");
+
   // --- Consent ---
   reset(); await mod.handler(event({ body: { marketingConsent: true } }));
   check("Playbook opt-in adds the playbook-interest tag", hooks[0].tags.includes("playbook-interest") && hooks[0].playbook_interest === "yes");

@@ -8,7 +8,8 @@
 const { openStore } = require("../lib/records.js");
 
 const EVENTS = new Set(["assessment_started", "question_answered_view", "question_answered", "safety_escalation_triggered",
-  "assessment_completed", "plan_email_sent", "pdf_downloaded", "playbook_invite_optin"]);
+  "assessment_completed", "plan_email_sent", "pdf_downloaded", "playbook_invite_optin",
+  "share_opened", "share_link_copied", "referred_visit", "plan_page_viewed"]);
 const DEFAULT_ORIGINS = ["https://assessment.bullyproof.guide", "https://bullyproof-support-clarity-check.netlify.app", "https://shimmering-pegasus-4a4a21.netlify.app"];
 const hits = new Map();
 const ok = { statusCode: 204, headers: { "Cache-Control": "no-store" }, body: "" };

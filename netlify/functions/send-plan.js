@@ -161,6 +161,8 @@ exports.handler = async function (event) {
     if (typeof k === "string" && builder.SAFETY_VARIANTS[k] && !builder.state.safetyFlags.includes(k)) builder.state.safetyFlags.push(k);
   });
   const marketingConsent = payload.marketingConsent === true;
+  // Where this family came from, if they arrived through a shared link (?ref=…). Short, plain words only.
+  const referral = typeof payload.ref === "string" && /^[a-z0-9-]{1,40}$/.test(payload.ref) ? payload.ref : "";
   builder.state.marketingConsent = marketingConsent;
   const flags = builder.state.safetyFlags.slice();
   const flagged = flags.length > 0;
@@ -196,6 +198,7 @@ exports.handler = async function (event) {
       ...profile,
       playbook_interest: marketingConsent ? "yes" : "no",
       source: "Parent Clarity Check",
+      referral_source: referral,
       submitted_at: createdAt
     }, flagged ? 0 : 1, { kind: flagged ? "plan-safety" : "plan" });
   }
@@ -214,6 +217,7 @@ exports.handler = async function (event) {
     safetyResourcesAcknowledged: flagged ? payload.safetyAcknowledged === true : null,
     consentGiven: payload.consentGiven === true,
     marketingConsent,
+    referral,
     emailDelivered: delivery === "sent" ? true : (delivery === "queued" ? "queued" : false),
     answers,
     summary

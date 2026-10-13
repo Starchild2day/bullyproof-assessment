@@ -535,6 +535,80 @@ function planPageMessage(title, body) {
     </div>`;
 }
 
+// ============================================================
+// HELP ANOTHER PARENT (referral) — Mark's approved first version.
+// Shown at the end of the private plan page, after the parent has read their plan (never to
+// safety-flagged parents, whose page stays focused on getting help). It shares ONLY a clean
+// invitation to start a new Clarity Check: no answers, no results, nothing about the child.
+// The link carries ?ref=parent-share so we can count (anonymously) how many visits sharing brings.
+// ============================================================
+function shareLink() {
+  const configured = (typeof CONFIG !== "undefined" && CONFIG.SHARE_URL) || "";
+  // The landing page is in English, so a Spanish-speaking parent's share goes straight to the Spanish Clarity Check.
+  const base = configured || (getLang() === "es" ? `${window.location.origin}/` : `${window.location.origin}/landing/`);
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}ref=parent-share${getLang() === "es" ? "&lang=es" : ""}`;
+}
+function shareMessage() {
+  return L("I found this free Parent Clarity Check and thought you might appreciate it. It helps parents better understand what's happening with their kids and consider what to do next. Thought I'd pass it along!",
+           "Encontré este Chequeo de Claridad para Padres gratuito y pensé que te podría servir. Ayuda a los padres a entender mejor lo que les pasa a sus hijos y a pensar qué hacer después. ¡Te lo comparto!");
+}
+function shareSectionHtml() {
+  return `
+    <div class="card share-card" id="shareCard">
+      <div class="card-body">
+        <div class="share-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="#C89B3C"><path d="M12 21s-7.2-4.4-9.6-9.1C.8 8.6 2.6 4.8 6.3 4.3c2.1-.3 4 .8 5.7 2.7 1.7-1.9 3.6-3 5.7-2.7 3.7.5 5.5 4.3 3.9 7.6C19.2 16.6 12 21 12 21z"/></svg></div>
+        <h2 class="share-title">${L(`Help Another Parent Find Their Next Step`, `Ayude a otro padre o madre a encontrar su próximo paso`)}</h2>
+        <p class="share-tag">${L(`You don't have to have all the answers to help someone find theirs.`, `No necesita tener todas las respuestas para ayudar a alguien a encontrar las suyas.`)}</p>
+        <p class="share-body">${L(`Know another parent who might be worried about their child or unsure what to do next? Share the free Bullyproof Parent Clarity Check and help them take their first step toward greater understanding and confidence.`, `¿Conoce a otro padre o madre que esté preocupado por su hijo o hija, o que no sepa qué hacer? Comparta el Chequeo de Claridad para Padres gratuito de Bullyproof y ayúdele a dar su primer paso hacia más comprensión y confianza.`)}</p>
+        <div class="share-buttons">
+          <button class="primary" id="shareBtn" type="button">${L(`Share with a Parent`, `Compartir con un padre o madre`)}</button>
+          <button class="share-secondary" id="copyLinkBtn" type="button">${L(`Copy Link`, `Copiar enlace`)}</button>
+        </div>
+        <div class="share-options" id="shareOptions" hidden>
+          <a class="share-opt" id="shareSms" href="#">${L(`Send by text`, `Enviar por mensaje de texto`)}</a>
+          <a class="share-opt" id="shareEmail" href="#">${L(`Send by email`, `Enviar por correo`)}</a>
+          <button class="share-opt" id="shareCopyMsg" type="button">${L(`Copy the message`, `Copiar el mensaje`)}</button>
+        </div>
+        <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
+        <p class="share-privacy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true" style="vertical-align:-2px;margin-right:5px;"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>${L(`Your answers and personal results are always private. Only the Clarity Check invitation is shared.`, `Sus respuestas y resultados personales siempre son privados. Solo se comparte la invitación al Chequeo de Claridad.`)}</p>
+      </div>
+    </div>`;
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) { /* fall back below */ }
+  try {
+    const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", "");
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand("copy"); ta.remove(); return ok;
+  } catch (e) { return false; }
+}
+function wireShareSection() {
+  const status = document.getElementById("shareStatus");
+  const say = (msg) => { if (status) status.textContent = msg; };
+  const link = shareLink(), msg = shareMessage();
+  const subject = L("A free resource I thought you'd appreciate", "Un recurso gratuito que pensé que te serviría");
+  const opts = document.getElementById("shareOptions");
+  document.getElementById("shareSms").href = `sms:?&body=${encodeURIComponent(msg + " " + link)}`;
+  document.getElementById("shareEmail").href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg + "\n\n" + link)}`;
+  document.getElementById("shareBtn").addEventListener("click", async () => {
+    track("share_opened");
+    if (navigator.share) {
+      try { await navigator.share({ title: "Bullyproof Parent Clarity Check", text: msg, url: link }); say(L("Thank you for sharing.", "Gracias por compartir.")); return; }
+      catch (e) { if (e && e.name === "AbortError") return; /* otherwise fall back to the options */ }
+    }
+    opts.hidden = false;
+  });
+  document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+    track("share_link_copied");
+    say(await copyText(link) ? L("Link copied. Paste it anywhere to share.", "Enlace copiado. Péguelo donde quiera para compartirlo.") : link);
+  });
+  document.getElementById("shareCopyMsg").addEventListener("click", async () => {
+    track("share_link_copied");
+    say(await copyText(msg + " " + link) ? L("Message copied. Paste it into a text or email.", "Mensaje copiado. Péguelo en un mensaje de texto o correo.") : msg + " " + link);
+  });
+}
+
 async function renderPlanView() {
   progressTrack.style.display = "none";
   try { let m = document.querySelector('meta[name="robots"]'); if (!m) { m = document.createElement("meta"); m.name = "robots"; document.head.appendChild(m); } m.content = "noindex, nofollow"; } catch (e) { /* header also set by Netlify */ }
@@ -571,7 +645,9 @@ async function renderPlanView() {
         <p id="planStatus" role="status" aria-live="polite" style="display:none;margin:12px 0 0;font-size:14.5px;line-height:1.5;"></p>
       </div>
     </div>
-    <div class="card plan-sheet">${buildEmailHtml()}</div>`;
+    <div class="card plan-sheet">${buildEmailHtml()}</div>
+    ${state.safetyFlags.length ? "" : shareSectionHtml()}`;
+  if (!state.safetyFlags.length) wireShareSection();
   const btn = document.getElementById("planPdfBtn");
   btn.addEventListener("click", async () => {
     btn.disabled = true;
@@ -1176,6 +1252,7 @@ async function sendPlanByEmail() {
         consentGiven: !!state.consentGiven,
         marketingConsent: !!state.marketingConsent,
         lang: getLang(),
+        ref: state.ref || "",
         website: state.honeypot || "",
         turnstileToken: state.turnstileToken || ""
       })
@@ -2471,6 +2548,14 @@ applyStaticLanguage();
 wireLanguageToggle();
 
 try { if (new URLSearchParams(window.location.search).get("invite") === "1") state.screen = "invite"; } catch (e) { /* no URL params — start normally */ }
+// A shared invitation link carries ?ref=… (e.g. parent-share). Remember it for this visit only and
+// count it anonymously; it's also saved with the parent's own plan, so we can see which sources bring
+// families. Nothing about the person who shared it is ever collected.
+try {
+  const ref = (new URLSearchParams(window.location.search).get("ref") || "").toLowerCase();
+  if (/^[a-z0-9-]{1,40}$/.test(ref)) { state.ref = ref; try { sessionStorage.setItem("bp_ref", ref); } catch (e) {} track("referred_visit", { trigger: ref.replace(/-/g, "_") }); }
+  else { try { const r = sessionStorage.getItem("bp_ref"); if (r && /^[a-z0-9-]{1,40}$/.test(r)) state.ref = r; } catch (e) {} }
+} catch (e) { /* no referral */ }
 try {
   const m = window.location.pathname.match(/^\/plan\/([A-Za-z0-9_-]{24})\/?$/);
   if (m) { state.screen = "plan"; state.planId = m[1]; }

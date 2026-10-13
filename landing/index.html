@@ -182,5 +182,9 @@
   </div>
 </footer>
 
+<script>
+  // Keep a shared link's ?ref=… (and language) when the parent taps Start, so it reaches the Clarity Check.
+  (function () { try { if (!location.search) return; document.querySelectorAll('a.cta[href="/"]').forEach(function (a) { a.href = "/" + location.search; }); } catch (e) {} })();
+</script>
 </body>
 </html>

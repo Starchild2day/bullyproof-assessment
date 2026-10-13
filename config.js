@@ -40,5 +40,5 @@ const CONFIG = {
 
   // --- 10. "HELP ANOTHER PARENT" share link. Blank = this site's landing page (/landing/). When
   // bullyproof.support/parent-clarity-check is set up, put that full address here. ---
-  SHARE_URL: ""
+  SHARE_URL: "https://www.bullyproof.support/parent-clarity-check"
 };

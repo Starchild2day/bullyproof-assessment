@@ -545,7 +545,7 @@ function planPageMessage(title, body) {
 function shareLink() {
   const configured = (typeof CONFIG !== "undefined" && CONFIG.SHARE_URL) || "";
   // The landing page is in English, so a Spanish-speaking parent's share goes straight to the Spanish Clarity Check.
-  const base = configured || (getLang() === "es" ? `${window.location.origin}/` : `${window.location.origin}/landing/`);
+  const base = getLang() === "es" ? `${window.location.origin}/` : (configured || `${window.location.origin}/landing/`);
   const sep = base.includes("?") ? "&" : "?";
   return `${base}${sep}ref=parent-share${getLang() === "es" ? "&lang=es" : ""}`;
 }

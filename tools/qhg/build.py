@@ -198,6 +198,11 @@ def render_guide(g):
 
 
 def render_extra(md):
+    # Mark's call: the cheat sheet credits named organizations only (no "YouTube creators").
+    md = md.replace(" — drawn from counselors, school guidance resources, and YouTube creators who teach this.",
+                    " — drawn from counselors and school guidance resources.")
+    md = md.replace("school counselor training materials, and YouTube creators who teach this — including channels in the *How to Respond to a Bully* search cluster)",
+                    "and school counselor training materials)")
     lines = md.strip().splitlines()
     body = "\n".join(lines[1:]) if lines[0].startswith("# ") else md
     body = clean_rules(body)
@@ -281,8 +286,27 @@ def shell(title, body, desc="", extra_head="", body_class=""):
 <p>These guides offer general guidance for parents. They are not medical, psychological, or legal advice, and they don't replace a counselor, doctor, or other professional who knows your child.</p>
 <p>© 2026 Kidsavers International, Inc. · <a href="https://www.bullyproof.support">Bullyproof.Support</a> · <a href="mailto:mark@bullyproof.guide">mark@bullyproof.guide</a></p>
 </div></footer>
+<script src="/guides/assets/library.js?v=__V__"></script>
 </body></html>"""
 
+
+
+# "Help Another Parent" — Mark's approved wording from the Action Plan. Shares ONLY an invitation
+# to the free Clarity Check (never a paid guide), tagged ref=guides-share so library shares can be counted.
+SHARE_URL = "https://www.bullyproof.support/parent-clarity-check?ref=guides-share"
+SHARE_MSG = ("I found this free Parent Clarity Check and thought you might appreciate it. It helps parents better "
+             "understand what's happening with their kids and consider what to do next. Thought I'd pass it along!")
+HEART = '<svg width="26" height="26" viewBox="0 0 24 24" fill="#C89B3C" aria-hidden="true"><path d="M12 21s-7.2-4.4-9.6-9.1C.8 8.6 2.6 4.8 6.3 4.3c2.1-.3 4 .8 5.7 2.7 1.7-1.9 3.6-3 5.7-2.7 3.7.5 5.5 4.3 3.9 7.6C19.2 16.6 12 21 12 21z"/></svg>'
+SHARE_HTML = f"""<section class="share-card" data-share-url="{SHARE_URL}" data-share-msg="{html.escape(SHARE_MSG)}">
+<div class="share-icon">{HEART}</div>
+<h2 class="share-title">Help Another Parent Find Their Next Step</h2>
+<p class="share-tag">You don't have to have all the answers to help someone find theirs.</p>
+<p class="share-body">Know another parent who might be worried about their child or unsure what to do next? Share the free Bullyproof Parent Clarity Check and help them take their first step toward greater understanding and confidence.</p>
+<div class="share-buttons"><button class="btn gold sb-share" type="button">Share with a Parent</button><button class="btn ghost sb-copy" type="button">Copy Link</button></div>
+<div class="share-options" hidden><a class="share-opt sb-sms" href="#">Send by text</a><a class="share-opt sb-email" href="#">Send by email</a><button class="share-opt sb-copymsg" type="button">Copy the message</button></div>
+<p class="share-status" role="status" aria-live="polite"></p>
+<p class="share-privacy">Only the free Clarity Check invitation is shared. Nothing about you or your child.</p>
+</section>"""
 
 def guide_body(g, inner, locked=False):
     sec = section_of.get(g.get("n"), g.get("section", ""))
@@ -293,7 +317,8 @@ def guide_body(g, inner, locked=False):
 <h1>{html.escape(g['title'])}</h1>
 {f'<p class="g-q">“{html.escape(q)}”</p>' if q else ''}</header>
 """
-    return head + inner + "</article></main>"
+    tail = "" if g.get("free") else SHARE_HTML
+    return head + inner + "</article>" + tail + "</main>"
 
 
 # ---------------------------------------------------------------------------
@@ -399,8 +424,8 @@ home = f"""<main>
 <p class="small center" id="buy-note">Secure checkout by Stripe. Kidsavers International, Inc.</p>
 <p class="small center">Already bought them? <a href="/guides/restore/">Open your guides again</a></p></div>
 </div></section>
+<div class="wrap">{SHARE_HTML}</div>
 <script src="/guides/assets/config.js?v={VER}"></script>
-<script src="/guides/assets/library.js?v={VER}"></script>
 </main>"""
 open(os.path.join(PUB, "index.html"), "w").write(
     shell(PRODUCT, home, "Twenty-five short guides with the exact words to say when your child is being bullied. Search by describing what's happening.", body_class="home").replace("__V__", VER))
@@ -416,7 +441,7 @@ welcome = """<main class="wrap"><div class="panel">
 <div class="copybox"><input id="lnk" readonly aria-label="Your private link"><button type="button" id="cp">Copy</button></div>
 <p><a id="mail" class="btn navy" href="#">Email this link to myself</a></p>
 <p class="small">Tip: on your phone, open your guides and add the page to your home screen. It will open like an app.</p>
-</div></main>
+</div>"""+SHARE_HTML+"""</main>
 <script>
 (function(){var k=(location.search.match(/k=([a-f0-9]+)/)||[])[1];var i=document.getElementById('lnk');
 if(!k){i.value='Open your guides from the button above';return;}

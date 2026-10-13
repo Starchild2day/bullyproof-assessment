@@ -103,3 +103,31 @@
   }
   if (owns) { var o = document.getElementById("owner-note"); if (o) o.hidden = false; }
 })();
+
+/* Help Another Parent: wire every share card on the page */
+(function () {
+  function copy(text) {
+    if (navigator.clipboard) return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallback(); });
+    return Promise.resolve(fallback());
+    function fallback() { try { var ta = document.createElement("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); var ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e) { return false; } }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".share-card"), function (card) {
+    var link = card.getAttribute("data-share-url"), msg = card.getAttribute("data-share-msg");
+    var status = card.querySelector(".share-status"), opts = card.querySelector(".share-options");
+    function say(t) { status.textContent = t; }
+    card.querySelector(".sb-sms").href = "sms:?&body=" + encodeURIComponent(msg + " " + link);
+    card.querySelector(".sb-email").href = "mailto:?subject=" + encodeURIComponent("A free resource I thought you'd appreciate") + "&body=" + encodeURIComponent(msg + "\n\n" + link);
+    card.querySelector(".sb-share").addEventListener("click", function () {
+      if (navigator.share) {
+        navigator.share({ title: "Bullyproof Parent Clarity Check", text: msg, url: link })
+          .then(function () { say("Thank you for sharing."); }, function (e) { if (!e || e.name !== "AbortError") opts.hidden = false; });
+      } else { opts.hidden = false; }
+    });
+    card.querySelector(".sb-copy").addEventListener("click", function () {
+      copy(link).then(function (ok) { say(ok ? "Link copied. Paste it anywhere to share." : link); });
+    });
+    card.querySelector(".sb-copymsg").addEventListener("click", function () {
+      copy(msg + " " + link).then(function (ok) { say(ok ? "Message copied. Paste it into a text or email." : msg + " " + link); });
+    });
+  });
+})();

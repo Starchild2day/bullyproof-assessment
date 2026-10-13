@@ -94,7 +94,7 @@ function renderLanding() {
     if (prior.length >= 1 || preview) {
       returningNotice = `
         <div style="background:var(--gold-soft);border-left:4px solid var(--gold);border-radius:10px;padding:14px 16px;margin:0 0 18px;">
-          <p style="margin:0;font-size:14px;color:var(--navy-deep);"><strong>${L(`Welcome back.`, `Qué gusto verle de nuevo.`)}</strong> ${L(`It looks like you've already taken this check-in. If your situation has changed, go ahead and take it again. For ongoing, personalized support as things keep changing, that's exactly what`, `Parece que ya hizo este chequeo. Si su situación ha cambiado, puede hacerlo de nuevo. Para recibir apoyo continuo y personalizado a medida que las cosas cambian, para eso mismo fueron creados`)} <a href="${NETWORK_HOME_URL}" style="color:var(--navy);font-weight:600;">Bullyproof.Support</a> ${L(`and the upcoming Parent Playbook are built for.`, `y el próximo Bullyproof Parent Playbook.`)}</p>
+          <p style="margin:0;font-size:14px;color:var(--navy-deep);"><strong>${L(`Welcome back.`, `Qué gusto verle de nuevo.`)}</strong> ${L(`It looks like you've already taken this check-in. If your situation has changed, go ahead and take it again. For ongoing, personalized support as things keep changing, that's exactly what`, `Parece que ya hizo este chequeo. Si su situación ha cambiado, puede hacerlo de nuevo. Para recibir apoyo continuo y personalizado a medida que las cosas cambian, para eso mismo fue creado`)} <a href="${NETWORK_HOME_URL}" style="color:var(--navy);font-weight:600;">Bullyproof.Support</a>${L(` is built for.`, `.`)}</p>
         </div>`;
     }
   } catch (e) { /* storage unavailable — just skip the notice */ }
@@ -113,6 +113,7 @@ function renderLanding() {
       <div class="nav-row" style="justify-content:flex-start;">
         <button class="primary" id="startBtn" disabled>${L(`Start the Assessment`, `Comenzar la evaluación`)}</button>
       </div>
+      <p class="privacy-note guide20-note" style="margin-top:18px;">${L(`Worried your child may not want to be here anymore? Please don't wait for this check-in. Call or text <a href="tel:988">988</a> any time, and read our free guide,`, `¿Le preocupa que su hijo o hija ya no quiera estar aquí? Por favor, no espere a este chequeo. Llame o envíe un mensaje al <a href="tel:988">988</a> en cualquier momento, y lea nuestra guía gratuita (en inglés),`)} <a href="${guide20Url()}" target="_blank" rel="noopener">${GUIDE20_TITLE()}</a>.</p>
       </div>
     </div>
   `;
@@ -662,8 +663,9 @@ function isPreventive() {
 }
 
 // ============================================================
-// THE BULLYPROOF QUICK HELP GUIDES — offered in the Action Plan as the thing parents can use NOW,
-// while the Playbook is being finished (per Mark: a precursor to the Playbook, not a replacement).
+// THE BULLYPROOF QUICK HELP GUIDES — the one paid offer in the Action Plan: hands-on help parents
+// can use now. (Per Mark, Oct 2026: no Playbook mentions anywhere in the plan for now, and guide
+// numbers are never shown to parents.)
 // Never shown to safety-flagged parents: their plan stays focused on getting help, with no sales.
 // Titles are the guides the assessment can match (see quickHelpGuide()); the guides themselves are
 // in English for now.
@@ -701,16 +703,16 @@ function quickHelpOffer() {
     url,
     kicker: L("Available now", "Disponible ahora"),
     title: "The Bullyproof Quick Help Guides",
-    lead: L("Ready to use today, while the Bullyproof Parent Playbook is being completed. In the big moments, what we feel like saying isn't always what helps. These 25 short guides show you what to say, what to avoid, and why it works better, so you can skip the words parents often wish they could take back.",
-            "Listas para usar hoy, mientras se termina el Bullyproof Parent Playbook. En los momentos importantes, lo que sentimos ganas de decir no siempre es lo que ayuda. Estas 25 guías cortas le muestran qué decir, qué evitar y por qué funciona mejor, para que pueda evitar las palabras que muchos padres después desearían no haber dicho. Por ahora, las guías están en inglés."),
+    lead: L("In the big moments, what we feel like saying isn't always what helps. These 25 short guides show you what to say, what to avoid, and why it works better, so you can skip the words parents often wish they could take back.",
+            "En los momentos importantes, lo que sentimos ganas de decir no siempre es lo que ayuda. Estas 25 guías cortas le muestran qué decir, qué evitar y por qué funciona mejor, para que pueda evitar las palabras que muchos padres después desearían no haber dicho. Por ahora, las guías están en inglés."),
     issueLabel: L("Your primary issue:", "Su tema principal:"),
     issue: QUICK_HELP_ISSUES[g] ? L(QUICK_HELP_ISSUES[g][0], QUICK_HELP_ISSUES[g][1]) : "",
     matchLabel: L("Start with:", "Empiece con:"),
-    guideTitle: title ? `${L("Guide", "Guía")} ${num} \u2014 ${title}` : "",
+    guideTitle: title || "",
     bullets: [
       L("What to say, and just as important, what not to say", "Qué decir y, igual de importante, qué no decir"),
       L("Why it works better than our first instinct in the moment", "Por qué funciona mejor que nuestro primer impulso en el momento"),
-      L("Organized by issue, as an instant digital download", "Organizadas por tema, en una descarga digital inmediata")
+      L("Searchable by what's happening, and ready on your phone in a minute", "Se pueden buscar según lo que está pasando, y están listas en su teléfono en un minuto")
     ],
     closer: L("When your child's emotional well-being is on the line, having a trusted guide for these moments can be priceless.", "Cuando está en juego el bienestar emocional de su hijo o hija, contar con una guía de confianza para estos momentos puede no tener precio."),
     button: L("Get the Guides \u2014 $37", "Obtener las guías \u2014 $37"),
@@ -899,6 +901,7 @@ function buildEmailHtml() {
         <ul style="margin:0;padding-left:20px;color:#7A2E31;font-size:14px;">
           ${variant.resources.map(r => `<li><strong>${resName(r)}</strong> — ${resDetail(r)}</li>`).join("")}
         </ul>
+        ${key === "selfHarmOrSuicide" ? `<p style="margin:12px 0 0;color:#7A2E31;font-size:14px;line-height:1.5;">${GUIDE20_PLAN_LINE()} <a href="${guide20Url()}" style="color:#B23A48;font-weight:700;">${GUIDE20_TITLE()}</a></p>` : ""}
       </div>
     `);
   }
@@ -921,8 +924,7 @@ function buildEmailHtml() {
       <table role="presentation" style="width:100%;margin:0 0 16px;"><tr><td style="background:#EEF2F7;border-left:4px solid ${gold};border-radius:6px;padding:16px 18px;"><p style="color:${navyDeep};font-size:18px;font-weight:700;line-height:1.5;margin:0;">“${w.quote}”</p></td></tr></table>
       <p style="color:${muted};font-size:13px;font-weight:700;margin:0 0 4px;">${w.reframeLead}</p>
       <p style="color:${text};font-size:15px;font-style:italic;margin:0 0 14px;">“${w.reframe}”</p>
-      <p style="color:${muted};font-size:14px;margin:0 0 10px;"><strong style="color:${navy};">${L(`Why it helps:`, `Por qué ayuda:`)}</strong> ${w.why}</p>
-      <p style="color:${muted};font-size:13.5px;margin:0;">${w.teaser}</p>`);
+      <p style="color:${muted};font-size:14px;margin:0;"><strong style="color:${navy};">${L(`Why it helps:`, `Por qué ayuda:`)}</strong> ${w.why}</p>`);
   }
   if (multiChildNote()) {
     sections.push(`<p style="color:${text};background:#F9FAFC;border:1px solid #E1E4EA;border-radius:8px;padding:12px 14px;font-size:14.5px;margin:14px 0 0;">${multiChildNote()}</p>`);
@@ -1072,12 +1074,6 @@ function buildEmailHtml() {
     ${affiliateDisclosure() ? `<p style="color:#8896B8;font-size:12px;margin:14px 0 0;">${affiliateDisclosure()}</p>` : ""}
     </td></tr></table>
   `);
-  // "What comes next": the Playbook picture sits on the RIGHT, beside the intro
-  // and the list, so parents are looking at it while they read what it does
-  // (per Mark). A "Reserve my copy" box sits right under the picture, and again
-  // after the full details below. Email can't hold a working checkbox, so both
-  // open the reserve page, where the real checkbox is.
-  const reserveBox = (align) => `<a href="${playbookInviteUrl()}" style="display:inline-block;text-decoration:none;color:${navyDeep};font-size:13.5px;font-weight:700;line-height:1.3;white-space:nowrap;text-align:${align};"><span style="display:inline-block;width:14px;height:14px;border:2px solid ${navyDeep};border-radius:3px;background:#ffffff;vertical-align:-3px;margin-right:7px;"></span>${L(`Reserve my copy`, `Reservar mi copia`)}</a>`;
   const qh = quickHelpOffer();
   if (qh) sections.push(`
     <table role="presentation" style="width:100%;background:${navyDeep};border-top:4px solid ${gold};border-radius:12px;margin:28px 0 8px;"><tr><td style="padding:24px 22px 22px;">
@@ -1101,36 +1097,17 @@ function buildEmailHtml() {
     </td></tr></table>
   `);
   sections.push(`
-    ${sectionHeader(L("What comes next", "Lo que sigue"))}
-    <table role="presentation" style="width:100%;border-collapse:collapse;"><tr>
-      <td style="vertical-align:top;padding:0 14px 0 0;">
-        <p style="color:${text};font-size:15px;margin:0 0 12px;">${WHAT_COMES_NEXT_INTRO()}</p>
-        <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0;">
-          ${furtherStepsTeaser().map(t => `<li style="margin-bottom:6px;">${t}</li>`).join("")}
-        </ul>
-      </td>
-      <td style="vertical-align:top;width:140px;text-align:center;">
-        <img src="${playbookBoxImageUrl()}" alt="The Bullyproof Parent Playbook" width="130" style="display:block;width:130px;max-width:130px;border-radius:6px;margin:0 0 10px;">
-        ${state.marketingConsent ? "" : reserveBox("center")}
-      </td>
-    </tr></table>
-  `);
-  sections.push(`
-    <table role="presentation" style="width:100%;background:#F5F6FB;border-radius:10px;margin:18px 0 16px;border:1px solid #E1E4EA;"><tr>
+    ${sectionHeader(FREE_SUPPORT_TITLE())}
+    <p style="color:${text};font-size:15px;margin:0 0 14px;">${FREE_SUPPORT_INTRO()}</p>
+    <table role="presentation" style="width:100%;background:#F5F6FB;border-radius:10px;margin:0 0 16px;border:1px solid #E1E4EA;"><tr>
       <td style="padding:20px;vertical-align:top;">
-        <p style="color:${navyDeep};font-size:17px;font-weight:700;margin:0 0 8px;">The Bullyproof Parent Playbook</p>
-        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;font-weight:600;">${L(`Personalized guidance that grows with your child.`, `Orientación personalizada que crece con su hijo o hija.`)}</p>
-        <p style="color:${muted};font-size:13.5px;margin:0 0 10px;">${PLAYBOOK_BLURB()}</p>
-        <p style="color:${muted};font-size:13px;margin:0 0 10px;">${PLAYBOOK_SOON()}</p>
-        <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">${L(`Join Bullyproof.Support FREE today →`, `Únase GRATIS hoy a Bullyproof.Support →`)}</a>
-        <p style="color:${muted};font-size:12.5px;margin:12px 0 4px;font-weight:700;">${L(`What membership includes, starting today:`, `Lo que incluye la membresía, desde hoy:`)}</p>
-        <ul style="color:${muted};font-size:12.5px;padding-left:18px;margin:0;">
+        <p style="color:${navyDeep};font-size:14px;margin:0 0 8px;font-weight:700;">${L(`What a free membership includes:`, `Lo que incluye la membresía gratuita:`)}</p>
+        <ul style="color:${muted};font-size:13.5px;padding-left:18px;margin:0 0 14px;">
           ${MEMBERSHIP_BENEFITS().map((b, i) => `<li style="margin-bottom:${i === MEMBERSHIP_BENEFITS().length - 1 ? 0 : 4}px;">${b}</li>`).join("")}
         </ul>
+        <a href="${NETWORK_HOME_URL}" style="color:${navy};font-size:14.5px;font-weight:700;">${L(`Join Bullyproof.Support FREE →`, `Únase GRATIS a Bullyproof.Support →`)}</a>
       </td>
     </tr></table>
-    <p style="color:${muted};font-size:13.5px;margin:0 0 14px;">${L(`Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.`, `Su membresía no inicia hoy su prueba gratuita. Cuando el Playbook salga a la venta, recibirá una invitación para probarlo GRATIS durante una semana.`)}</p>
-    ${state.marketingConsent ? "" : `<p style="margin:0;">${reserveBox("left")}</p>`}
   `);
 
   sections.push(`
@@ -1401,7 +1378,6 @@ function wordsAnswer() {
     reframeLead: L("Later, if it feels right, you might add:", "Más adelante, si le parece bien, podría agregar:"),
     reframe,
     why,
-    teaser: L("The Bullyproof Parent Playbook will offer words like these, matched to your child's age, personality, and what happened, so you'll have support whenever you're not sure what to say.", "El Bullyproof Parent Playbook le ofrecerá palabras como estas, adaptadas a la edad y la personalidad de su hijo o hija y a lo que pasó, para que tenga apoyo siempre que no esté seguro de qué decir.")
   };
 }
 
@@ -1818,15 +1794,20 @@ function MEMBERSHIP_BENEFITS() {
   L("A directory of professionals you can search anytime, not just this once", "Un directorio de profesionales que puede consultar cuando quiera, no solo esta vez"),
   L("Real stories from other parents navigating situations like yours", "Historias reales de otros padres que atraviesan situaciones como la suya"),
   L("Music, podcasts, and articles focused specifically on kids and bullying", "Música, podcasts y artículos enfocados en los niños y el bullying"),
-  L("A free trial of the Bullyproof Parent Playbook when it's available", "Una prueba gratuita del Bullyproof Parent Playbook cuando esté disponible"),
   L("Founding Member status while the community is still growing", "Estatus de Miembro Fundador mientras la comunidad sigue creciendo")
 ];
 }
 
 // Wording that appears in BOTH the email and the PDF lives here, once.
-function WHAT_COMES_NEXT_INTRO() { return L("What you just read is real and complete on its own. But situations change — and when they do, that's exactly what the Bullyproof Parent Playbook is built for: not a longer list, but ongoing, evolving help. Here's the kind of support parents find most helpful on a consistent basis:", "Lo que acaba de leer es real y está completo por sí solo. Pero las situaciones cambian, y cuando cambian, para eso mismo fue creado el Bullyproof Parent Playbook: no una lista más larga, sino ayuda continua que evoluciona. Este es el tipo de apoyo que los padres encuentran más útil de manera constante:"); }
+function FREE_SUPPORT_TITLE() { return L("Free support, whenever you need it", "Apoyo gratuito, cuando lo necesite"); }
+function FREE_SUPPORT_INTRO() { return L("What you just read is complete on its own. Situations change, though, and when they do, you don't have to figure it out alone. A free Bullyproof.Support membership keeps help close.", "Lo que acaba de leer está completo por sí solo. Pero las situaciones cambian, y cuando cambian, no tiene que resolverlo solo. Una membresía gratuita de Bullyproof.Support mantiene la ayuda cerca."); }
+// FREE CRISIS GUIDE (Guide 20) — always free, never behind the paywall. Shown on the start screen
+// and, for parents whose answers mention self-harm or suicide, inside the red "reach out first" box
+// of the plan (email, plan page and PDF). The guide itself is in English for now.
+function guide20Url() { return `${window.location.origin}/guides/my-child-doesnt-want-to-be-here-anymore/`; }
+function GUIDE20_TITLE() { return "My Child Doesn't Want to Be Here Anymore"; }
+function GUIDE20_PLAN_LINE() { return L("There's also a free guide written for this moment, with what to say and what to do next:", "También hay una guía gratuita escrita para este momento, con qué decir y qué hacer después (por ahora, en inglés):"); }
 function PLAYBOOK_BLURB() { return L("Being built to give you practical, personalized guidance based on your child's age, personality, and what's happening right now — with words to use, conversations to have, and next steps to take as new challenges come up.", "Lo estamos creando para darle orientación práctica y personalizada según la edad y la personalidad de su hijo o hija y lo que está pasando ahora, con palabras para usar, conversaciones para tener y próximos pasos a seguir cuando surjan nuevos retos."); }
-function PLAYBOOK_SOON() { return L("Coming soon — and Bullyproof.Support members will be first in line.", "Próximamente, y los miembros de Bullyproof.Support serán los primeros en la fila."); }
 function playbookBoxImageUrl() {
   return `${window.location.origin}/assets/playbook-box.jpg`;
 }
@@ -1849,57 +1830,6 @@ function whyThisMattersNote() {
   return L("Confidence and social skills can be built at any age — and they matter. A 2022 study that followed nearly 500 teens for several years found that support from friends helped cushion the emotional hurt of being bullied. Working on that together is one of the most powerful things a parent can do.", "La confianza y las habilidades sociales se pueden desarrollar a cualquier edad, y importan. Un estudio de 2022 que dio seguimiento a casi 500 adolescentes durante varios años encontró que el apoyo de los amigos ayudó a amortiguar el dolor emocional de sufrir bullying. Trabajar en eso juntos es una de las cosas más poderosas que puede hacer un padre o una madre.");
 }
 
-function furtherStepsTeaser() {
-  if (isPreventive()) {
-    return [
-      L("Knowing what to say so your child will communicate with you — instead of just giving one-word answers.", "Saber qué decir para que su hijo o hija se comunique con usted, en lugar de dar solo respuestas de una palabra."),
-      L("How to talk about kindness and boundaries — before there's a problem.", "Cómo hablar de la bondad y los límites, antes de que haya un problema."),
-      L("A simple weekly habit that builds your child's confidence over time", "Un hábito semanal sencillo que fortalece la confianza de su hijo o hija con el tiempo"),
-      L("How to know when kids can work it out — and when they need your help.", "Cómo saber cuándo los niños pueden resolverlo solos y cuándo necesitan su ayuda."),
-      L("How to keep the good things you learned growing up — and give your kids better tools for the rest.", "Cómo conservar lo bueno que aprendió al crecer y darles a sus hijos mejores herramientas para todo lo demás.")
-    ];
-  }
-
-  // Two anchors present in every active situation — these carry the
-  // emotional core (not feeling alone, not repeating what didn't work
-  // growing up), not just tactical steps.
-  const items = [
-    L("Real-time backup for the moments this feels the most overwhelming — so you're never figuring out what to say by yourself", "Respaldo en tiempo real para los momentos en que todo se siente más abrumador, para que nunca tenga que averiguar qué decir por su cuenta"),
-    L("How to keep the good things you learned growing up — and give your kids better tools for the rest.", "Cómo conservar lo bueno que aprendió al crecer y darles a sus hijos mejores herramientas para todo lo demás.")
-  ];
-
-  // A genuinely earned insight (only appears when the parent's own words
-  // indicated it) — given priority over the generic fallbacks below.
-  if (selfReflectionNote()) {
-    items.push(L("A gentle way to look at any patterns worth adjusting — without blame", "Una forma amable de revisar los patrones que valga la pena ajustar, sin culpas"));
-  }
-
-  // Situational pool — each only shown when it actually applies.
-  const school = schoolStatus();
-  if (school === "dismissed" || school === "no-change" || school === "not-reached-out") {
-    items.push(L("The exact words to say if the school pushes back or downplays it", "Las palabras exactas para decir si la escuela se resiste o le quita importancia"));
-  }
-  const comm = communicationStatus();
-  if (comm === "clear" || comm === "hints") {
-    items.push(L("What to say to help, instead of what you've already tried that hasn't worked", "Qué decir para ayudar, en lugar de lo que ya intentó y no ha funcionado"));
-  }
-  if (["11–14", "15–18"].includes(state.answers.q1)) {
-    items.push(L("Age appropriate conversation guidance so your words are actually heard and received", "Guía de conversación adecuada a la edad para que sus palabras sean realmente escuchadas y recibidas"));
-  }
-  if (topicBranch() === "online") {
-    items.push(L("How to handle screens and monitoring without it turning into a fight", "Cómo manejar las pantallas y la supervisión sin que se convierta en una pelea"));
-  }
-  if (["physical", "namecalling", "exclusion", "power"].includes(topicBranch())) {
-    items.push(L("What to say — and what not to say — if another family is involved", "Qué decir, y qué no decir, si hay otra familia involucrada"));
-  }
-
-  // Generic fallbacks — always relevant, but the most replaceable if
-  // space runs out, since they're not situation-specific.
-  items.push(L("A week-by-week plan to help your child rebuild confidence", "Un plan semana a semana para ayudar a su hijo o hija a recuperar la confianza"));
-  items.push(L("A simple way to track whether things are actually getting better", "Una forma sencilla de saber si las cosas realmente están mejorando"));
-
-  return items.slice(0, 5);
-}
 
 // A step that opens with a short headline sentence (7 words or fewer) shows
 // that headline in bold on its own line, so a scanning parent sees the three
@@ -2008,13 +1938,23 @@ async function generatePDF() {
     const variant = SAFETY_VARIANTS[key];
     doc.setFontSize(11);
     const resLines = variant.resources.map(r => doc.splitTextToSize(resName(r) + " — " + resDetail(r), 176));
-    const resBoxH = 10 + resLines.reduce((n, ls) => n + ls.length * 5 + 1, 0);
+    const g20 = key === "selfHarmOrSuicide";
+    const g20Lines = g20 ? doc.splitTextToSize(GUIDE20_PLAN_LINE(), 176) : [];
+    const resBoxH = 10 + resLines.reduce((n, ls) => n + ls.length * 5 + 1, 0) + (g20 ? 4 + g20Lines.length * 5 + 6 : 0);
     ensureRoom(resBoxH);
     doc.setFillColor(253, 237, 237);
     doc.rect(10, y - 6, 190, resBoxH, "F");
     doc.setFontSize(13); doc.setTextColor(197, 48, 48); doc.text(L("Please reach out to one of these resources first:", "Por favor, comuníquese primero con uno de estos recursos:"), 15, y); y += 7;
     doc.setFontSize(11); doc.setTextColor(40, 40, 40);
     resLines.forEach(ls => { doc.text(ls, 15, y); y += ls.length * 5 + 1; });
+    if (g20) {
+      y += 4;
+      doc.setFontSize(11); doc.setTextColor(122, 46, 49);
+      doc.text(g20Lines, 15, y); y += g20Lines.length * 5;
+      doc.setFont(undefined, "bold"); doc.setTextColor(178, 58, 72);
+      doc.textWithLink(GUIDE20_TITLE(), 15, y + 1, { url: guide20Url() });
+      doc.setFont(undefined, "normal"); y += 6;
+    }
     y += 6;
   }
 
@@ -2045,7 +1985,6 @@ async function generatePDF() {
     body(w.reframeLead, { color: [90, 100, 120] });
     body("“" + w.reframe + "”", { italic: true });
     body(L("Why it helps: ", "Por qué ayuda: ") + w.why, { color: [90, 100, 120] });
-    body(w.teaser, { color: [90, 100, 120] });
   }
   if (multiChildNote()) body(multiChildNote(), { color: [74, 109, 147] });
   if (selfReflectionNote()) body(selfReflectionNote(), { color: [74, 109, 147] });
@@ -2337,23 +2276,7 @@ async function generatePDF() {
 
   if (affiliateDisclosure()) body(affiliateDisclosure(), { color: [140, 140, 140] });
 
-  // One consolidated close, instead of two separate sections: what's next,
-  // a simple honest card for the Playbook (not a fake screenshot — it
-  // doesn't exist yet, so there's nothing real to screenshot), and a single
-  // real, honest call to action. Joining Bullyproof.Support today is real;
-  // "starting a tracked trial" isn't a thing that exists yet, so it's not
-  // claimed here.
-  // Same layout as the email: Playbook picture on the RIGHT beside the intro
-  // and list, "Reserve my copy" under it, and again after the details.
-  function reserveBox(x, yy) {
-    doc.setDrawColor(16, 27, 51); doc.setLineWidth(0.5); doc.setFillColor(255, 255, 255);
-    doc.roundedRect(x, yy - 3.6, 4.2, 4.2, 0.7, 0.7, "FD");
-    doc.setFont(undefined, "bold"); doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
-    doc.text(L("Reserve my copy", "Reservar mi copia"), x + 6.2, yy);
-    doc.link(x - 1, yy - 5, 40, 7, { url: playbookInviteUrl() });
-    doc.setFont(undefined, "normal");
-  }
-  // The Quick Help Guides: their own product, level one — hands-on and available today. The Playbook follows as the next level.
+  // The Quick Help Guides: the one paid offer in the plan — hands-on and available today.
   const qhOffer = quickHelpOffer();
   if (qhOffer) {
     const X = 15, W = 180, PAD = 8, inner = W - PAD * 2;
@@ -2418,56 +2341,23 @@ async function generatePDF() {
     doc.text(noteL, X + PAD, cy, { lineHeightFactor: 1.3 });
     y = top + cardH + 10;
   }
-  const playbookImg = await fetchImageAsDataUrl(playbookBoxImageUrl());
-  const colW = playbookImg ? 124 : 180;
-  doc.setFont(undefined, "normal"); doc.setFontSize(11);
-  const introLines = doc.splitTextToSize(WHAT_COMES_NEXT_INTRO(), colW);
-  const bulletBlocks = furtherStepsTeaser().map(t => doc.splitTextToSize(`• ${t}`, colW));
-  const LH = 5.2; // line spacing for this block
-  const textH = introLines.length * LH + 6 + bulletBlocks.reduce((h, l) => h + l.length * LH + 3.5, 0);
-  ensureRoom(Math.max(textH, 72) + 22); // the heading never sits alone: it moves with its intro, list and picture
-  heading(L("What comes next:", "Lo que sigue:"));
-  ensureRoom(Math.max(textH, 72) + 4); // keep the list and the picture together on one page
-  const topY = y;
-  if (playbookImg) {
-    try { doc.addImage(playbookImg, "JPEG", 150, topY - 4, 44, 53); } catch (err) { console.warn("Could not embed Playbook box image:", err); }
-    if (!state.marketingConsent) reserveBox(152, topY + 58);
-  }
-  doc.setFont(undefined, "normal"); doc.setFontSize(11); doc.setTextColor(40, 40, 40);
-  doc.text(introLines, 15, y, { lineHeightFactor: 1.35 }); y += introLines.length * LH + 6;
-  bulletBlocks.forEach(l => { doc.text(l, 15, y, { lineHeightFactor: 1.35 }); y += l.length * LH + 3.5; });
-  y = Math.max(y, topY + 68) + 4;
-
-  ensureRoom(78); // the Playbook details card and the start of the benefits list stay together
-  doc.setFillColor(245, 246, 251); doc.setDrawColor(225, 228, 234); doc.setLineWidth(0.3);
-  doc.setFontSize(9.5);
-  const blurbLines = doc.splitTextToSize(PLAYBOOK_BLURB(), 168);
-  const cardH = 42 + blurbLines.length * 4.6;
-  doc.roundedRect(15, y, 180, cardH, 3, 3, "FD");
-  doc.setFontSize(14); doc.setFont(undefined, "bold"); doc.setTextColor(16, 27, 51);
-  doc.text("The Bullyproof Parent Playbook", 21, y + 10);
-  doc.setFontSize(10); doc.setTextColor(60, 70, 100);
-  doc.text(L("Personalized guidance that grows with your child.", "Orientación personalizada que crece con su hijo o hija."), 21, y + 17);
-  doc.setFont(undefined, "normal"); doc.setFontSize(9.5); doc.setTextColor(90, 100, 120);
-  doc.text(blurbLines, 21, y + 25);
-  const afterBlurb = y + 25 + blurbLines.length * 4.6;
-  doc.setFontSize(9); doc.text(PLAYBOOK_SOON(), 21, afterBlurb + 2);
-  doc.setFontSize(10.5); doc.setTextColor(66, 153, 225);
-  doc.textWithLink(L("Join Bullyproof.Support FREE today", "Únase GRATIS hoy a Bullyproof.Support"), 21, afterBlurb + 10, { url: NETWORK_HOME_URL });
-  y += cardH + 8;
+  heading(FREE_SUPPORT_TITLE());
+  body(FREE_SUPPORT_INTRO());
+  ensureRoom(14 + MEMBERSHIP_BENEFITS().length * 6);
   doc.setFontSize(10.5); doc.setFont(undefined, "bold"); doc.setTextColor(27, 42, 74);
-  doc.text(L("What membership includes, starting today:", "Lo que incluye la membresía, desde hoy:"), 15, y); y += 7;
+  doc.text(L("What a free membership includes:", "Lo que incluye la membresía gratuita:"), 15, y); y += 7;
   doc.setFont(undefined, "normal"); doc.setFontSize(10); doc.setTextColor(60, 70, 100);
   MEMBERSHIP_BENEFITS().forEach(b => {
     const ls = doc.splitTextToSize("• " + b, 172);
     ensureRoom(ls.length * 5 + 3);
     doc.text(ls, 17, y); y += ls.length * 5 + 2;
   });
-  y += 4;
-  ensureRoom(34); // the trial note and the second reserve box stay together
-  body(L("Your membership does not start your free trial today. When the Playbook launches, you'll receive an invitation to try it FREE for one week.", "Su membresía no inicia hoy su prueba gratuita. Cuando el Playbook salga a la venta, recibirá una invitación para probarlo GRATIS durante una semana."), { color: [140, 140, 140] });
-  if (!state.marketingConsent) { reserveBox(16, y + 2); y += 14; }
-
+  y += 3;
+  ensureRoom(10);
+  doc.setFont(undefined, "bold"); doc.setFontSize(10.5); doc.setTextColor(66, 153, 225);
+  doc.textWithLink(L("Join Bullyproof.Support FREE", "Únase GRATIS a Bullyproof.Support"), 15, y, { url: NETWORK_HOME_URL });
+  doc.setFont(undefined, "normal");
+  y += 12;
 
   heading(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"));
   body(L("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:", "Esa también es siempre una opción. Busque en la red de Bullyproof Support para encontrar a un profesional cerca de usted: solo escriba su ubicación; buscar no cuesta nada:"));

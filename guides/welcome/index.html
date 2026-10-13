@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your guides are ready · The Bullyproof Quick Help Guides</title>
+<meta name="robots" content="noindex"><meta name="description" content="">
+<meta name="theme-color" content="#1B2A4A">
+<link rel="icon" href="/guides/assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet"><link rel="stylesheet" href="/guides/assets/library.css?v=72978637"></head>
+<body class="">
+<header class="top"><div class="wrap top-in">
+<a class="brand" href="/guides/"><span class="sun" aria-hidden="true"></span><span><b>Bullyproof</b> Quick Help Guides</span></a>
+<a class="top-search" href="/guides/#search" aria-label="Search the guides"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Search</span></a>
+</div></header>
+<main class="wrap"><div class="panel">
+<p class="kicker">Thank you</p>
+<h1>Your guides are ready</h1>
+<p>All 25 guides are open to you on this device right now. Nothing to download, and no password.</p>
+<p><a class="btn gold" href="/guides/">Open the guides</a></p>
+<h2 style="font:700 20px Inter,sans-serif;color:var(--navy);margin:28px 0 6px">Keep your private link</h2>
+<p>This link opens your guides on any phone or computer. Please save it now, because it's the key to your library.</p>
+<div class="copybox"><input id="lnk" readonly aria-label="Your private link"><button type="button" id="cp">Copy</button></div>
+<p><a id="mail" class="btn navy" href="#">Email this link to myself</a></p>
+<p class="small">Tip: on your phone, open your guides and add the page to your home screen. It will open like an app.</p>
+</div></main>
+<script>
+(function(){var k=(location.search.match(/k=([a-f0-9]+)/)||[])[1];var i=document.getElementById('lnk');
+if(!k){i.value='Open your guides from the button above';return;}
+var u=location.origin+'/guides/access/'+k;i.value=u;
+document.getElementById('cp').onclick=function(){i.select();try{navigator.clipboard.writeText(u)}catch(e){document.execCommand('copy')}this.textContent='Copied';};
+document.getElementById('mail').href='mailto:?subject='+encodeURIComponent('My Bullyproof Quick Help Guides')+'&body='+encodeURIComponent('My private link to all 25 Bullyproof Quick Help Guides:\n\n'+u+'\n\nOpen it on any phone or computer.');
+try{history.replaceState(null,'','/guides/welcome/')}catch(e){}})();
+</script>
+<footer class="foot"><div class="wrap">
+<p class="foot-crisis"><b>If a child may be in danger right now:</b> call <a href="tel:911">911</a>. For thoughts of suicide, call or text <a href="tel:988">988</a>, or text HOME to <a href="sms:741741&body=HOME">741741</a>.</p>
+<p>These guides offer general guidance for parents. They are not medical, psychological, or legal advice, and they don't replace a counselor, doctor, or other professional who knows your child.</p>
+<p>© 2026 Kidsavers International, Inc. · <a href="https://www.bullyproof.support">Bullyproof.Support</a> · <a href="mailto:mark@bullyproof.guide">mark@bullyproof.guide</a></p>
+</div></footer>
+</body></html>

@@ -442,7 +442,7 @@ home = f"""<main>
 <section class="hero"><div class="wrap">
 <p class="kicker light">Hands-on help, available today</p>
 <h1>{PRODUCT}</h1>
-<p class="lede">The exact words for the hardest moments: what to say, what not to say, and why it matters. Twenty-five situations, each one short enough to read in the driveway.</p>
+<p class="lede">The exact words for the hardest moments: what to say, what not to say, and why it matters. Twenty-eight situations, each one short enough to read in the driveway.</p>
 <div id="search" class="search-box">
 <label for="q" class="sr">Describe what's happening</label>
 <input id="q" type="search" autocomplete="off" placeholder="Describe what's happening" aria-describedby="q-hint">
@@ -461,7 +461,7 @@ home = f"""<main>
 
 <section class="wrap buy" id="buy"><div class="buy-card">
 <div class="buy-copy"><p class="kicker">One digital library · instant access</p>
-<h2>All 25 guides, <span class="qhg-price">{PRICE}</span></h2>
+<h2>All 28 guides, <span class="qhg-price">{PRICE}</span></h2>
 <ul class="ticks">
 <li>Every guide in two layers: the 45-second Quick Help, and a deeper layer when you want to understand it</li>
 <li>The exact words to say, the common mistakes to skip, and what to do tonight and this week</li>
@@ -471,7 +471,7 @@ home = f"""<main>
 </ul>
 <p class="small">The crisis guide, <a href="/guides/my-child-doesnt-want-to-be-here-anymore/">My Child Doesn't Want to Be Here Anymore</a>, is free for every parent, always. Your <span class="qhg-price">{PRICE}</span> pays for the other twenty-four.</p>
 </div>
-<div class="buy-act"><a id="buy-btn" class="btn gold" href="#">Get all 25 guides · <span class="qhg-price">{PRICE}</span></a>
+<div class="buy-act"><a id="buy-btn" class="btn gold" href="#">Get all 28 guides · <span class="qhg-price">{PRICE}</span></a>
 <p class="small center" id="buy-note">Secure checkout by Stripe. Kidsavers International, Inc.</p>
 <p class="small center">Already bought them? <a href="/guides/restore/">Open your guides again</a></p></div>
 </div></section>
@@ -479,13 +479,13 @@ home = f"""<main>
 <script src="/guides/assets/config.js?v={VER}"></script>
 </main>"""
 open(os.path.join(PUB, "index.html"), "w").write(
-    shell(PRODUCT, home, "Twenty-five short guides with the exact words to say when your child is being bullied. Search by describing what's happening.", body_class="home").replace("__V__", VER))
+    shell(PRODUCT, home, "Twenty-eight short guides with the exact words to say when your child is being bullied. Search by describing what's happening.", body_class="home").replace("__V__", VER))
 
 # welcome page (after checkout) — shows the buyer's private link and ways to keep it
 welcome = """<main class="wrap"><div class="panel">
 <p class="kicker">Thank you</p>
 <h1>Your guides are ready</h1>
-<p>All 25 guides are open to you on this device right now. Nothing to download, and no password.</p>
+<p>All 28 guides are open to you on this device right now. Nothing to download, and no password.</p>
 <p><a class="btn gold" href="/guides/">Open the guides</a></p>
 <h2 style="font:700 20px Inter,sans-serif;color:var(--navy);margin:28px 0 6px">Keep your private link</h2>
 <p>This link opens your guides on any phone or computer. Please save it now, because it's the key to your library.</p>
@@ -498,7 +498,7 @@ welcome = """<main class="wrap"><div class="panel">
 if(!k){i.value='Open your guides from the button above';return;}
 var u=location.origin+'/guides/access/'+k;i.value=u;
 document.getElementById('cp').onclick=function(){i.select();try{navigator.clipboard.writeText(u)}catch(e){document.execCommand('copy')}this.textContent='Copied';};
-document.getElementById('mail').href='mailto:?subject='+encodeURIComponent('My Bullyproof Quick Help Guides')+'&body='+encodeURIComponent('My private link to all 25 Bullyproof Quick Help Guides:\\n\\n'+u+'\\n\\nOpen it on any phone or computer.');
+document.getElementById('mail').href='mailto:?subject='+encodeURIComponent('My Bullyproof Quick Help Guides')+'&body='+encodeURIComponent('My private link to all 28 Bullyproof Quick Help Guides:\\n\\n'+u+'\\n\\nOpen it on any phone or computer.');
 try{history.replaceState(null,'','/guides/welcome/')}catch(e){}})();
 </script>"""
 os.makedirs(os.path.join(PUB, "welcome"), exist_ok=True)

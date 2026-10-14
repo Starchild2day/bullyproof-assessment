@@ -33,25 +33,25 @@ function QL(en, es) { return QHG_ES ? es : en; }
   var C_ADMIT = ["my-child-finally-admits-theyre-being-bullied", "what-your-child-can-say", "the-school-on-my-side"];
   var CONCEPTS = [
     // belongings taken, hidden, broken
-    { en: /\b(tak\w*|took|stol\w*|steal\w*|swip\w*|grab\w*|snatch\w*|hid|hide\w*|hiding|break\w*|broke\w*|ruin\w*|wreck\w*|destroy\w*|throw\w*|threw|trash\w*|dump\w*|rip\w*|tore|torn|mess\w* with|keeps? taking)\b.*\b(things?|stuff|belongings?|bags?|backpacks?|lunch\w*|money|phones?|shoes?|books?|pencils?|homework|toys?|food|snacks?|hats?|jackets?|coats?|glasses|binders?|clothes|ipads?|tablets?|airpods|headphones|bottles?|bikes?|lockers?|supplies|chromebook|laptop|sweater|hoodie)\b|\blunch money\b|\bstealing\b/,
+    { en: /\b(tak\w*|took|stol\w*|steal\w*|swip\w*|grab\w*|snatch\w*|hid|hide\w*|hiding|break\w*|broke\w*|ruin\w*|wreck\w*|destroy\w*|throw\w*|threw|trash\w*|dump\w*|rip\w*|tore|torn|mess\w* with|keeps? taking)\b.*\b(things?|stuff|belongings?|bags?|backpacks?|lunch\w*|money|phones?|shoes?|books?|pencils?|homework|toys?|food|snacks?|hats?|jackets?|coats?|glasses|binders?|clothes|ipads?|tablets?|airpods|headphones|bottles?|bikes?|lockers?|supplies|chromebook|laptop|sweater|hoodie)\b|\blunch money\b|\bstealing\b|\b(stuff|things|belongings)\b.*\b(missing|disappear\w*|vanish\w*)\b/,
       es: /\b(quit\w*|rob\w*|escond\w*|romp\w*|roto|rota|tira\w*|destroz\w*|agarr\w*|arrebat\w*|desaparec\w*)\b.*\b(cosas?|mochilas?|lonche|almuerzo|comida|dinero|telefono|celular|zapatos?|tenis|libros?|lapiz|lapices|tarea|juguetes?|gorra|chamarra|chaqueta|sueter|lentes|ropa|botella|bici\w*|casillero|utiles|tableta|audifonos)\b|\ble roban\b|\blo roban\b/,
-      g: C_ADMIT, w: [14, 11, 9], notIf: [/\btake (away )?(his|her|their|the) (phone|tablet|ipad)\b|\b(phone|tablet) away\b|\btake away\b/, /\bquitar(le)? el (telefono|celular)\b/] },
+      g: ["my-childs-things-were-taken-or-broken", "my-child-finally-admits-theyre-being-bullied", "what-your-child-can-say"], w: [16, 9, 7], notIf: [/\btake (away )?(his|her|their|the) (phone|tablet|ipad)\b|\b(phone|tablet) away\b|\btake away\b/, /\bquitar(le)? el (telefono|celular)\b/] },
     // hit, pushed, tripped (but not "my child hit someone")
     { en: /\b(hit|hits|hitting|punch\w*|kick\w*|push\w*|shov\w*|trip\w*|slap\w*|chok\w*|beat\w* (him|her|them|my \w+) up|beat up|beaten|beating|jump(ed)? (him|her|my)|attack\w*|spit\w*|pinch\w*|hurt(s|ing)? (him|her|them|my)\b(?! ?sel)|physical\w*|rough\w* up|pick\w* fights? with (him|her))/,
-      es: /\b(le pegan|le pegaron|le pega (un|una|otro|otra|el|la)|lo golpe\w*|la golpe\w*|golpean|empuj\w*|pate\w*|zancadill\w*|cachete\w*|bofet\w*|ahorc\w*|lo lastim\w*|la lastim\w*|lo agred\w*|la agred\w*|agresion|fisic\w*|escupe|escupen|pellizc\w*|lo tumb\w*|la tumb\w*)/,
-      g: ["my-child-finally-admits-theyre-being-bullied", "what-your-child-can-say", "told-the-teacher-and-nothing-changed"], w: [14, 11, 8], notIf: [FIGHT_EN, FIGHT_ES], minus: { "my-child-started-fighting-back": 12 } },
+      es: /\b(le pegan|le pegaron|le pega (un|una|otro|otra|el|la)|lo golpe\w*|la golpe\w*|golpean|empuj\w*|pate\w*|zancadill\w*|cachete\w*|bofet\w*|ahorc\w*|lo lastim\w*|la lastim\w*|lo agred\w*|la agred\w*|agresion|fisic\w*|escupe|escupen|pellizc\w*|lo tumb\w*|la tumb\w*|lastim\w* a (mi|su)|golpiza|paliza|madrazos?)/,
+      g: ["my-child-is-being-hurt-physically", "my-child-finally-admits-theyre-being-bullied", "told-the-teacher-and-nothing-changed"], w: [16, 9, 7], notIf: [FIGHT_EN, FIGHT_ES], minus: { "my-child-started-fighting-back": 12 } },
     { en: FIGHT_EN, es: FIGHT_ES, g: ["my-child-started-fighting-back"], w: [16] },
     // bruises, torn clothes, coming home hurt: signs first
     { en: /\b(bruis\w*|scratch\w*|torn clothes|ripped clothes|black eye|came home hurt|injur\w*)/, es: /\b(moret\w*|rasgun\w*|ropa rota|ojo morado|llego lastimad\w*|herid\w*)/,
-      g: ["i-think-my-child-is-being-bullied", "my-child-finally-admits-theyre-being-bullied"], w: [14, 11] },
+      g: ["my-child-is-being-hurt-physically", "i-think-my-child-is-being-bullied", "my-child-finally-admits-theyre-being-bullied"], w: [15, 12, 8] },
     // threats
     { en: /\b(threat\w*|gonna (hurt|kill|beat|get|jump)|going to (hurt|kill|beat|get|jump|shoot|stab)|said (he|she|they)( would| will|d)? (hurt|kill|beat|shoot|stab|bring)|weapon|gun|guns|knife)\b/,
       es: /\b(amenaz\w*|lo van a|la van a|le van a|pistola|arma|cuchillo|navaja|disparar)\b/,
-      g: ["what-your-child-can-say", "the-school-on-my-side", "my-child-finally-admits-theyre-being-bullied"], w: [14, 11, 9] },
+      g: ["my-child-is-being-hurt-physically", "the-school-on-my-side", "what-your-child-can-say"], w: [14, 11, 9] },
     // rumors and lies
     { en: /\b(rumou?rs?|gossip\w*|lies about|lying about|telling lies|spread\w* (stuff|things|lies|stories)|talk\w* behind|saying things about|said things about|turned (everyone|people|the class) against)/,
       es: /\b(rumor\w*|chism\w*|mentiras sobre|inventan|hablan mal|hablan a sus espaldas|pusieron a todos en contra)/,
-      g: ["my-child-is-being-left-out", "my-child-finally-admits-theyre-being-bullied", "what-your-child-can-say"], w: [13, 10, 8] },
+      g: ["theyre-saying-things-about-my-child", "my-child-is-being-left-out", "my-child-finally-admits-theyre-being-bullied"], w: [16, 9, 7] },
     // looks
     { en: /\b(weight|fat|chubby|skinny|ugly|glasses|braces|hair|acne|pimples|zits|skin|nose|teeth|short|tall|clothes|body|looks|appearance|height|freckles|smell\w*)\b/,
       es: /\b(peso|gord\w*|flac\w*|fe[oa]s?|lentes|anteojos|frenos|brackets|pelo|cabello|granos|acne|piel|nariz|dientes|bajit\w*|chaparr\w*|alt[oa]s?|ropa|cuerpo|apariencia|huele|olor|pecas)\b/,
@@ -63,7 +63,7 @@ function QL(en, es) { return QHG_ES ? es : en; }
     // names, teasing, laughing at
     { en: /\b(call\w* (him|her|them|my \w+) (names|\w+)|names|name.?call\w*|mak\w* fun|made fun|laugh\w* at|teas\w*|mock\w*|insult\w*|picking on|pick on|picked on|being mean|mean to|cruel to|embarrass\w*|humiliat\w*|swear\w* at|cuss\w* at)/,
       es: /\b(apod\w*|insult\w*|groserias|le dicen|se burl\w*|burlas?|se rien|rien de|lo molestan|la molestan|molest\w*|humill\w*|avergonz\w*|lo tratan mal|la tratan mal)/,
-      g: ["what-your-child-can-say", "my-child-finally-admits-theyre-being-bullied", "why-they-do-it"], w: [8, 7, 6] },
+      g: ["theyre-saying-things-about-my-child", "what-your-child-can-say", "my-child-finally-admits-theyre-being-bullied"], w: [10, 8, 6] },
     // an adult is the problem
     { en: /\b(teacher|coach|principal|aide|staff|bus driver)\b.*\b(mean|yell\w*|bully\w*|bullies|picks? on|picking on|embarrass\w*|humiliat\w*|unfair|singl\w* (him|her) out|targets?)\b/,
       es: /\b(maestr[oa]|profesor\w*|entrenador\w*|director\w*)\b.*\b(grit\w*|humill\w*|se burla|trata mal|acos\w*|injust\w*|la trae contra|lo trae contra)\b/,
@@ -269,7 +269,7 @@ function QL(en, es) { return QHG_ES ? es : en; }
   var url = (window.QHG_CONFIG && window.QHG_CONFIG.CHECKOUT_URL) || "";
   var owns = /(?:^|;\s*)qhg_has=1/.test(document.cookie);
   if (btn) {
-    if (owns) { btn.textContent = QL("You have all 25 guides", "Ya tiene las 25 guías"); btn.className = "btn navy"; btn.href = "#contents"; note.textContent = QL("Open any guide above.", "Abra cualquier guía de arriba."); }
+    if (owns) { btn.textContent = QL("You have all 28 guides", "Ya tiene las 28 guías"); btn.className = "btn navy"; btn.href = "#contents"; note.textContent = QL("Open any guide above.", "Abra cualquier guía de arriba."); }
     else if (url) { btn.href = url; }
     else { btn.className = "btn disabled"; btn.removeAttribute("href"); btn.textContent = QL("Checkout opening soon", "El pago abre muy pronto"); }
   }

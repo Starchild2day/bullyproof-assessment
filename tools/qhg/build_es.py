@@ -219,7 +219,7 @@ INTRO = """<div class="in-part">
 <h2 class="in-turn">Para eso son estas guías.</h2>
 <ol class="in-each"><li><span class="in-lab">Una situación</span>Cada una trata una sola situación.</li><li><span class="in-lab">Las palabras exactas</span>Cada una le da las palabras exactas: qué decir, qué no decir y por qué importa la diferencia.</li><li><span class="in-lab">Lo bastante rápida</span>Cada una es lo bastante corta para leerla en el tiempo que toma estacionar el carro.</li><li><span class="in-lab">Una capa más profunda</span>Y cada una tiene una parte más larga debajo, para cuando quiera entender lo que de verdad está pasando y no solo qué decir.</li></ol>
 <p class="in-note">Aquí no va a encontrar todas las respuestas. Algunas situaciones necesitan a un maestro, un consejero o un profesional. Cuando sea así, la guía se lo va a decir con claridad.</p>
-<p class="in-close">Pero para las veinticinco situaciones en las que los padres se encuentran más seguido, esas en las que usted está solo y el momento es ahora, aquí está todo el juego.</p>
+<p class="in-close">Pero para las veintiocho situaciones en las que los padres se encuentran más seguido, esas en las que usted está solo y el momento es ahora, aquí está todo el juego.</p>
 <p class="in-final">Lea la que se parezca a esta noche.<br>Regrese por las demás cuando las necesite.</p>
 </div>"""
 
@@ -227,7 +227,7 @@ home = f"""<main>
 <section class="hero"><div class="wrap">
 <p class="kicker light">Ayuda práctica, disponible hoy</p>
 <h1>{PRODUCT}</h1>
-<p class="lede">Las palabras exactas para los momentos más difíciles: qué decir, qué no decir y por qué importa. Veinticinco situaciones, cada una lo bastante corta para leerla en la entrada de la casa.</p>
+<p class="lede">Las palabras exactas para los momentos más difíciles: qué decir, qué no decir y por qué importa. Veintiocho situaciones, cada una lo bastante corta para leerla en la entrada de la casa.</p>
 <div id="search" class="search-box">
 <label for="q" class="sr">Describa lo que está pasando</label>
 <input id="q" type="search" autocomplete="off" placeholder="Describa lo que está pasando" aria-describedby="q-hint">
@@ -246,7 +246,7 @@ home = f"""<main>
 
 <section class="wrap buy" id="buy"><div class="buy-card">
 <div class="buy-copy"><p class="kicker">Una biblioteca digital · acceso inmediato</p>
-<h2>Las 25 guías, <span class="qhg-price">{PRICE}</span></h2>
+<h2>Las 28 guías, <span class="qhg-price">{PRICE}</span></h2>
 <ul class="ticks">
 <li>Cada guía en dos capas: la Ayuda rápida de 45 segundos, y una capa más profunda para cuando quiera entender lo que pasa</li>
 <li>Las palabras exactas para decir, los errores comunes que conviene evitar, y qué hacer esta noche y esta semana</li>
@@ -257,7 +257,7 @@ home = f"""<main>
 </ul>
 <p class="small">La guía de crisis, <a href="/guides/es/my-child-doesnt-want-to-be-here-anymore/">Mi hijo o hija ya no quiere estar aquí</a>, es gratis para todos los padres, siempre. Sus <span class="qhg-price">{PRICE}</span> pagan las otras veinticuatro.</p>
 </div>
-<div class="buy-act"><a id="buy-btn" class="btn gold" href="#">Obtener las 25 guías · <span class="qhg-price">{PRICE}</span></a>
+<div class="buy-act"><a id="buy-btn" class="btn gold" href="#">Obtener las 28 guías · <span class="qhg-price">{PRICE}</span></a>
 <p class="small center" id="buy-note">Pago seguro con Stripe. Kidsavers International, Inc.</p>
 <p class="small center">¿Ya las compró? <a href="/guides/es/restore/">Abra sus guías de nuevo</a></p></div>
 </div></section>
@@ -265,12 +265,12 @@ home = f"""<main>
 <script src="/guides/assets/config.js?v={VER}"></script>
 </main>"""
 open(os.path.join(ES, "index.html"), "w", encoding="utf-8").write(
-    shell(PRODUCT, home, "Veinticinco guías cortas con las palabras exactas para cuando a su hijo lo están acosando. Busque describiendo lo que pasa.", body_class="home").replace("__V__", VER))
+    shell(PRODUCT, home, "Veintiocho guías cortas con las palabras exactas para cuando a su hijo lo están acosando. Busque describiendo lo que pasa.", body_class="home").replace("__V__", VER))
 
 welcome = """<main class="wrap"><div class="panel">
 <p class="kicker">Gracias</p>
 <h1>Sus guías están listas</h1>
-<p>Las 25 guías ya están abiertas para usted en este dispositivo, en español y en inglés. No hay nada que descargar ni contraseña que recordar.</p>
+<p>Las 28 guías ya están abiertas para usted en este dispositivo, en español y en inglés. No hay nada que descargar ni contraseña que recordar.</p>
 <p><a class="btn gold" href="/guides/es/">Abrir las guías</a></p>
 <h2 style="font:700 20px Inter,sans-serif;color:var(--navy);margin:28px 0 6px">Guarde su enlace privado</h2>
 <p>Este enlace abre sus guías en cualquier teléfono o computadora. Por favor guárdelo ahora, porque es la llave de su biblioteca.</p>
@@ -283,7 +283,7 @@ welcome = """<main class="wrap"><div class="panel">
 if(!k){i.value='Abra sus guías con el botón de arriba';return;}
 var u=location.origin+'/guides/access/'+k;i.value=u;
 document.getElementById('cp').onclick=function(){i.select();try{navigator.clipboard.writeText(u)}catch(e){document.execCommand('copy')}this.textContent='Copiado';};
-document.getElementById('mail').href='mailto:?subject='+encodeURIComponent('Mis Guías de Ayuda Rápida de Bullyproof')+'&body='+encodeURIComponent('Mi enlace privado a las 25 Guías de Ayuda Rápida de Bullyproof:\\n\\n'+u+'\\n\\nÁbralo en cualquier teléfono o computadora.');
+document.getElementById('mail').href='mailto:?subject='+encodeURIComponent('Mis Guías de Ayuda Rápida de Bullyproof')+'&body='+encodeURIComponent('Mi enlace privado a las 28 Guías de Ayuda Rápida de Bullyproof:\\n\\n'+u+'\\n\\nÁbralo en cualquier teléfono o computadora.');
 try{history.replaceState(null,'','/guides/es/welcome/')}catch(e){}})();
 </script>"""
 os.makedirs(os.path.join(ES, "welcome"), exist_ok=True)

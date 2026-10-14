@@ -24,7 +24,7 @@ export default async (req: Request, context: Context) => {
 ${t.line ? `<p class="g-q">“${esc(t.line)}”</p>` : ""}</header>
 <div class="locked"><div class="lk">
 <h2>This guide is part of The Bullyproof Quick Help Guides</h2>
-<p>All 25 guides come together in one library: the exact words to say for each situation, what not to say, and what to do tonight and this week. Instant access on this phone or computer. No account, no app, no password.</p>
+<p>All 28 guides come together in one library: the exact words to say for each situation, what not to say, and what to do tonight and this week. Instant access on this phone or computer. No account, no app, no password.</p>
 <p><a class="btn gold" href="/guides/#buy">See what's inside · ${priceLabel()}</a></p>
 <p class="small">Already bought the guides? <a href="/guides/restore/">Open them again here</a>.</p>
 </div>

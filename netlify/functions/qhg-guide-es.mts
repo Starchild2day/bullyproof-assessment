@@ -22,7 +22,7 @@ export default async (req: Request, context: Context) => {
 ${t.line ? `<p class="g-q">“${esc(t.line)}”</p>` : ""}</header>
 <div class="locked"><div class="lk">
 <h2>Esta guía es parte de Las Guías de Ayuda Rápida de Bullyproof</h2>
-<p>Las 25 guías vienen juntas en una sola biblioteca: las palabras exactas para cada situación, lo que no conviene decir, y qué hacer esta noche y esta semana. En español y en inglés. Acceso inmediato en este teléfono o computadora. Sin cuenta, sin aplicación, sin contraseña.</p>
+<p>Las 28 guías vienen juntas en una sola biblioteca: las palabras exactas para cada situación, lo que no conviene decir, y qué hacer esta noche y esta semana. En español y en inglés. Acceso inmediato en este teléfono o computadora. Sin cuenta, sin aplicación, sin contraseña.</p>
 <p><a class="btn gold" href="/guides/es/#buy">Vea lo que incluye · ${priceLabel()}</a></p>
 <p class="small">¿Ya compró las guías? <a href="/guides/es/restore/">Ábralas de nuevo aquí</a>.</p>
 </div>

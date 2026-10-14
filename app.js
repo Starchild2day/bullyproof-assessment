@@ -698,8 +698,8 @@ function quickHelpOffer() {
     url,
     kicker: L("Available now", "Disponible ahora"),
     title: "The Bullyproof Quick Help Guides",
-    lead: L("In the big moments, what we feel like saying isn't always what helps. These 25 short guides show you what to say, what to avoid, and why it works better, so you can skip the words parents often wish they could take back.",
-            "En los momentos importantes, lo que sentimos ganas de decir no siempre es lo que ayuda. Estas 25 guías cortas le muestran qué decir, qué evitar y por qué funciona mejor, para que pueda evitar las palabras que muchos padres después desearían no haber dicho. Por ahora, las guías están en inglés."),
+    lead: L("In the big moments, what we feel like saying isn't always what helps. These 28 short guides show you what to say, what to avoid, and why it works better, so you can skip the words parents often wish they could take back.",
+            "En los momentos importantes, lo que sentimos ganas de decir no siempre es lo que ayuda. Estas 28 guías cortas le muestran qué decir, qué evitar y por qué funciona mejor, para que pueda evitar las palabras que muchos padres después desearían no haber dicho. Por ahora, las guías están en inglés."),
     issueLabel: L("Your primary issue:", "Su tema principal:"),
     issue: QUICK_HELP_ISSUES[g] ? L(QUICK_HELP_ISSUES[g][0], QUICK_HELP_ISSUES[g][1]) : "",
     matchLabel: L("Start with:", "Empiece con:"),
@@ -712,7 +712,7 @@ function quickHelpOffer() {
     closer: L("When your child's emotional well-being is on the line, having a trusted guide for these moments can be priceless.", "Cuando está en juego el bienestar emocional de su hijo o hija, contar con una guía de confianza para estos momentos puede no tener precio."),
     button: L("Get the Guides \u2014 $37", "Obtener las guías \u2014 $37"),
     soon: L("Opening soon \u2014 we'll email you the link.", "Muy pronto: le enviaremos el enlace por correo."),
-    note: L("$37, one time. All 25 guides are included.", "$37, un solo pago. Incluye las 25 guías.")
+    note: L("$37, one time. All 28 guides are included.", "$37, un solo pago. Incluye las 28 guías.")
   };
 }
 

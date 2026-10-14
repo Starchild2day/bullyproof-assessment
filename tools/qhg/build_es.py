@@ -255,7 +255,7 @@ home = f"""<main>
 <li>En español y en inglés, con una sola compra</li>
 <li>Funciona en su teléfono de inmediato. Sin cuenta, sin aplicación, sin contraseña</li>
 </ul>
-<p class="small">La guía de crisis, <a href="/guides/es/my-child-doesnt-want-to-be-here-anymore/">Mi hijo o hija ya no quiere estar aquí</a>, es gratis para todos los padres, siempre. Sus <span class="qhg-price">{PRICE}</span> pagan las otras veinticuatro.</p>
+<p class="small">La guía de crisis, <a href="/guides/es/my-child-doesnt-want-to-be-here-anymore/">Mi hijo o hija ya no quiere estar aquí</a>, es gratis para todos los padres, siempre. Sus <span class="qhg-price">{PRICE}</span> pagan las otras veintisiete.</p>
 </div>
 <div class="buy-act"><a id="buy-btn" class="btn gold" href="#">Obtener las 28 guías · <span class="qhg-price">{PRICE}</span></a>
 <p class="small center" id="buy-note">Pago seguro con Stripe. Kidsavers International, Inc.</p>

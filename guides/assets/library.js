@@ -322,3 +322,12 @@ function QL(en, es) { return QHG_ES ? es : en; }
   var wrapR = document.createElement("div"); wrapR.className = "top-right";
   bar.insertBefore(wrapR, search); wrapR.appendChild(a); if (search) wrapR.appendChild(search);
 })();
+
+/* Price by date: the Founding Family price ($37) ends Dec 31, 2026, Arizona time. From Jan 1, 2027
+   every price on the page shows $47 and founding-only wording hides, with nothing to rebuild.
+   Checkout itself charges by the same date (netlify/lib/qhg-price.mjs). */
+(function () {
+  if (Date.now() < Date.parse("2027-01-01T00:00:00-07:00")) return;
+  Array.prototype.forEach.call(document.querySelectorAll(".qhg-price"), function (e) { e.textContent = "$47"; });
+  Array.prototype.forEach.call(document.querySelectorAll(".founding-only"), function (e) { e.hidden = true; });
+})();

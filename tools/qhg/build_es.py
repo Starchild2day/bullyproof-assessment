@@ -246,7 +246,7 @@ home = f"""<main>
 
 <section class="wrap buy" id="buy"><div class="buy-card">
 <div class="buy-copy"><p class="kicker">Una biblioteca digital · acceso inmediato</p>
-<h2>Las 25 guías, {PRICE}</h2>
+<h2>Las 25 guías, <span class="qhg-price">{PRICE}</span></h2>
 <ul class="ticks">
 <li>Cada guía en dos capas: la Ayuda rápida de 45 segundos, y una capa más profunda para cuando quiera entender lo que pasa</li>
 <li>Las palabras exactas para decir, los errores comunes que conviene evitar, y qué hacer esta noche y esta semana</li>
@@ -255,9 +255,9 @@ home = f"""<main>
 <li>En español y en inglés, con una sola compra</li>
 <li>Funciona en su teléfono de inmediato. Sin cuenta, sin aplicación, sin contraseña</li>
 </ul>
-<p class="small">La guía de crisis, <a href="/guides/es/my-child-doesnt-want-to-be-here-anymore/">Mi hijo o hija ya no quiere estar aquí</a>, es gratis para todos los padres, siempre. Sus {PRICE} pagan las otras veinticuatro.</p>
+<p class="small">La guía de crisis, <a href="/guides/es/my-child-doesnt-want-to-be-here-anymore/">Mi hijo o hija ya no quiere estar aquí</a>, es gratis para todos los padres, siempre. Sus <span class="qhg-price">{PRICE}</span> pagan las otras veinticuatro.</p>
 </div>
-<div class="buy-act"><a id="buy-btn" class="btn gold" href="#">Obtener las 25 guías · {PRICE}</a>
+<div class="buy-act"><a id="buy-btn" class="btn gold" href="#">Obtener las 25 guías · <span class="qhg-price">{PRICE}</span></a>
 <p class="small center" id="buy-note">Pago seguro con Stripe. Kidsavers International, Inc.</p>
 <p class="small center">¿Ya las compró? <a href="/guides/es/restore/">Abra sus guías de nuevo</a></p></div>
 </div></section>

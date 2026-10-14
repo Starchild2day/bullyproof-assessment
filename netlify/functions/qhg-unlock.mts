@@ -25,6 +25,8 @@ export default async (req: Request, context: Context) => {
   const s = await r.json();
   const paid = s.status === "complete" && (s.payment_status === "paid" || s.payment_status === "no_payment_required");
   if (!paid) return page("Your payment hasn't finished yet", "Stripe shows this checkout as not paid yet. If you completed payment, wait a minute and refresh this page.");
+  // Only a Quick Help Guides purchase opens the guides (not a donation or another Kidsavers product).
+  if (s.metadata?.product !== "qhg") return page("That purchase isn't for the guides", "This checkout was for something else. If you meant to buy the Quick Help Guides, start again from the guides page, or email us and we'll sort it out.");
 
   const email = String(s.customer_details?.email || s.customer_email || "").toLowerCase();
   const db = store();

@@ -4,6 +4,7 @@
 import type { Config, Context } from "@netlify/functions";
 import { contentEs } from "../lib/qhg-content-es.mjs";
 import { isValid, html } from "../lib/qhg-access.mjs";
+import { priceLabel } from "../lib/qhg-price.mjs";
 
 const esc = (s: string) =>
   String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" } as any)[c]);
@@ -22,7 +23,7 @@ ${t.line ? `<p class="g-q">“${esc(t.line)}”</p>` : ""}</header>
 <div class="locked"><div class="lk">
 <h2>Esta guía es parte de Las Guías de Ayuda Rápida de Bullyproof</h2>
 <p>Las 25 guías vienen juntas en una sola biblioteca: las palabras exactas para cada situación, lo que no conviene decir, y qué hacer esta noche y esta semana. En español y en inglés. Acceso inmediato en este teléfono o computadora. Sin cuenta, sin aplicación, sin contraseña.</p>
-<p><a class="btn gold" href="/guides/es/#buy">Vea lo que incluye · $37</a></p>
+<p><a class="btn gold" href="/guides/es/#buy">Vea lo que incluye · ${priceLabel()}</a></p>
 <p class="small">¿Ya compró las guías? <a href="/guides/es/restore/">Ábralas de nuevo aquí</a>.</p>
 </div>
 <p class="small" style="margin-top:18px">Si le preocupa que su hijo ya no quiera estar aquí, la guía para eso es gratis para todos los padres: <a href="/guides/es/my-child-doesnt-want-to-be-here-anymore/">Mi hijo o hija ya no quiere estar aquí</a>.</p>

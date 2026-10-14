@@ -4,6 +4,7 @@
 import type { Config, Context } from "@netlify/functions";
 import { content } from "../lib/qhg-content.mjs";
 import { isValid, html } from "../lib/qhg-access.mjs";
+import { priceLabel } from "../lib/qhg-price.mjs";
 
 const esc = (s: string) =>
   String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" } as any)[c]);
@@ -24,7 +25,7 @@ ${t.line ? `<p class="g-q">“${esc(t.line)}”</p>` : ""}</header>
 <div class="locked"><div class="lk">
 <h2>This guide is part of The Bullyproof Quick Help Guides</h2>
 <p>All 25 guides come together in one library: the exact words to say for each situation, what not to say, and what to do tonight and this week. Instant access on this phone or computer. No account, no app, no password.</p>
-<p><a class="btn gold" href="/guides/#buy">See what's inside · $37</a></p>
+<p><a class="btn gold" href="/guides/#buy">See what's inside · ${priceLabel()}</a></p>
 <p class="small">Already bought the guides? <a href="/guides/restore/">Open them again here</a>.</p>
 </div>
 <p class="small" style="margin-top:18px">If you're worried your child may not want to be here anymore, the guide for that is free for every parent: <a href="/guides/my-child-doesnt-want-to-be-here-anymore/">My Child Doesn't Want to Be Here Anymore</a>.</p>

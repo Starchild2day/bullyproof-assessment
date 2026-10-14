@@ -461,7 +461,7 @@ home = f"""<main>
 
 <section class="wrap buy" id="buy"><div class="buy-card">
 <div class="buy-copy"><p class="kicker">One digital library · instant access</p>
-<h2>All 25 guides, {PRICE}</h2>
+<h2>All 25 guides, <span class="qhg-price">{PRICE}</span></h2>
 <ul class="ticks">
 <li>Every guide in two layers: the 45-second Quick Help, and a deeper layer when you want to understand it</li>
 <li>The exact words to say, the common mistakes to skip, and what to do tonight and this week</li>
@@ -469,9 +469,9 @@ home = f"""<main>
 <li>Plus <b>Why They Do It</b> and <b>What Your Child Can Say</b>, a cheat sheet your child can practice</li>
 <li>Works on your phone right away. No account, no app, no password</li>
 </ul>
-<p class="small">The crisis guide, <a href="/guides/my-child-doesnt-want-to-be-here-anymore/">My Child Doesn't Want to Be Here Anymore</a>, is free for every parent, always. Your {PRICE} pays for the other twenty-four.</p>
+<p class="small">The crisis guide, <a href="/guides/my-child-doesnt-want-to-be-here-anymore/">My Child Doesn't Want to Be Here Anymore</a>, is free for every parent, always. Your <span class="qhg-price">{PRICE}</span> pays for the other twenty-four.</p>
 </div>
-<div class="buy-act"><a id="buy-btn" class="btn gold" href="#">Get all 25 guides · {PRICE}</a>
+<div class="buy-act"><a id="buy-btn" class="btn gold" href="#">Get all 25 guides · <span class="qhg-price">{PRICE}</span></a>
 <p class="small center" id="buy-note">Secure checkout by Stripe. Kidsavers International, Inc.</p>
 <p class="small center">Already bought them? <a href="/guides/restore/">Open your guides again</a></p></div>
 </div></section>

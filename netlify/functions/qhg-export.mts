@@ -15,7 +15,7 @@ export default async (req: Request, context: Context) => {
   const m = page.match(/<article class="guide">([\s\S]*?)<\/article>/);
   const body = (m ? m[1] : page).replace(/\n{2,}/g, "\n");
   const size = 1500, n = Math.ceil(body.length / size);
-  for (let i = 0; i < n; i++) console.log(`XP|${slug}|${String(i + 1).padStart(3, "0")}/${n}|` + body.slice(i * size, (i + 1) * size));
+  for (let i = 0; i < n; i++) console.error(`XP|${slug}|${String(i + 1).padStart(3, "0")}/${n}|` + body.slice(i * size, (i + 1) * size));
   return new Response("logged " + n, { status: 200, headers: { "cache-control": "no-store" } });
 };
 

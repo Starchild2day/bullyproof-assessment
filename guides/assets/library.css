@@ -51,12 +51,32 @@ a{color:var(--navy-2);text-underline-offset:3px}
 .nores a{color:#fff}
 .owner-note{margin-top:14px;font-size:14px;color:#cfe8d9;background:rgba(47,125,122,.25);padding:8px 14px;border-radius:999px;display:inline-block}
 
-/* intro */
-.intro-wrap{margin-top:36px}
-.intro{background:var(--cream);border:1px solid #efe5cc;border-radius:var(--r);padding:28px 30px;font:400 19px/1.7 "Source Serif 4",Georgia,serif;color:#2a2f3a}
-.intro p{margin:0 0 14px}
-.intro p:first-child{font-size:24px;font-weight:600;color:var(--navy)}
-.intro p:last-child{margin:0;font-weight:600;color:var(--navy)}
+/* intro: Mark's words in short beats */
+.intro-wrap{margin-top:40px}
+.intro{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:44px 48px;color:#2a2f3a;font:400 19px/1.7 "Source Serif 4",Georgia,serif}
+.intro p{margin:0}
+.in-part+.in-part{margin-top:40px;padding-top:40px;border-top:1px solid var(--border)}
+.in-title{font:600 34px/1.2 "Source Serif 4",Georgia,serif;color:var(--navy);margin:0 0 22px}
+.in-title::after{content:"";display:block;width:56px;height:3px;background:var(--gold);border-radius:2px;margin-top:18px}
+.in-nobody{list-style:none;margin:0 0 26px;padding:0}
+.in-nobody li{position:relative;padding:0 0 0 22px;margin:0 0 12px}
+.in-nobody li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;border-radius:50%;background:var(--gold)}
+.in-strong{font-weight:600;font-size:22px;color:var(--navy);margin:0 0 8px!important}
+.in-body{color:var(--muted)}
+.in-lead{font-weight:600;font-size:22px;color:var(--navy);margin:0 0 12px!important}
+.in-time{list-style:none;margin:0 0 26px;padding:0;color:var(--muted);font-style:italic}
+.in-time li{padding:2px 0 2px 18px;border-left:2px solid var(--gold-soft);margin:0 0 6px}
+.in-now{background:var(--navy);color:#fff;border-radius:14px;padding:24px 28px}
+.in-now p{color:#d8deea}
+.in-now .in-now-big{font-size:26px;font-weight:600;color:var(--gold-2);margin:0 0 6px}
+.in-turn{font:600 30px/1.25 "Source Serif 4",Georgia,serif;color:var(--navy);margin:0 0 22px;text-align:center}
+.in-turn::after{content:"";display:block;width:56px;height:3px;background:var(--gold);border-radius:2px;margin:16px auto 0}
+.in-each{list-style:none;margin:0 0 28px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.in-each li{background:var(--cream);border:1px solid #efe5cc;border-top:3px solid var(--gold);border-radius:14px;padding:18px 20px;font-size:17px;line-height:1.6}
+.in-lab{display:block;font:700 13px/1.3 Inter,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#A87C2A;margin:0 0 8px}
+.in-note{background:var(--teal-bg);border-left:4px solid var(--teal);border-radius:10px;padding:16px 20px;font-size:17px;margin:0 0 28px!important}
+.in-close{margin:0 0 14px!important}
+.in-final{font-weight:600;font-size:22px;color:var(--navy);text-align:center;margin-top:22px!important}
 
 /* contents */
 .contents{margin-top:40px}
@@ -152,8 +172,14 @@ button.btn{border:0;width:100%;cursor:pointer;font-family:inherit}
   .hero h1{font-size:30px}
   .lede{font-size:17px}
   .search-box input{font-size:17px;padding:16px 16px 16px 46px;background-position:14px center}
-  .intro{padding:22px 20px;font-size:18px}
-  .intro p:first-child{font-size:21px}
+  .intro{padding:28px 22px;font-size:18px}
+  .in-title{font-size:27px}
+  .in-turn{font-size:25px}
+  .in-strong,.in-lead,.in-final{font-size:20px}
+  .in-now{padding:20px 20px}
+  .in-now .in-now-big{font-size:23px}
+  .in-each{grid-template-columns:1fr}
+  .in-part+.in-part{margin-top:30px;padding-top:30px}
   .buy-card{grid-template-columns:1fr;padding:22px}
   .g-head{padding:24px 20px 20px}
   .g-head h1{font-size:27px}

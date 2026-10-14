@@ -388,7 +388,44 @@ def sections_html():
     return "\n".join(out)
 
 
-intro_html = "".join(f"<p>{md_html(p)[3:-4]}</p>" for p in intro_paras)
+def intro_block(paras):
+    """Mark's front-matter words, unchanged, laid out in short readable beats instead of one block."""
+    inl = lambda s: md_html(s)[3:-4]
+    split = lambda s, pat: [x.strip() for x in re.split(pat, s) if x.strip()]
+    if len(paras) != 10:
+        return "".join(f"<p>{inl(p)}</p>" for p in paras)
+    p = paras
+    nobody = split(p[1], r"(?<=\.)\s+(?=Nobody)")
+    expected = split(p[2], r"(?<=anyway\.)\s+")
+    time = split(p[3], r"(?<=\.)\s+(?=Time to)")
+    now = split(p[4], r"(?<=time\.)\s+")
+    each = split(p[6], r"(?<=\.)\s+(?=(?:And )?[Ee]ach one)")
+    labels = ["One situation", "The exact words", "Fast enough", "A deeper layer"]
+    if not (len(nobody) == 3 and len(expected) == 2 and len(time) == 4 and len(now) == 2 and len(each) == 4):
+        return "".join(f"<p>{inl(x)}</p>" for x in paras)
+    li = lambda xs: "".join(f"<li>{inl(x)}</li>" for x in xs)
+    cards = "".join(f'<li><span class="in-lab">{lab}</span>{inl(x)}</li>' for lab, x in zip(labels, each))
+    return f"""<div class="in-part">
+<h2 class="in-title">{inl(p[0])}</h2>
+<ul class="in-nobody">{li(nobody)}</ul>
+<p class="in-strong">{inl(expected[0])}</p>
+<p class="in-body">{inl(expected[1])}</p>
+</div>
+<div class="in-part">
+<p class="in-lead">{inl(time[0])}</p>
+<ul class="in-time">{li(time[1:])}</ul>
+<div class="in-now"><p class="in-now-big">{inl(now[0])}</p><p>{inl(now[1])}</p></div>
+</div>
+<div class="in-part">
+<h2 class="in-turn">{inl(p[5])}</h2>
+<ol class="in-each">{cards}</ol>
+<p class="in-note">{inl(p[7])}</p>
+<p class="in-close">{inl(p[8])}</p>
+<p class="in-final">{"<br>".join(inl(x) for x in split(p[9], r"(?<=tonight\.)\s+"))}</p>
+</div>"""
+
+
+intro_html = intro_block(intro_paras)
 home = f"""<main>
 <section class="hero"><div class="wrap">
 <p class="kicker light">Hands-on help, available today</p>

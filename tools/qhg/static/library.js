@@ -270,7 +270,7 @@ function QL(en, es) { return QHG_ES ? es : en; }
   var owns = /(?:^|;\s*)qhg_has=1/.test(document.cookie);
   if (btn) {
     if (owns) { btn.textContent = QL("You have all 28 guides", "Ya tiene las 28 guías"); btn.className = "btn navy"; btn.href = "#contents"; note.textContent = QL("Open any guide above.", "Abra cualquier guía de arriba."); }
-    else if (url) { btn.href = url; }
+    else if (url) { btn.href = url + (QHG_ES ? (url.indexOf("?") > -1 ? "&" : "?") + "lang=es" : ""); }
     else { btn.className = "btn disabled"; btn.removeAttribute("href"); btn.textContent = QL("Checkout opening soon", "El pago abre muy pronto"); }
   }
   if (owns) { var o = document.getElementById("owner-note"); if (o) o.hidden = false; }

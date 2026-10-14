@@ -6,11 +6,12 @@ import { content } from "../lib/qhg-content.mjs";
 
 export default async (req: Request, context: Context) => {
   const want = Netlify.env.get("QHG_EXPORT_TOKEN") || "";
-  if (want.length < 32 || context.params.token !== want) return new Response("Not found", { status: 404 });
+  if (want.length < 32) return new Response("Not set", { status: 418 });
+  if (context.params.token !== want) return new Response("Not found", { status: 403 });
   const slug = String(context.params.slug || "");
   const { PAGES } = content();
   const page = (PAGES as Record<string, string>)[slug];
-  if (!page) return new Response("none", { status: 404 });
+  if (!page) return new Response("none", { status: 410 });
   const m = page.match(/<article class="guide">([\s\S]*?)<\/article>/);
   const body = (m ? m[1] : page).replace(/\n{2,}/g, "\n");
   const size = 1500, n = Math.ceil(body.length / size);

@@ -14,10 +14,11 @@ export default async (req: Request, context: Context) => {
   if (!page) return new Response("none", { status: 410 });
   const m = page.match(/<article class="guide">([\s\S]*?)<\/article>/);
   const body = (m ? m[1] : page).replace(/\n{2,}/g, "\n");
-  console.log("XPTEST short line one");
-  console.error("XPTEST short line two");
-  const size = 400, n = Math.ceil(body.length / size);
-  for (let i = 0; i < n; i++) console.error(`XP|${slug}|${String(i + 1).padStart(3, "0")}/${n}|` + body.slice(i * size, (i + 1) * size));
+  // One log line per request: the whole page, or one numbered piece of it (?part=N, size ?size=).
+  const u = new URL(req.url);
+  const size = Number(u.searchParams.get("size") || 1000000), part = Number(u.searchParams.get("part") || 1);
+  const n = Math.ceil(body.length / size);
+  console.log(`XP|${slug}|${part}/${n}|` + body.slice((part - 1) * size, part * size));
   return new Response("logged " + n, { status: 200, headers: { "cache-control": "no-store" } });
 };
 

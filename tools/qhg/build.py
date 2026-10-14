@@ -326,8 +326,20 @@ def guide_body(g, inner, locked=False):
 # ---------------------------------------------------------------------------
 # Write output
 # ---------------------------------------------------------------------------
+# Clear the old English output, but keep the Spanish edition (guides/es/ and its search index, built by build_es.py).
 if os.path.isdir(PUB):
-    shutil.rmtree(PUB)
+    for name in os.listdir(PUB):
+        if name == "es":
+            continue
+        path = os.path.join(PUB, name)
+        if name == "assets":
+            for f in os.listdir(path):
+                if f != "index-es.json":
+                    os.remove(os.path.join(path, f))
+        elif os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
 os.makedirs(os.path.join(PUB, "assets"), exist_ok=True)
 os.makedirs(FN, exist_ok=True)
 for f in os.listdir(os.path.join(ROOT, "static")):

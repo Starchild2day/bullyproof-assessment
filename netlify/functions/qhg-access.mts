@@ -9,7 +9,8 @@ export default async (req: Request, context: Context) => {
 <main class="wrap"><div class="panel"><h1>That link didn't work</h1><p>It may have been copied only partly. Try opening it again from where you saved it, or <a href="/guides/restore/">get your guides again here</a>.</p></div></main>`, 404);
   }
   grantCookies(context, token);
-  return new Response(null, { status: 302, headers: { Location: "/guides/", "cache-control": "no-store" } });
+  const home = context.cookies.get("qhg_lang") === "es" ? "/guides/es/" : "/guides/";
+  return new Response(null, { status: 302, headers: { Location: home, "cache-control": "no-store" } });
 };
 
 export const config: Config = { path: "/guides/access/:token" };

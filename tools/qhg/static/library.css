@@ -207,3 +207,9 @@ button.btn{border:0;width:100%;cursor:pointer;font-family:inherit}
 .share-status{min-height:1.2em;font-size:15px;color:var(--teal);margin:10px 0 0}
 .share-privacy{font-size:13px;color:var(--muted);margin:8px 0 0}
 @media (max-width:700px){.share-buttons .btn{width:100%}}
+/* English / Español switch in the top bar */
+.top-right{display:flex;align-items:center;gap:8px}
+.lang-switch{color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:7px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.35)}
+.lang-switch:hover{background:rgba(255,255,255,.12)}
+html[lang="es"] .learn>summary::after{content:"Abrir"}
+html[lang="es"] .learn[open]>summary::after{content:"Cerrar"}

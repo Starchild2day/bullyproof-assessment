@@ -9,6 +9,8 @@ const page = (title: string, msg: string) =>
 <main class="wrap"><div class="panel"><h1>${title}</h1><p>${msg}</p><p><a href="/guides/">Back to the guides</a></p></div></main>`, 400);
 
 export default async (req: Request, context: Context) => {
+  // The library remembers the reader's language (qhg_lang), so Spanish readers come back to Spanish pages.
+  const lang = context.cookies.get("qhg_lang") === "es" ? "es" : "en";
   const id = new URL(req.url).searchParams.get("session_id") || "";
   if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(id)) {
     return page("We couldn't find that purchase", "This link is missing its purchase details. If you just paid, please use the link from your checkout confirmation, or email mark@bullyproof.guide and we'll send your guides right away.");
@@ -39,11 +41,12 @@ export default async (req: Request, context: Context) => {
     if (hook && email) {
       const link = new URL("/guides/access/" + token, req.url).toString();
       context.waitUntil(fetch(hook, { method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, tags: ["qhg-purchased"], access_link: link }) }).catch(() => {}));
+        body: JSON.stringify({ email, tags: ["qhg-purchased"], access_link: link, language: lang }) }).catch(() => {}));
     }
   }
   grantCookies(context, token);
-  return new Response(null, { status: 302, headers: { Location: "/guides/welcome/?k=" + token, "cache-control": "no-store" } });
+  const welcome = lang === "es" ? "/guides/es/welcome/?k=" : "/guides/welcome/?k=";
+  return new Response(null, { status: 302, headers: { Location: welcome + token, "cache-control": "no-store" } });
 };
 
 export const config: Config = { path: "/guides/unlock" };

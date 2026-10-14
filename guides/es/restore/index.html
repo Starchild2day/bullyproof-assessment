@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abra sus guías de nuevo · Las Guías de Ayuda Rápida de Bullyproof</title>
+<meta name="description" content=""><meta name="robots" content="noindex">
+<meta name="theme-color" content="#1B2A4A">
+<link rel="icon" href="/guides/assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet"><link rel="stylesheet" href="/guides/assets/library.css?v=73224038"></head>
+<body class="">
+<header class="top"><div class="wrap top-in">
+<a class="brand" href="/guides/es/"><span class="sun" aria-hidden="true"></span><span><b>Bullyproof</b> Guías de Ayuda Rápida</span></a>
+<a class="top-search" href="/guides/es/#search" aria-label="Buscar en las guías"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Buscar</span></a>
+</div></header>
+<main class="wrap"><div class="panel">
+<h1>Abra sus guías de nuevo</h1>
+<p>¿Tiene un teléfono o computadora nuevos, o perdió su enlace? Escriba el correo que usó al pagar y le enviaremos su enlace privado a esa dirección.</p>
+<form id="rf"><label for="em" class="small">Correo que usó al pagar</label>
+<input id="em" class="field" type="email" required autocomplete="email" placeholder="usted@correo.com">
+<button class="btn gold" type="submit">Enviarme mi enlace</button></form>
+<div id="rm" class="msg" hidden></div>
+<p class="small" style="margin-top:20px">¿Sigue sin poder entrar? Escriba a <a href="mailto:mark@bullyproof.guide">mark@bullyproof.guide</a> y le ayudaremos a entrar de nuevo.</p>
+</div></main>
+<script>
+document.getElementById('rf').onsubmit=function(e){e.preventDefault();var m=document.getElementById('rm');
+fetch('/guides/api/restore',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:document.getElementById('em').value,lang:'es'})})
+.then(function(r){return r.json()}).then(function(d){m.hidden=false;
+if(!d.ok){m.className='msg err';m.textContent='Por favor revise ese correo e inténtelo de nuevo.';return;}
+m.className='msg';m.textContent=d.emailing?'Si ese correo compró las guías, su enlace privado ya va en camino. Revise su bandeja de entrada (y la carpeta de spam) en un minuto.':'Gracias. Por favor escriba a mark@bullyproof.guide desde ese correo y le enviaremos su enlace de inmediato.';})
+.catch(function(){m.hidden=false;m.className='msg err';m.textContent='Algo salió mal. Por favor inténtelo de nuevo.';});};
+</script>
+<footer class="foot"><div class="wrap">
+<p class="foot-crisis"><b>Si un niño puede estar en peligro ahora mismo:</b> llame al <a href="tel:911">911</a>. Si hay pensamientos de suicidio, llame al <a href="tel:988">988</a> y oprima 2 para español, o envíe AYUDA por mensaje de texto al <a href="sms:988&body=AYUDA">988</a> o al <a href="sms:741741&body=AYUDA">741741</a>.</p>
+<p>Estas guías ofrecen orientación general para padres. No son consejo médico, psicológico ni legal, y no reemplazan a un consejero, médico u otro profesional que conozca a su hijo.</p>
+<p>© 2026 Kidsavers International, Inc. · <a href="https://www.bullyproof.support">Bullyproof.Support</a> · <a href="mailto:mark@bullyproof.guide">mark@bullyproof.guide</a></p>
+</div></footer>
+<script src="/guides/assets/library.js?v=73224038"></script>
+</body></html>

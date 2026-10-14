@@ -38,9 +38,9 @@ const QUESTIONS_ES = {
   },
   q11: {
     title: "¿Esto está pasando en internet o a través de pantallas?",
-    sub: "Aunque también esté pasando en persona.",
+    sub: "Elija la opción de abajo que mejor describa su situación.",
     preventTitle: "¿Está pasando algo en internet o a través de pantallas?",
-    preventSub: "Aunque también pase en persona; o si no pasa nada, simplemente dígalo."
+    preventSub: "Elija la opción de abajo que mejor describa su situación."
   },
   q12: {
     title: "¿Con qué quiere más ayuda en este momento?",

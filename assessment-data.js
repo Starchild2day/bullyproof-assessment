@@ -202,11 +202,11 @@ const QUESTIONS = [
   {
     id: "q11",
     preventTitle: "Is anything happening online or through screens?",
-    preventSub: "Even if it's also happening in person — or if nothing is, just say so.",
+    preventSub: "Choose the option below that best describes your situation.",
     preventExtra: ["No — nothing's happening; prevention is my focus"],
     icon: ICONS.q11,
     title: "Is this happening online or through screens at all?",
-    sub: "Even if it's also happening in person.",
+    sub: "Choose the option below that best describes your situation.",
     type: "choice",
     options: [
       "Yes — primarily online",

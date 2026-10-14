@@ -983,8 +983,8 @@ function buildEmailHtml() {
               <p style="color:${navyDeep};font-size:17px;line-height:1.75;margin:0 0 16px;">${dreamtimeEmphasis(para)}</p>`;
           }
           if (i === 3) {
-            // "Which means…" — the turn of the argument, then its last line set apart as the takeaway.
-            const [body, closer] = splitClosingSentence(para);
+            // "Which means…" — one flowing paragraph that leads straight into the book reveal below.
+            const body = para, closer = "";
             return `<p style="color:${navyDeep};font-size:17px;line-height:1.75;margin:0 0 20px;">${body}</p>
               ${closer ? `<table role="presentation" style="width:100%;margin:0 0 6px;"><tr><td style="text-align:center;padding:4px 10px 0;">
                 <table role="presentation" style="margin:0 auto 12px;"><tr><td style="width:44px;border-top:2px solid ${gold};font-size:0;line-height:0;">&nbsp;</td></tr></table>
@@ -1732,13 +1732,13 @@ Here's why that moment matters more than it seems. Cellular biologist Bruce Lipt
 
 Every night, as your child drifts toward sleep, their mind passes through the same open, impressionable state that makes early childhood so absorbent in the first place. Think of it as "Dreamtime Programming": whatever's on their mind in those last few moments of the day can shape how well they sleep, what they dream about, and often how the next day goes.
 
-Which means every bedtime is also an opportunity — a nightly chance to interrupt that programming before it takes hold, and redirect it toward something that builds your child up instead. That's the entire idea behind Shining Moments.`, `La mente de un niño puede quedarse atascada. Lo que le preocupa (un mal día, un momento que dolió, una inquietud sin respuesta fácil) suele dar más vueltas justo a la hora de dormir, cuando ya no hay nada que lo distraiga.
+Which means every bedtime is also an opportunity: a nightly chance to interrupt that programming before it takes hold, and turn it toward something that builds your child up. That's exactly what the Shining Moments bedtime ritual was created for: a few warm minutes together, with simple pages made just for this moment.`, `La mente de un niño puede quedarse atascada. Lo que le preocupa (un mal día, un momento que dolió, una inquietud sin respuesta fácil) suele dar más vueltas justo a la hora de dormir, cuando ya no hay nada que lo distraiga.
 
 Por eso ese momento importa más de lo que parece. El biólogo celular Bruce Lipton lleva décadas estudiando cómo se forma la mente subconsciente de un niño. Según él:
 
 Cada noche, mientras su hijo o hija se acerca al sueño, su mente pasa por el mismo estado abierto e impresionable que hace que la primera infancia absorba tanto. Piense en ello como "programación de ensueño": lo que tenga en la mente en esos últimos momentos del día puede influir en lo bien que duerme, en lo que sueña y, muchas veces, en cómo le va al día siguiente.
 
-Eso significa que cada hora de dormir también es una oportunidad: la posibilidad, cada noche, de interrumpir esa programación antes de que se asiente y redirigirla hacia algo que fortalezca a su hijo o hija. Esa es toda la idea detrás de Shining Moments.`);
+Eso significa que cada hora de dormir también es una oportunidad: la posibilidad, cada noche, de interrumpir esa programación antes de que se asiente y llevarla hacia algo que fortalezca a su hijo o hija. Para eso se creó el ritual de Shining Moments (Momentos Brillantes) a la hora de dormir: unos minutos cálidos juntos, con unas páginas sencillas hechas justo para este momento.`);
   return {
     text,
     introCaption,
@@ -2051,7 +2051,7 @@ async function generatePDF() {
       }
       if (pi === 3) {
         // "Which means…": the argument, then its last line set apart, centered, as the takeaway
-        const [paraBody, closer] = splitClosingSentence(introParas[pi]);
+        const paraBody = introParas[pi], closer = "";   // one flowing paragraph, leading into the book reveal
         doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
         const lines = doc.splitTextToSize(paraBody, 180);
         ensureRoom(lines.length * 6 + 26);

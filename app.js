@@ -73,11 +73,11 @@ function addFlag(key) {
 }
 
 function render() {
-  const useFixedShell = state.screen === "question" && (state.safetyFlags.length === 0 || state.safetyAcknowledged);
-  document.body.classList.toggle("question-mode", useFixedShell);
+  document.body.classList.toggle("question-mode", state.screen === "question");
   document.body.classList.toggle("landing-mode", state.screen === "landing");
   if (state.screen !== "question") document.body.classList.remove("safety-mini");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  // Jump straight to the top of each new screen (a smooth scroll can be cut short on phones and leave the page part-way down).
+  window.scrollTo(0, 0);
   if (state.screen === "landing") return renderLanding();
   if (state.screen === "question") return renderQuestion();
   if (state.screen === "results") return renderResults();
@@ -303,18 +303,13 @@ function questionIconUrl(qid) {
   return `${window.location.origin}/assets/icon-${qid}.png`;
 }
 
+// After a tap on an answer: redraw the question in place, keeping the page exactly where the parent had it.
 function rerenderCurrentQuestion() {
-  const scrollEl = document.querySelector(".options-scroll");
-  const savedOptionsScroll = scrollEl ? scrollEl.scrollTop : 0;
   const savedWindowScroll = window.scrollY;
-
-  const useFixedShell = state.safetyFlags.length === 0 || state.safetyAcknowledged;
-  document.body.classList.toggle("question-mode", useFixedShell);
   renderQuestion();
-
-  const newScrollEl = document.querySelector(".options-scroll");
-  if (newScrollEl) newScrollEl.scrollTop = savedOptionsScroll;
-  else window.scrollTo(0, savedWindowScroll);
+  const card = appEl.querySelector(".card");
+  if (card) card.style.animation = "none";   // no slide-in flicker on every tap
+  window.scrollTo(0, savedWindowScroll);
 }
 
 function wireQuestionEvents(q) {

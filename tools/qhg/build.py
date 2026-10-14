@@ -78,6 +78,8 @@ for n in range(1, 26):
     md = read(f"guide-{n:02d}.md")
     # Guide 15 points to a "Guide 33" from the larger 50-guide arc, which isn't in this library.
     md = md.replace(" Guide 33 covers that.", "")
+    # Mark Zirtzlaff agreed (Oct 12, 2026) to be named in full as Guide 20's reviewer.
+    md = md.replace("**Mark Z.**", "**Mark Zirtzlaff** of MZ Security Consulting")
     h1 = re.match(r"#\s*Guide\s+\d+\s*—\s*(.+)", md.strip().splitlines()[0])
     title = h1.group(1).strip()
     q = re.search(r"^>\s*One parenting question:\s*\*?(.+?)\*?\s*$", md, re.M)

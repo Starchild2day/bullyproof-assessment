@@ -130,8 +130,8 @@ def shell(title, body, desc="", body_class="", robots=ROBOTS):
 </body></html>"""
 
 
-# "Help Another Parent": shares ONLY the free Clarity Check, in Spanish (relative link, so it follows the site's address).
-SHARE_URL = "/?lang=es&ref=guides-share"
+# "Help Another Parent": shares ONLY the free Clarity Check, opened in Spanish on bullyproof.support.
+SHARE_URL = "https://www.bullyproof.support/parent-clarity-check?lang=es&ref=guides-share"
 SHARE_MSG = ("Encontré este Chequeo de Claridad para Padres gratis y pensé que te podría servir. Ayuda a los padres a "
              "entender mejor lo que les pasa a sus hijos y a pensar qué hacer después. ¡Te lo comparto!")
 HEART = '<svg width="26" height="26" viewBox="0 0 24 24" fill="#C89B3C" aria-hidden="true"><path d="M12 21s-7.2-4.4-9.6-9.1C.8 8.6 2.6 4.8 6.3 4.3c2.1-.3 4 .8 5.7 2.7 1.7-1.9 3.6-3 5.7-2.7 3.7.5 5.5 4.3 3.9 7.6C19.2 16.6 12 21 12 21z"/></svg>'

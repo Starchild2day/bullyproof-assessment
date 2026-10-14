@@ -3,7 +3,7 @@
    vocabulary, the titles, and distinctive words from each guide. Crisis words always pin the
    free crisis guide first. No results never dead-ends: it falls back to the sections. */
 // Turn on when the Spanish library is approved: English pages then show the "Español" switch.
-var QHG_SPANISH_LIVE = false;
+var QHG_SPANISH_LIVE = true;
 var QHG_ES = document.documentElement.lang === "es";
 var QHG_BASE = QHG_ES ? "/guides/es/" : "/guides/";
 function QL(en, es) { return QHG_ES ? es : en; }

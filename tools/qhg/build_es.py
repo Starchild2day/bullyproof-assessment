@@ -248,7 +248,7 @@ home = f"""<main>
 <div class="buy-copy"><p class="kicker">Una biblioteca digital · acceso inmediato</p>
 <h2>Las 28 guías, <span class="qhg-price">{PRICE}</span></h2>
 <ul class="ticks">
-<li>Cada guía en dos capas: la Ayuda rápida de 45 segundos, y una capa más profunda para cuando quiera entender lo que pasa</li>
+<li>Cada guía en dos capas: una Ayuda rápida para este momento, y una capa más profunda para cuando quiera el panorama completo</li>
 <li>Las palabras exactas para decir, los errores comunes que conviene evitar, y qué hacer esta noche y esta semana</li>
 <li>Busque describiendo lo que está pasando y llegue directo a la guía correcta</li>
 <li>Además, <b>Por qué lo hacen</b> y <b>Lo que su hijo puede decir</b>, una hoja de frases que su hijo puede practicar</li>

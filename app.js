@@ -697,14 +697,31 @@ const QUICK_HELP_ISSUES = {
   "guide-16": ["Building strength before problems start", "Fortalecer a su hijo o hija antes de que haya problemas"],
   "guide-19": ["The school hasn't fixed it", "La escuela no lo ha resuelto"]
 };
+// Where each matched guide lives in the library (its preview page shows what's inside and a buy button).
+const QUICK_HELP_SLUGS = {
+  "guide-01": "i-think-my-child-is-being-bullied", "guide-02": "my-child-wont-talk",
+  "guide-03": "my-child-finally-admits-theyre-being-bullied", "guide-04": "my-child-says-please-dont-tell-the-school",
+  "guide-05": "my-child-tells-me-only-part-of-the-story", "guide-10": "my-child-is-being-bullied-online",
+  "guide-11": "my-child-is-being-left-out", "guide-16": "lower-the-odds-before-anything-happens",
+  "guide-19": "told-the-teacher-and-nothing-changed"
+};
+// Same date-based price as the guides checkout: $37 Founding Family price through Dec 31, 2026 (Arizona), then $47.
+function quickHelpPrice() { return Date.now() < Date.parse("2027-01-01T00:00:00-07:00") ? "$37" : "$47"; }
 function quickHelpOffer() {
   if (state.safetyFlags.length) return null;
   const g = quickHelpGuide();
-  const num = parseInt(String(g).replace("guide-", ""), 10);
   const title = QUICK_HELP_TITLES[g];
-  const url = (typeof CONFIG !== "undefined" && CONFIG.QUICK_HELP_URL) || "";
+  const es = getLang() === "es";
+  const origin = window.location.origin;
+  const lib = origin + (es ? "/guides/es/" : "/guides/");
+  // Buy goes straight to the secure Stripe checkout; "see what's inside" goes to the library (the sales page).
+  const url = (typeof CONFIG !== "undefined" && CONFIG.QUICK_HELP_URL) || (origin + "/guides/buy" + (es ? "?lang=es" : "") );
+  const price = quickHelpPrice();
   return {
     url,
+    libraryUrl: lib + "?ref=clarity-plan",
+    guideUrl: QUICK_HELP_SLUGS[g] ? lib + QUICK_HELP_SLUGS[g] + "/" : "",
+    insideLink: L("See what's inside first \u2192", "Vea primero lo que incluye \u2192"),
     kicker: L("Available now", "Disponible ahora"),
     title: "The Bullyproof Quick Help Guides",
     lead: L("In the big moments, what we feel like saying isn't always what helps. These 28 short guides show you what to say, what to avoid, and why it works better, so you can skip the words parents often wish they could take back.",
@@ -719,9 +736,9 @@ function quickHelpOffer() {
       L("Searchable by what's happening, and ready on your phone in a minute", "Se pueden buscar según lo que está pasando, y están listas en su teléfono en un minuto")
     ],
     closer: L("When your child's emotional well-being is on the line, having a trusted guide for these moments can be priceless.", "Cuando está en juego el bienestar emocional de su hijo o hija, contar con una guía de confianza para estos momentos puede no tener precio."),
-    button: L("Get the Guides \u2014 $37", "Obtener las guías \u2014 $37"),
+    button: L(`Get the Guides \u2014 ${price}`, `Obtener las guías \u2014 ${price}`),
     soon: L("Opening soon \u2014 we'll email you the link.", "Muy pronto: le enviaremos el enlace por correo."),
-    note: L("$37, one time. All 28 guides are included.", "$37, un solo pago. Incluye las 28 guías.")
+    note: L(`${price}, one time. All 28 guides are included, in English and Spanish. Secure checkout by Stripe.`, `${price}, un solo pago. Incluye las 28 guías, en español y en inglés. Pago seguro con Stripe.`)
   };
 }
 
@@ -1089,7 +1106,7 @@ function buildEmailHtml() {
         ${qh.issue ? `<p style="color:${gold};font-size:12.5px;font-weight:700;margin:0 0 3px;">${qh.issueLabel}</p>
         <p style="color:#ffffff;font-size:16px;font-weight:700;line-height:1.4;margin:0 0 10px;">${qh.issue}</p>` : ""}
         <p style="color:${gold};font-size:12.5px;font-weight:700;margin:0 0 4px;">${qh.matchLabel}</p>
-        <p style="color:#ffffff;font-size:16px;font-weight:700;line-height:1.4;margin:0;">${escapeHtml(qh.guideTitle)}</p>
+        <p style="color:#ffffff;font-size:16px;font-weight:700;line-height:1.4;margin:0;">${qh.guideUrl ? `<a href="${escapeAttr(qh.guideUrl)}" style="color:#ffffff;text-decoration:underline;text-underline-offset:3px;">${escapeHtml(qh.guideTitle)}</a>` : escapeHtml(qh.guideTitle)}</p>
       </td></tr></table>` : ""}
       <ul style="color:#D5DAE6;font-size:14px;line-height:1.5;padding-left:20px;margin:16px 0 18px;">
         ${qh.bullets.map(b => `<li style="margin-bottom:5px;">${b}</li>`).join("")}
@@ -1098,6 +1115,7 @@ function buildEmailHtml() {
       ${qh.url
         ? `<a href="${escapeAttr(qh.url)}" style="display:inline-block;background:${gold};color:${navyDeep};font-size:15.5px;font-weight:800;padding:13px 22px;border-radius:8px;text-decoration:none;">${qh.button}</a>`
         : `<p style="color:${gold};font-size:15px;font-weight:700;margin:0;">${qh.soon}</p>`}
+      ${qh.libraryUrl ? `<p style="margin:14px 0 0;"><a href="${escapeAttr(qh.libraryUrl)}" style="color:${gold};font-size:14.5px;font-weight:700;text-decoration:none;">${qh.insideLink}</a></p>` : ""}
       <p style="color:#AEB6C8;font-size:12.5px;line-height:1.5;margin:12px 0 0;">${qh.note}</p>
     </td></tr></table>
   `);

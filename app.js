@@ -103,7 +103,7 @@ function renderLanding() {
       ${banner(LANDING_ICON, { large: true, imageSrc: assetUrl("icon-landing.png"), showLogo: true })}
       <div class="card-body">
       <h1>${L(`You don't have to figure this out alone.`, `No tiene que resolver esto por su cuenta.`)}</h1>
-      <p class="body-text">${L(`Twelve quick questions — about 3 minutes — and you'll have a personalized action plan for your exact situation, sent straight to your inbox tonight.`, `Doce preguntas rápidas, unos 3 minutos, y tendrá un plan de acción personalizado para su situación exacta, enviado directamente a su correo esta noche.`)}</p>
+      <p class="body-text">${L(`Ten quick questions — about 3 minutes — and you'll have a personalized action plan for your exact situation, sent straight to your inbox tonight.`, `Diez preguntas rápidas, unos 3 minutos, y tendrá un plan de acción personalizado para su situación exacta, enviado directamente a su correo esta noche.`)}</p>
       ${returningNotice}
       <p class="privacy-note">${L(`Your answers are only used to build your action plan, and we never sell your information.`, `Sus respuestas solo se usan para crear su plan de acción, y nunca vendemos su información.`)} <a href="${privacyUrl()}" target="_blank" rel="noopener">${L(`Privacy policy`, `Política de privacidad`)}</a></p>
       <div class="checkbox-row">
@@ -130,12 +130,21 @@ function renderLanding() {
   });
 }
 
+// Follow-up questions appear only for some parents, so they aren't numbered: every parent sees "of 10".
+const FOLLOW_UPS = new Set(["q9"]);
 function renderProgress() {
-  const total = visibleQuestions().length;
-  const pct = Math.round((state.qIndex / total) * 100);
+  const visible = visibleQuestions();
+  const pct = Math.round((state.qIndex / visible.length) * 100);
   progressTrack.style.display = "block";
   progressFill.style.width = pct + "%";
-  progressLabel.textContent = L(`Question ${state.qIndex + 1} of ${total}`, `Pregunta ${state.qIndex + 1} de ${total}`);
+  const cur = visible[state.qIndex];
+  if (cur && FOLLOW_UPS.has(cur.id)) {
+    progressLabel.textContent = L("A quick follow-up", "Una pregunta rápida de seguimiento");
+    return;
+  }
+  const numbered = visible.filter(q => !FOLLOW_UPS.has(q.id));
+  const n = visible.slice(0, state.qIndex + 1).filter(q => !FOLLOW_UPS.has(q.id)).length;
+  progressLabel.textContent = L(`Question ${n} of ${numbered.length}`, `Pregunta ${n} de ${numbered.length}`);
 }
 
 function renderQuestion() {
@@ -758,13 +767,14 @@ function swipeoneProfile() {
     ["doesn't want me to contact", "child-doesnt-want", L("your child doesn't want the school told", "su hijo o hija no quiere que se le avise a la escuela")],
     ["haven't reached out", "not-yet", L("you haven't contacted the school yet", "todavía no se ha comunicado con la escuela")]
   ]);
-  const online = pick(a.q11, [
-    ["primarily online", "online", L("mostly online", "sobre todo en internet")],
-    ["online for sure", "online-maybe-in-person", L("online, and maybe in person too", "en internet, y tal vez también en persona")],
-    ["both online and in person", "both", L("both online and in person", "en internet y en persona")],
-    ["only happening in person", "in-person", L("in person", "en persona")],
-    ["I'm not sure", "not-sure", L("not sure yet", "todavía no se sabe")]
-  ]);
+  // Online or in person: worked out from "Where is this happening?" (the separate online question was retired).
+  const ow = onlineWeight();
+  const notSure = (a.q7 || []).some(x => x.startsWith("I'm not sure"));
+  const online = ow === "online" ? { key: "online", text: L("mostly online", "sobre todo en internet") }
+    : ow === "both" ? { key: "both", text: L("both online and in person", "en internet y en persona") }
+    : ow === "in-person" ? { key: "in-person", text: L("in person", "en persona") }
+    : notSure ? { key: "not-sure", text: L("not sure yet", "todavía no se sabe") }
+    : { key: "", text: "" };
   const placeTable = [
     ["At school", "school", L("at school", "en la escuela")],
     ["school bus", "bus", L("on the school bus", "en el autobús escolar")],
@@ -1271,13 +1281,10 @@ function schoolStatus() {
 
 function onlineWeight() {
   const q7 = state.answers.q7 || [];
-  const q11 = state.answers.q11 || "";
-  if (q11.startsWith("Yes — primarily online")) return "online";
-  if (q11.startsWith("Yes — online for sure")) return "online";
-  if (q11.startsWith("Yes — both")) return "both";
   const onlineCount = q7.filter(l => l.includes("social media") || l.includes("text messages") || l.includes("gaming platform")).length;
   const inPersonCount = q7.filter(l => l.includes("At school") || l.includes("school bus") || l.includes("after-school") || l.includes("neighborhood")).length;
   if (onlineCount > inPersonCount) return "online";
+  if (onlineCount > 0 && inPersonCount > 0) return "both";
   if (inPersonCount > 0) return "in-person";
   if (/online|social media/i.test(state.answers.q2 || "")) return "online";
   return "unclear";
@@ -1462,8 +1469,7 @@ function stepContext() {
       : L("StopBullying.gov, the U.S. government's bullying resource,", "StopBullying.gov, el recurso del gobierno de EE. UU. sobre el bullying,");
     return L(`Save the evidence first. You told us this is happening online. Take screenshots and note the dates before anything gets deleted. Then sit down with your child and look at the app's report and block settings together — as a team, not as spying. That's exactly the order ${so} recommends: keep the evidence, then report and block.`, `Primero guarde las pruebas. Usted nos dijo que esto está pasando en internet. Tome capturas de pantalla y anote las fechas antes de que algo se borre. Luego siéntese con su hijo o hija y revisen juntos las opciones de denuncia y bloqueo de la aplicación: como equipo, no como espionaje. Ese es justo el orden que ${so} recomienda: guardar las pruebas, y luego denunciar y bloquear.`);
   }
-  const saidInPerson = (state.answers.q11 || "").startsWith("No — this is only happening in person");
-  if (weight === "in-person" || saidInPerson) {
+  if (weight === "in-person") {
     const age = state.answers.q1 || "";
     const teen = age === "11–14" || age === "15–18";
     // "Recess" means nothing to a parent of a teenager — the real equivalent
@@ -1474,7 +1480,7 @@ function stepContext() {
   if (wordsAnswer()) {
     return L(`Say it, then listen. You asked what to say to help, so start with the words in "Words that can help" above, said calmly at a quiet moment like a car ride or bedtime. Then stop talking and just listen. Whatever your child shares, answer with "Thank you for telling me" before anything else. Feeling heard is what lets those words sink in and begin to ease the hurt.`, `Dígalo y luego escuche. Usted preguntó qué decir para ayudar, así que empiece con las palabras de "Palabras que pueden ayudar", más arriba, dichas con calma en un momento tranquilo, como un paseo en carro o la hora de dormir. Luego deje de hablar y solo escuche. Cuente lo que cuente su hijo o hija, responda primero: "Gracias por contármelo". Sentirse escuchado es lo que permite que esas palabras calen y empiecen a aliviar el dolor.`);
   }
-  const saidNotSure = (state.answers.q7 || []).some(x => x.startsWith("I'm not sure")) || (state.answers.q11 || "").startsWith("I'm not sure");
+  const saidNotSure = (state.answers.q7 || []).some(x => x.startsWith("I'm not sure"));
   return saidNotSure
     ? L("Keep a short daily note. You told us you're not sure yet where this is happening, so a one-line note each day helps you find out. Write down your child's mood and anything small they say. Patterns often show up after a week or two.", "Lleve una breve nota diaria. Usted nos dijo que todavía no sabe dónde está pasando esto, así que una nota de una línea cada día le ayudará a averiguarlo. Anote el estado de ánimo de su hijo o hija y cualquier cosa pequeña que diga. Los patrones suelen aparecer después de una o dos semanas.")
     : L("Keep a short daily note. It isn't clear yet where or when this is happening, so a one-line note each day helps you find out. Write down your child's mood and anything small they say. Patterns often show up after a week or two.", "Lleve una breve nota diaria. Todavía no está claro dónde o cuándo está pasando esto, así que una nota de una línea cada día le ayudará a averiguarlo. Anote el estado de ánimo de su hijo o hija y cualquier cosa pequeña que diga. Los patrones suelen aparecer después de una o dos semanas.");

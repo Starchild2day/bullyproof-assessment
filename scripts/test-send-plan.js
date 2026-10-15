@@ -91,9 +91,9 @@ const check = (name, ok, extra = "") => { (ok ? pass++ : fail++); console.log(`$
   }
 
   // Labels: the full set, Spanish phrasing, and the private questions kept out.
-  reset(); await mod.handler(event({ body: { lang: "es", answers: { q1: "11–14", q2: opt("q2", "Something happened online"), q3: [opt("q3", "headaches")], q5: opt("q5", "A few weeks"), q6: [opt("q6", "Withdrawing")], q7: [opt("q7", "social media"), opt("q7", "gaming platform")], q8: opt("q8", "only hints"), q9: [opt("q9", "called names")], q10: opt("q10", "nothing has changed"), q11: opt("q11", "both online and in person"), q12: "Que puedo hacer?" } } }));
+  reset(); await mod.handler(event({ body: { lang: "es", answers: { q1: "11–14", q2: opt("q2", "Something happened online"), q3: [opt("q3", "headaches")], q5: opt("q5", "A few weeks"), q6: [opt("q6", "Withdrawing")], q7: [opt("q7", "social media"), opt("q7", "gaming platform")], q8: opt("q8", "only hints"), q9: [opt("q9", "called names")], q10: opt("q10", "nothing has changed"), q12: "Que puedo hacer?" } } }));
   const L1 = hooks[0] || {};
-  check("labels: every general field filled, keys stay English for automation rules", L1.child_age === "11-14" && L1.age_group === "tween" && L1.situation === "online" && L1.how_long === "few-weeks" && L1.child_told === "hints" && L1.school_status === "no-change" && L1.online === "both" && L1.where === "social-media, gaming", JSON.stringify(L1));
+  check("labels: every general field filled, keys stay English for automation rules", L1.child_age === "11-14" && L1.age_group === "tween" && L1.situation === "online" && L1.how_long === "few-weeks" && L1.child_told === "hints" && L1.school_status === "no-change" && L1.online === "online" && L1.where === "social-media, gaming", JSON.stringify(L1));
   check("labels: phrases come in the parent's language (Spanish)", L1.child_age_text === "de 11 a 14 años" && L1.how_long_text === "unas semanas" && /escuela/.test(L1.school_status_text) && /redes sociales/.test(L1.where_text));
   check("labels: physical signs, behavior changes and treatment type are never sent", !/headache|dolor|Withdraw|aleja|names|apodos|q3|q6|q9/i.test(JSON.stringify(L1)));
   reset(); await mod.handler(event({ body: { answers: { ...worried, q12: "he doesn't want to be here anymore" } } }));
@@ -123,7 +123,7 @@ const check = (name, ok, extra = "") => { (ok ? pass++ : fail++); console.log(`$
   const guideFor = async (answers, extra = {}) => { reset(); await mod.handler(event({ body: { answers, ...extra } })); return hooks[0] && hooks[0].guide; };
   const base = { q1: "8–10", q12: "What do I do?" };
   check("guide: prevention -> guide-16", (await guideFor({ ...base, q2: opt("q2", "prevent") })) === "guide-16");
-  check("guide: mostly online -> guide-10", (await guideFor({ ...base, q2: opt("q2", "Something happened online"), q11: opt("q11", "primarily online") })) === "guide-10");
+  check("guide: mostly online -> guide-10", (await guideFor({ ...base, q2: opt("q2", "Something happened online"), q7: [opt("q7", "social media"), opt("q7", "text messages")] })) === "guide-10");
   check("guide: left out / excluded -> guide-11", (await guideFor({ ...base, q2: opt("q2", "treated badly"), q9: [opt("q9", "left out, ignored, or excluded")] })) === "guide-11");
   check("guide: school did nothing -> guide-19", (await guideFor({ ...base, q2: opt("q2", "treated badly"), q10: opt("q10", "nothing has changed") })) === "guide-19");
   check("guide: school said it isn't bullying -> guide-19", (await guideFor({ ...base, q2: opt("q2", "treated badly"), q10: opt("q10", "said it isn't bullying") })) === "guide-19");

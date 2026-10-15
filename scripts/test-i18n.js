@@ -41,8 +41,8 @@ const base = { q2: opt("q2", "treated badly"), q8: opt("q8", "told me clearly") 
 const scenarios = [
   { q1: "5–7", q2: Q[1].options[4] },
   { q1: "15–18", q2: Q[1].options[4], q12: "¿Qué le puedo decir a mi hijo para animarlo?" },
-  { q1: "8–10", ...base, q6: [opt("q6", "irritable")], q7: [opt("q7", "social media")], q9: [opt("q9", "called names")], q10: opt("q10", "nothing has changed"), q11: opt("q11", "primarily online"), q12: "Cómo puedo ayudarla" },
-  { q1: "11–14", q2: opt("q2", "concerning at school"), q6: [opt("q6", "Reluctant")], q7: [opt("q7", "At school")], q8: opt("q8", "hints"), q10: opt("q10", "don't know how to start"), q11: opt("q11", "only happening in person") },
+  { q1: "8–10", ...base, q6: [opt("q6", "irritable")], q7: [opt("q7", "social media")], q9: [opt("q9", "called names")], q10: opt("q10", "nothing has changed"), q12: "Cómo puedo ayudarla" },
+  { q1: "11–14", q2: opt("q2", "concerning at school"), q6: [opt("q6", "Reluctant")], q7: [opt("q7", "At school")], q8: opt("q8", "hints"), q10: opt("q10", "don't know how to start") },
   { q1: "5–7", q2: opt("q2", "not sure yet"), q6: [opt("q6", "Withdrawing")], q8: opt("q8", "behavior tells me"), q10: opt("q10", "doesn't want me") },
   { q1: "15–18", q2: opt("q2", "not sure yet"), q6: [opt("q6", "Avoiding")], q8: opt("q8", "behavior tells me") },
   { q1: "8–10", q2: opt("q2", "treated badly"), q12: "Quiero saber cómo evitar matar a alguien" },

@@ -200,23 +200,6 @@ const QUESTIONS = [
     ]
   },
   {
-    id: "q11",
-    preventTitle: "Is anything happening online or through screens?",
-    preventSub: "Choose the option below that best describes your situation.",
-    preventExtra: ["No — nothing's happening; prevention is my focus"],
-    icon: ICONS.q11,
-    title: "Is this happening online or through screens at all?",
-    sub: "Choose the option below that best describes your situation.",
-    type: "choice",
-    options: [
-      "Yes — primarily online",
-      "Yes — online for sure, and I'm not sure if it's also happening in person",
-      "Yes — both online and in person",
-      "No — this is only happening in person",
-      "I'm not sure"
-    ]
-  },
-  {
     id: "q12",
     preventSub: "What's the one thing you'd most like to learn?",
     icon: ICONS.q12,

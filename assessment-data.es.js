@@ -36,12 +36,6 @@ const QUESTIONS_ES = {
     sub: "Maestros, consejeros, director: cualquier persona con un cargo en la escuela.",
     preventTitle: "¿Ya se comunicó con alguien en la escuela?"
   },
-  q11: {
-    title: "¿Esto está pasando en internet o a través de pantallas?",
-    sub: "Elija la opción de abajo que mejor describa su situación.",
-    preventTitle: "¿Está pasando algo en internet o a través de pantallas?",
-    preventSub: "Elija la opción de abajo que mejor describa su situación."
-  },
   q12: {
     title: "¿Con qué quiere más ayuda en este momento?",
     sub: "¿Qué le ayudaría a sentir menos soledad en esto?",
@@ -111,13 +105,6 @@ const OPTIONS_ES = {
   "No — my child doesn't want me to contact the school": "No, mi hijo o hija no quiere que yo contacte a la escuela",
   "No — I haven't reached out yet because I don't know how to start": "No, todavía no me he comunicado porque no sé cómo empezar",
   "Not yet — nothing to report; I'm building strengths early": "Todavía no: no hay nada que reportar; estoy fortaleciendo a mi hijo o hija desde temprano",
-  // q11
-  "Yes — primarily online": "Sí, principalmente en internet",
-  "Yes — online for sure, and I'm not sure if it's also happening in person": "Sí, en internet seguro, y no sé si también pasa en persona",
-  "Yes — both online and in person": "Sí, tanto en internet como en persona",
-  "No — this is only happening in person": "No, solo está pasando en persona",
-  "I'm not sure": "No lo sé",
-  "No — nothing's happening; prevention is my focus": "No, no está pasando nada; mi enfoque es la prevención"
 };
 
 const RESOURCE_NAME_ES = {

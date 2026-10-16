@@ -1,7 +1,7 @@
 // Plays Mark's Suno songs with our own player (so a song plays once, with a Repeat button,
 // instead of Suno's embed, which loops forever).
 //
-// GET /audio/<suno-song-id>.m4a
+// GET /audio/<suno-song-id>.mp3
 //   1. Only songs on Mark's own Suno account are served (checked once against Suno, then remembered).
 //   2. The first request copies the audio from Suno into this site's storage; after that it's served
 //      from storage. Mark's paid Suno plan gives him the rights to his songs.
@@ -32,19 +32,22 @@ async function ownedByMark(id: string): Promise<boolean | null> {
   } catch { return null; }
 }
 
+// Real, playable audio only: an MP3 starts with "ID3" or an MPEG frame sync byte pair.
+// (Suno's streaming copies are scrambled for its own player, so we never store those.)
+function isMp3(buf: ArrayBuffer | null): boolean {
+  if (!buf || buf.byteLength < 4) return false;
+  const b = new Uint8Array(buf, 0, 4);
+  return (b[0] === 0x49 && b[1] === 0x44 && b[2] === 0x33) || (b[0] === 0xff && (b[1] & 0xe0) === 0xe0);
+}
+
+// The plain MP3 download that Mark's paid Suno plan provides.
 async function copyFromSuno(id: string): Promise<ArrayBuffer | null> {
-  const urls = [
-    `https://cdn1.suno.ai/${id}.m4a`,
-    `https://d2lwuy8qc234o3.cloudfront.net/1/clip/${id}.m4a`,
-  ];
-  for (const u of urls) {
-    try {
-      const r = await fetch(u, { headers: SUNO_HEADERS });
-      const type = r.headers.get("content-type") || "";
-      if (r.ok && type.startsWith("audio")) return await r.arrayBuffer();
-    } catch { /* try the next address */ }
-  }
-  return null;
+  try {
+    const r = await fetch(`https://cdn1.suno.ai/${id}.mp3`, { headers: SUNO_HEADERS });
+    if (!r.ok) return null;
+    const buf = await r.arrayBuffer();
+    return isMp3(buf) ? buf : null;
+  } catch { return null; }
 }
 
 export default async (req: Request) => {
@@ -52,11 +55,12 @@ export default async (req: Request) => {
   if (req.method !== "GET" && req.method !== "HEAD") return fail(405, "Method not allowed");
 
   const name = new URL(req.url).pathname.split("/").pop() || "";
-  const id = name.replace(/\.m4a$/, "").toLowerCase();
+  const id = name.replace(/\.(mp3|m4a)$/, "").toLowerCase();
   if (!ID_RE.test(id)) return fail(404, "Not found");
 
   const store = getStore("song-audio");
-  let data = await store.get(id, { type: "arrayBuffer" });
+  let data: ArrayBuffer | null = await store.get(id, { type: "arrayBuffer" });
+  if (data && !isMp3(data)) { await store.delete(id); data = null; }  // clear any unplayable copy
 
   if (!data) {
     const owned = await ownedByMark(id);
@@ -69,7 +73,7 @@ export default async (req: Request) => {
   }
 
   const total = data.byteLength;
-  const base = { ...CORS, "Content-Type": "audio/mp4", "Accept-Ranges": "bytes", "Cache-Control": "public, max-age=604800" };
+  const base = { ...CORS, "Content-Type": "audio/mpeg", "Accept-Ranges": "bytes", "Cache-Control": "public, max-age=604800" };
   const range = req.headers.get("range");
   const m = range && /^bytes=(\d*)-(\d*)$/.exec(range.trim());
   if (m) {

@@ -2436,49 +2436,49 @@ async function generatePDF() {
         + bulletsL.reduce((h, l) => h + l.length * 5 + 1.5, 0) + 3 + closerL.length * 5.2 + 5 + 12 + 5 + noteL.length * 4.4 + 8;
       ensureRoom(cardH + 8);
       const top = y;
-      doc.setFillColor(16, 27, 51); doc.roundedRect(X, top, W, cardH, 3, 3, "F");
-      doc.setFillColor(200, 155, 60); doc.rect(X + 3, top, W - 6, 1.4, "F");
+      doc.setFillColor(255, 255, 255); doc.setDrawColor(16, 27, 51); doc.setLineWidth(0.6); doc.roundedRect(X, top, W, cardH, 3, 3, "FD");
+      doc.setFillColor(200, 155, 60); doc.rect(X + 3, top + 0.3, W - 6, 1.2, "F");
       let cy = top + 11;
-      doc.setFont(undefined, "bold"); doc.setFontSize(8.5); doc.setTextColor(200, 155, 60);
+      doc.setFont(undefined, "bold"); doc.setFontSize(8.5); doc.setTextColor(138, 109, 46);
       doc.text(qhOffer.kicker.toUpperCase(), X + PAD, cy, { charSpace: 0.5 }); cy += 8;
-      doc.setFontSize(16); doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16); doc.setTextColor(16, 27, 51);
       doc.text(qhOffer.title, X + PAD, cy); cy += 8;
-      doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
+      doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(51, 60, 78);
       doc.text(leadL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += leadL.length * 5 + 4;
       if (guideL.length) {
-        doc.setFillColor(28, 42, 74); doc.setDrawColor(138, 109, 46); doc.setLineWidth(0.4);
+        doc.setFillColor(251, 247, 238); doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.4);
         doc.roundedRect(X + PAD, cy, inner, matchH, 2, 2, "FD");
         let my = cy + 7;
         if (issueL.length) {
-          doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
+          doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(138, 109, 46);
           doc.text(qhOffer.issueLabel, X + PAD + 5, my);
-          doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+          doc.setFontSize(12); doc.setTextColor(16, 27, 51);
           doc.text(issueL, X + PAD + 5, my + 6.5, { lineHeightFactor: 1.3 });
           my += issueH;
         }
-        doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
+        doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(138, 109, 46);
         doc.text(qhOffer.matchLabel, X + PAD + 5, my);
-        doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12); doc.setTextColor(16, 27, 51);
         doc.text(guideL, X + PAD + 5, my + 6.5, { lineHeightFactor: 1.3 });
         cy += matchH + 6;
       }
-      doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
+      doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(51, 60, 78);
       bulletsL.forEach(l => { doc.text(l, X + PAD + 1, cy, { lineHeightFactor: 1.35 }); cy += l.length * 5 + 1.5; });
       cy += 3;
-      doc.setFont(undefined, "bold"); doc.setFontSize(10.5); doc.setTextColor(241, 228, 195);
+      doc.setFont(undefined, "bold"); doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
       doc.text(closerL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += closerL.length * 5.2 + 3;
       if (qhOffer.url) {
         doc.setFont(undefined, "bold"); doc.setFontSize(11.5);
         const bw = doc.getTextWidth(qhOffer.button) + 14;
-        doc.setFillColor(200, 155, 60); doc.roundedRect(X + PAD, cy, bw, 11, 2, 2, "F");
+        doc.setFillColor(255, 255, 255); doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.9); doc.roundedRect(X + PAD, cy, bw, 11, 2, 2, "FD");
         doc.setTextColor(16, 27, 51); doc.text(qhOffer.button, X + PAD + 7, cy + 7.3);
         doc.link(X + PAD, cy, bw, 11, { url: qhOffer.url });
       } else {
-        doc.setFont(undefined, "bold"); doc.setFontSize(11.5); doc.setTextColor(200, 155, 60);
+        doc.setFont(undefined, "bold"); doc.setFontSize(11.5); doc.setTextColor(138, 109, 46);
         doc.text(qhOffer.soon, X + PAD, cy + 7.3);
       }
       cy += 16;
-      doc.setFont(undefined, "normal"); doc.setFontSize(9); doc.setTextColor(174, 182, 200);
+      doc.setFont(undefined, "normal"); doc.setFontSize(9); doc.setTextColor(100, 108, 122);
       doc.text(noteL, X + PAD, cy, { lineHeightFactor: 1.3 });
       y = top + cardH + 10;
     }

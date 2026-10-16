@@ -72,12 +72,93 @@ function addFlag(key) {
   if (!state.safetyFlags.includes(key)) { state.safetyFlags.push(key); track("safety_escalation_triggered", { trigger: key }); }
 }
 
+// ============================================================
+// KEEPING A PARENT'S PLACE
+// A parent who taps away (to read about the Sunbeam book, a guide, anything) and comes back, or whose
+// phone reloads the page, picks up exactly where they were. Progress is kept in THIS browser tab only
+// (sessionStorage): it is gone once the tab is closed, so answers never linger on a shared phone.
+// The phone's own Back button also steps back one question instead of leaving the Clarity Check.
+// ============================================================
+const PROGRESS_KEY = "bp_progress_v1";
+const PROGRESS_MAX_AGE = 12 * 60 * 60 * 1000;
+function keepTyping() {
+  try {
+    const fe = document.getElementById("finalEmail"); if (fe) state.email = fe.value.trim();
+    const ti = document.getElementById("textInput"); const q = state.screen === "question" ? currentQuestion() : null;
+    if (ti && q && q.type === "text") state.answers[q.id] = ti.value;
+  } catch (e) { /* nothing to keep */ }
+}
+function saveProgress() {
+  try {
+    if (state.screen === "landing" || state.screen === "invite") return;
+    if (state.screen === "plan" && state.planId) { sessionStorage.removeItem(PROGRESS_KEY); return; }   // the plan's own link takes over
+    sessionStorage.setItem(PROGRESS_KEY, JSON.stringify({
+      t: Date.now(), screen: state.screen, qIndex: state.qIndex, answers: state.answers,
+      safetyFlags: state.safetyFlags, safetyAcknowledged: !!state.safetyAcknowledged, email: state.email || "",
+      sent: state.justSent || null
+    }));
+  } catch (e) { /* storage unavailable: the check still works, it just can't resume */ }
+}
+function restoreProgress() {
+  try {
+    const p = JSON.parse(sessionStorage.getItem(PROGRESS_KEY) || "null");
+    if (!p || !p.t || Date.now() - p.t > PROGRESS_MAX_AGE) return false;
+    if (!["question", "results", "plan"].includes(p.screen)) return false;
+    state.answers = p.answers && typeof p.answers === "object" ? p.answers : {};
+    state.safetyFlags = Array.isArray(p.safetyFlags) ? p.safetyFlags : [];
+    state.safetyAcknowledged = !!p.safetyAcknowledged;
+    state.email = p.email || null;
+    state.consentGiven = true;
+    state.screen = p.screen;
+    state.qIndex = Math.max(0, Math.min(p.qIndex | 0, visibleQuestions().length - 1));
+    if (p.screen === "plan") { state.planView = true; state.planLoaded = true; state.justSent = p.sent || null; state.completionTracked = state.completionRecorded = true; }
+    return true;
+  } catch (e) { return false; }
+}
+function historyKey() { return state.screen === "question" ? "q" + state.qIndex : state.screen; }
+function syncHistory() {
+  try {
+    if (!["question", "results", "plan"].includes(state.screen)) return;
+    if (state.screen === "plan" && !state.justSent && !state.restoredPlan) return;   // a plan opened from its link is a normal page
+    const key = historyKey(), cur = history.state;
+    if (cur && cur.bp === key) return;
+    const entry = { bp: key, prev: cur && cur.bp ? cur.bp : null, screen: state.screen, qIndex: state.qIndex };
+    const url = state.screen === "plan" && state.planUrlPath ? state.planUrlPath : undefined;   // the plan's own private link
+    if (state.replaceHistory) { state.replaceHistory = false; entry.prev = cur ? cur.prev || null : null; history.replaceState(entry, "", url); }
+    else history.pushState(entry, "", url);
+  } catch (e) { /* history unavailable: the in-page buttons still work */ }
+}
+// The in-page Back buttons: use the browser's own history when the step behind us is ours, so the
+// phone's Back and Forward keep making sense; otherwise just step back.
+function goBackOneStep(fallback) {
+  try {
+    const cur = history.state;
+    const want = state.screen === "results" ? "q" + (visibleQuestions().length - 1) : "q" + (state.qIndex - 1);
+    if (cur && cur.prev === want) { keepTyping(); history.back(); return; }
+  } catch (e) { /* fall through */ }
+  state.replaceHistory = true; fallback();
+}
+window.addEventListener("popstate", (ev) => {
+  const s = ev.state;
+  if (s && s.bp && ["question", "results", "plan"].includes(s.screen)) {
+    keepTyping();
+    if (s.screen === "plan" && !state.planLoaded) return;
+    state.screen = s.screen;
+    state.qIndex = Math.max(0, Math.min(s.qIndex | 0, visibleQuestions().length - 1));
+    render(); return;
+  }
+  if (state.screen === "question" || state.screen === "results") { keepTyping(); state.screen = "landing"; render(); }
+});
+window.addEventListener("pagehide", () => { keepTyping(); saveProgress(); });
+
 function render() {
   document.body.classList.toggle("question-mode", state.screen === "question");
   document.body.classList.toggle("landing-mode", state.screen === "landing");
   if (state.screen !== "question") document.body.classList.remove("safety-mini");
   // Jump straight to the top of each new screen (a smooth scroll can be cut short on phones and leave the page part-way down).
   window.scrollTo(0, 0);
+  syncHistory();
+  saveProgress();
   if (state.screen === "landing") return renderLanding();
   if (state.screen === "question") return renderQuestion();
   if (state.screen === "results") return renderResults();
@@ -270,7 +351,7 @@ function renderMulti(q) {
 
 function renderText(q) {
   const val = state.answers[q.id] || "";
-  return `<textarea id="textInput" rows="5" placeholder="${L(`Type here...`, `Escriba aquí...`)}">${val}</textarea>`;
+  return `<textarea id="textInput" rows="5" placeholder="${L(`Type here...`, `Escriba aquí...`)}">${escapeHtml(val)}</textarea>`;
 }
 
 function escapeAttr(s) { return String(s).replace(/"/g, "&quot;"); }
@@ -322,8 +403,9 @@ function rerenderCurrentQuestion() {
 }
 
 function wireQuestionEvents(q) {
-  document.getElementById("backBtn").addEventListener("click", () => { if (state.qIndex > 0) { state.qIndex--; render(); } });
+  document.getElementById("backBtn").addEventListener("click", () => { if (state.qIndex > 0) goBackOneStep(() => { state.qIndex--; render(); }); });
   document.getElementById("nextBtn").addEventListener("click", () => onNext(q));
+  if (q.type === "text") { const ti = document.getElementById("textInput"); if (ti) ti.addEventListener("input", () => { state.answers[q.id] = ti.value; saveProgress(); }); }
   if (q.type === "choice") { document.querySelectorAll(".option-btn").forEach(btn => { btn.addEventListener("click", () => { state.answers[q.id] = btn.dataset.value; checkSafety(q, btn.dataset.value); rerenderCurrentQuestion(); }); }); }
   if (q.type === "multi") { document.querySelectorAll(".multi-opt").forEach(btn => { btn.addEventListener("click", () => { const val = btn.dataset.value; const arr = state.answers[q.id] || []; const idx = arr.indexOf(val); if (idx >= 0) arr.splice(idx, 1); else arr.push(val); state.answers[q.id] = arr; checkSafety(q, arr); rerenderCurrentQuestion(); }); }); }
 }
@@ -374,7 +456,7 @@ function renderResults() {
         ${reflection ? `<p class="summary-reflection">${reflection}</p>` : ""}
       </div>
       <h2 class="question">${L(`Where should we send your action plan?`, `¿A dónde enviamos su plan de acción?`)}</h2>
-      <p class="sub">${L(`One email with a private link to your personalized plan, easy to read on your phone — plus a printable copy to keep.`, `Un correo con un enlace privado a su plan personalizado, fácil de leer en su teléfono, más una copia para imprimir y guardar.`)}</p>
+      <p class="sub">${L(`Your full plan opens right here as soon as you tap the button, and we'll email you a private link to come back to it any time.`, `Su plan completo se abre aquí mismo en cuanto toque el botón, y le enviaremos por correo un enlace privado para volver a él cuando quiera.`)}</p>
       <input type="email" id="finalEmail" placeholder="${L(`you@email.com`, `usted@correo.com`)}" value="${state.email || ""}">
       <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>${L(`Leave this empty`, `Deje esto vacío`)}<input type="text" id="hpWebsite" tabindex="-1" autocomplete="off"></label></div>
       <div id="turnstileBox" style="margin-top:12px;"></div>
@@ -397,7 +479,7 @@ function renderResults() {
       </div>
     </div>
   `;
-  document.getElementById("backToQ").addEventListener("click", () => { state.screen = "question"; state.qIndex = visibleQuestions().length - 1; render(); });
+  document.getElementById("backToQ").addEventListener("click", () => { keepTyping(); goBackOneStep(() => { state.screen = "question"; state.qIndex = visibleQuestions().length - 1; render(); }); });
   wireSafetyBanner();
   initTurnstile();
   document.getElementById("getPlanBtn").addEventListener("click", async () => {
@@ -412,13 +494,21 @@ function renderResults() {
     btn.disabled = true; btn.textContent = "Sending…";
     setPlanStatus(L("Sending your plan…", "Enviando su plan…"), "info");
     const sent = await sendPlanByEmail();
-    let pdfOk = true;
-    try { await generatePDF(); track("pdf_downloaded"); } catch (err) { pdfOk = false; console.warn("PDF creation failed:", err); }
-    btn.disabled = false; btn.textContent = sent.ok ? L("Send it again", "Enviarlo de nuevo") : L("Try again", "Intentar de nuevo");
-    setPlanStatus(planStatusMessage(sent, pdfOk, email), sent.ok ? "success" : "error");
-    if (sent.ok && sent.planUrl) showPlanLink(sent.planUrl);
-    // Once the plan is on its way, the "what's included" preview has done its job — hide it.
-    if (sent.ok || pdfOk) { const inc = document.getElementById("includedPreview"); if (inc) inc.style.display = "none"; }
+    if (!sent.ok && sent.status === 429) {   // too many requests: let them try again rather than move on
+      btn.disabled = false; btn.textContent = L("Try again", "Intentar de nuevo");
+      setPlanStatus(planStatusMessage(sent, false, email), "error");
+      return;
+    }
+    // The full plan opens right here on screen (no PDF popping up on a phone). A printable copy is one tap away.
+    state.justSent = { ok: !!sent.ok, queued: !!sent.queued, email };
+    let path = "";
+    try { if (sent.ok && sent.planUrl) { const u = new URL(sent.planUrl); if (u.origin === window.location.origin && /^\/plan\/[A-Za-z0-9_-]{24}$/.test(u.pathname)) path = u.pathname; } } catch (e) { /* stay on this address */ }
+    state.planUrlPath = path;
+    if (path) state.planId = path.split("/")[2];
+    state.planView = true; state.planLoaded = true; state.screen = "plan";
+    state.replaceHistory = true;   // Back from the plan returns to the last question, not to the email form
+    track("plan_shown_on_screen");
+    render();
   });
 }
 
@@ -627,7 +717,7 @@ async function renderPlanView() {
           L(`The link may have expired, or the plan was deleted at your request. You can take the check-in again any time — it takes about 3 minutes.`, `Es posible que el enlace haya vencido o que el plan se haya eliminado a petición suya. Puede hacer el chequeo de nuevo cuando quiera; toma unos 3 minutos.`));
       } else {
         planPageMessage(L(`We couldn't open your plan just now`, `No pudimos abrir su plan en este momento`),
-          L(`Please try again in a minute. If it keeps happening, the PDF copy you downloaded has your full plan.`, `Por favor, inténtelo de nuevo en un minuto. Si sigue pasando, la copia en PDF que descargó tiene su plan completo.`));
+          L(`Please try again in a minute. Your plan is saved, so this link will work again shortly.`, `Por favor, inténtelo de nuevo en un minuto. Su plan está guardado, así que este enlace volverá a funcionar en breve.`));
       }
       return;
     }
@@ -641,22 +731,33 @@ async function renderPlanView() {
     track("plan_page_viewed");
   }
 
+  const js = state.justSent;
+  const sentNote = !js ? "" : js.ok
+    ? (js.queued
+        ? L(`A copy is also on its way to ${js.email} and will arrive automatically, usually within the hour.`, `También le enviamos una copia a ${js.email}; llegará automáticamente, normalmente en menos de una hora.`)
+        : L(`A copy is also on its way to ${js.email}, with a private link back to this page. If you don't see it in a few minutes, check your spam or promotions folder.`, `También le enviamos una copia a ${js.email}, con un enlace privado para volver a esta página. Si no la ve en unos minutos, revise su carpeta de spam o de promociones.`))
+    : L(`We couldn't email it just now, but your full plan is right here. Save a printable copy below so you have it.`, `No pudimos enviarlo por correo en este momento, pero su plan completo está aquí. Guarde una copia para imprimir abajo para tenerla.`);
   appEl.innerHTML = `
     <div class="card plan-toolbar">
       <div class="card-body">
-        <p class="plan-kicker">${L(`Your private plan page`, `La página privada de su plan`)}</p>
-        <p class="sub" style="margin:4px 0 14px;">${L(`Bookmark this page to come back any time. Want a copy to print or keep?`, `Guarde esta página en favoritos para volver cuando quiera. ¿Quiere una copia para imprimir o guardar?`)}</p>
-        <button class="primary" id="planPdfBtn">${L(`Download printable PDF`, `Descargar PDF para imprimir`)}</button>
+        ${js ? `<p class="plan-kicker">${L(`Your Action Plan is ready`, `Su Plan de Acción está listo`)}</p>
+        <p class="sub plan-sent-note" style="margin:4px 0 14px;"></p>` : `<p class="plan-kicker">${L(`Your private plan page`, `La página privada de su plan`)}</p>`}
+        ${js ? "" : `<p class="sub" style="margin:4px 0 14px;">${L(`Bookmark this page to come back any time. Want a copy to print or keep?`, `Guarde esta página en favoritos para volver cuando quiera. ¿Quiere una copia para imprimir o guardar?`)}</p>`}
+        <button class="${js ? "share-secondary" : "primary"}" id="planPdfBtn">${L(`Save a printable copy (PDF)`, `Guardar una copia para imprimir (PDF)`)}</button>
         <p id="planStatus" role="status" aria-live="polite" style="display:none;margin:12px 0 0;font-size:14.5px;line-height:1.5;"></p>
       </div>
     </div>
     <div class="card plan-sheet">${buildEmailHtml()}</div>
     ${state.safetyFlags.length ? "" : shareSectionHtml()}`;
   if (!state.safetyFlags.length) wireShareSection();
+  const noteEl = appEl.querySelector(".plan-sent-note");
+  if (noteEl) { noteEl.textContent = sentNote; noteEl.style.color = js && js.ok ? "#276749" : "#9C4221"; }   // textContent: it contains their email address
+  // Links in the plan open in a new tab, so the plan stays right here when the parent comes back.
+  appEl.querySelectorAll(".plan-sheet a[href^='http']").forEach(a => { a.target = "_blank"; a.rel = "noopener"; });
   const btn = document.getElementById("planPdfBtn");
   btn.addEventListener("click", async () => {
     btn.disabled = true;
-    try { await generatePDF(); track("pdf_downloaded"); setPlanStatus(L(`Your PDF is downloading.`, `Su PDF se está descargando.`), "success"); }
+    try { await generatePDF(); track("pdf_downloaded"); setPlanStatus(L(`Your printable copy is saving to your device.`, `Su copia para imprimir se está guardando en su dispositivo.`), "success"); }
     catch (e) { setPlanStatus(L(`We couldn't create the PDF just now. Please try again in a moment.`, `No pudimos crear el PDF en este momento. Inténtelo de nuevo en un momento.`), "error"); }
     btn.disabled = false;
   });
@@ -904,6 +1005,9 @@ function buildReadableSummary() {
 function buildEmailHtml() {
   const navy = "#1B2A4A", navyDeep = "#101B33", text = "#1F2430", muted = "#5B6472", gold = "#C89B3C";
   const sections = [];
+  // The plan is built in named parts, then put in order below. What helps right now comes first:
+  // next steps, the words to say and the Quick Help Guides; then Shining Moments, reading and support.
+  const S = { safety: [], story: [], words: [], notes: [], why: [], steps: [], watch: [], pro: [], sunbeam: [], reading: [], guides: [], support: [], foot: [] };
 
   // One consistent section-header treatment used everywhere below —
   // this is the single biggest visual-hierarchy fix: previously every
@@ -917,7 +1021,7 @@ function buildEmailHtml() {
     const priority = ["selfHarmOrSuicide", "violenceRisk", "sexualOrPower", "physicalSigns"];
     const key = priority.find(k => state.safetyFlags.includes(k));
     const variant = SAFETY_VARIANTS[key];
-    sections.push(`
+    S.safety.push(`
       <div style="background:#FDEDED;border-left:4px solid #B23A48;border-radius:8px;padding:16px 18px;margin-bottom:20px;">
         <p style="margin:0 0 8px;font-weight:700;color:#B23A48;font-size:16px;">${L(`Please reach out to one of these resources first:`, `Por favor, comuníquese primero con uno de estos recursos:`)}</p>
         <ul style="margin:0;padding-left:20px;color:#7A2E31;font-size:14px;">
@@ -929,18 +1033,18 @@ function buildEmailHtml() {
   }
 
   if (state.answers.q4) {
-    sections.push(`${sectionHeader(L("You told us", "Usted nos dijo"))}<p style="color:${text};font-size:15.5px;font-style:italic;margin:0;">"${escapeHtml(state.answers.q4)}"</p>`);
+    S.story.push(`${sectionHeader(L("You told us", "Usted nos dijo"))}<p style="color:${text};font-size:15.5px;font-style:italic;margin:0;">"${escapeHtml(state.answers.q4)}"</p>`);
   }
   if (openingValidation()) {
-    sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${openingValidation()}</p>`);
+    S.story.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${openingValidation()}</p>`);
   }
-  sections.push(`${sectionHeader(isPreventive() ? L("Where you're starting", "Su punto de partida") : L("What's happening", "Qué está pasando"))}<p style="color:${text};font-size:15px;margin:0;">${deriveSummary()}</p>`);
+  S.story.push(`${sectionHeader(isPreventive() ? L("Where you're starting", "Su punto de partida") : L("What's happening", "Qué está pasando"))}<p style="color:${text};font-size:15px;margin:0;">${deriveSummary()}</p>`);
   if (focusLine()) {
-    sections.push(`<p style="color:${text};font-size:14.5px;font-style:italic;margin:10px 0 0;">${escapeHtml(focusLine())}</p>`);
+    S.story.push(`<p style="color:${text};font-size:14.5px;font-style:italic;margin:10px 0 0;">${escapeHtml(focusLine())}</p>`);
   }
   if (wordsAnswer()) {
     const w = wordsAnswer();
-    sections.push(`
+    S.words.push(`
       ${sectionHeader(w.title)}
       <p style="color:${text};font-size:15px;line-height:1.6;margin:0 0 14px;">${w.lead}</p>
       <table role="presentation" style="width:100%;margin:0 0 16px;"><tr><td style="background:#EEF2F7;border-left:4px solid ${gold};border-radius:6px;padding:16px 18px;"><p style="color:${navyDeep};font-size:18px;font-weight:700;line-height:1.5;margin:0;">“${w.quote}”</p></td></tr></table>
@@ -949,13 +1053,13 @@ function buildEmailHtml() {
       <p style="color:${muted};font-size:14px;margin:0;"><strong style="color:${navy};">${L(`Why it helps:`, `Por qué ayuda:`)}</strong> ${w.why}</p>`);
   }
   if (multiChildNote()) {
-    sections.push(`<p style="color:${text};background:#F9FAFC;border:1px solid #E1E4EA;border-radius:8px;padding:12px 14px;font-size:14.5px;margin:14px 0 0;">${multiChildNote()}</p>`);
+    S.notes.push(`<p style="color:${text};background:#F9FAFC;border:1px solid #E1E4EA;border-radius:8px;padding:12px 14px;font-size:14.5px;margin:14px 0 0;">${multiChildNote()}</p>`);
   }
   if (selfReflectionNote()) {
-    sections.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${selfReflectionNote()}</p>`);
+    S.notes.push(`<p style="color:${muted};font-size:14.5px;margin:10px 0 0;">${selfReflectionNote()}</p>`);
   }
-  sections.push(`${sectionHeader(L("What actually helps", "Lo que de verdad ayuda"))}<p style="color:${text};font-size:15px;margin:0;">${whyThisMattersNote()}</p>`);
-  sections.push(`
+  S.why.push(`${sectionHeader(L("Good to know", "Es bueno saberlo"))}<p style="color:${text};font-size:15px;margin:0;">${whyThisMattersNote()}</p>`);
+  S.steps.push(`
     ${sectionHeader(L("Your next 3 steps", "Sus próximos 3 pasos"))}
     <table role="presentation" style="width:100%;">
       ${stepParts().map(([stepT, stepR], i) => `
@@ -972,7 +1076,7 @@ function buildEmailHtml() {
   `);
   const watchFor = preventionWatchForNote();
   if (watchFor) {
-    sections.push(`
+    S.watch.push(`
       ${sectionHeader(L("What to watch for", "Qué debe observar"))}
       <p style="color:${text};font-size:15px;margin:0 0 10px;">${watchFor.intro}</p>
       <ul style="color:${text};font-size:14.5px;padding-left:20px;margin:0 0 10px;">
@@ -983,7 +1087,7 @@ function buildEmailHtml() {
   }
   const proNote = professionalSupportNote();
   if (proNote) {
-    sections.push(`${sectionHeader(L("Worth considering", "Vale la pena considerar"))}<p style="color:${text};font-size:15px;margin:0;">${proNote}</p>`);
+    S.pro.push(`${sectionHeader(L("Worth considering", "Vale la pena considerar"))}<p style="color:${text};font-size:15px;margin:0;">${proNote}</p>`);
   }
 
   // Recommended reading now comes after the steps — a natural answer to
@@ -994,7 +1098,7 @@ function buildEmailHtml() {
   // already had — previously this was the one major section with no
   // card treatment at all, which made it feel like an afterthought.
   if (sunbeamResource()) {
-    sections.push(`
+    S.sunbeam.push(`
     ${sectionHeader(L("A nightly opportunity", "Una oportunidad cada noche"))}
       <table role="presentation" style="width:100%;background:#FFFBF3;border:1px solid #EADFC6;border-top:4px solid ${gold};border-radius:12px;margin:0;overflow:hidden;"><tr><td style="padding:28px 26px 26px;">
         ${sunbeamResource().introCaption.split("\n\n").map((para, i) => {
@@ -1079,7 +1183,7 @@ function buildEmailHtml() {
       </td></tr></table>
     `);
   }
-  sections.push(`
+  S.reading.push(`
     ${sectionHeader(L("Recommended reading", "Lecturas recomendadas"))}
     <table role="presentation" style="width:100%;background:#F9FAFC;border:1px solid #E1E4EA;border-radius:12px;"><tr><td style="padding:20px 22px;">
     <p style="color:${text};font-size:14.5px;margin:0 0 16px;">${topicLabel()}</p>
@@ -1097,7 +1201,7 @@ function buildEmailHtml() {
     </td></tr></table>
   `);
   const qh = quickHelpOffer();
-  if (qh) sections.push(`
+  if (qh) S.guides.push(`
     <table role="presentation" style="width:100%;background:${navyDeep};border-top:4px solid ${gold};border-radius:12px;margin:28px 0 8px;"><tr><td style="padding:24px 22px 22px;">
       <p style="color:${gold};font-size:11.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 8px;">${qh.kicker}</p>
       <p style="color:#ffffff;font-size:20px;font-weight:800;line-height:1.3;margin:0 0 10px;">${qh.title}</p>
@@ -1119,7 +1223,7 @@ function buildEmailHtml() {
       <p style="color:#AEB6C8;font-size:12.5px;line-height:1.5;margin:12px 0 0;">${qh.note}</p>
     </td></tr></table>
   `);
-  sections.push(`
+  S.support.push(`
     ${sectionHeader(FREE_SUPPORT_TITLE())}
     <p style="color:${text};font-size:15px;margin:0 0 14px;">${FREE_SUPPORT_INTRO()}</p>
     <table role="presentation" style="width:100%;background:#F5F6FB;border-radius:10px;margin:0 0 16px;border:1px solid #E1E4EA;"><tr>
@@ -1133,14 +1237,14 @@ function buildEmailHtml() {
     </tr></table>
   `);
 
-  sections.push(`
+  S.support.push(`
     ${sectionHeader(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"))}
     <p style="color:${text};font-size:15px;margin:0;">
       ${L(`That's always an option too.`, `Esa también es siempre una opción.`)} <a href="${NETWORK_MATCH_URL}" style="color:${navy};">${L(`Search the Bullyproof Support network`, `Busque en la red de Bullyproof Support`)}</a> ${L(`to get matched with a professional near you — just enter your location, no cost to look.`, `para encontrar a un profesional cerca de usted: solo escriba su ubicación; buscar no cuesta nada.`)}<br>
       ${L(`If your area doesn't have a strong match yet,`, `Si en su zona todavía no hay una buena coincidencia,`)} <a href="${FIND_SUPPORT_URL}" style="color:${navy};">${L(`Psychology Today's broader directory`, `el directorio más amplio de Psychology Today`)}</a> ${L(`is a good backup.`, `es una buena alternativa.`)}
     </p>
   `);
-  sections.push(`
+  S.foot.push(`
     <p style="color:#8896B8;font-size:12px;margin-top:28px;border-top:1px solid #E1E4EA;padding-top:14px;">
     ${L(`This plan is for general information only. It is not medical, mental health, or legal advice, and it doesn't guarantee any specific result. Please use your own judgment and talk to a licensed professional about your specific situation. If your child is in immediate danger, call 911.`, `Este plan es solo para información general. No es asesoría médica, de salud mental ni legal, y no garantiza ningún resultado específico. Use su propio criterio y hable con un profesional con licencia sobre su situación específica. Si su hijo o hija está en peligro inmediato, llame al 911.`)}
     </p>
@@ -1160,7 +1264,7 @@ function buildEmailHtml() {
   const footDelete = footContact
     ? `${L("Want your answers deleted?", "¿Quiere que se eliminen sus respuestas?")} <a href="mailto:${escapeAttr(footContact)}?subject=${L("Delete%20my%20data", "Eliminar%20mis%20datos")}" style="color:#8896B8;">${L("Delete my data", "Eliminar mis datos")}</a>.`
     : "";
-  sections.push(`
+  S.foot.push(`
     <p style="color:#8896B8;font-size:12px;line-height:1.6;margin:10px 0 0;">
       ${footIntro}
       ${footConsent}
@@ -1169,6 +1273,11 @@ function buildEmailHtml() {
       ${footAddress ? `<br>${escapeHtml(footAddress)}` : ""}
     </p>
   `);
+
+  const order = isPreventive()
+    ? ["safety", "story", "words", "notes", "steps", "watch", "pro", "sunbeam", "guides", "why", "reading", "support", "foot"]
+    : ["safety", "story", "words", "notes", "steps", "watch", "pro", "guides", "why", "sunbeam", "reading", "support", "foot"];
+  order.forEach(k => sections.push(...S[k]));
 
   return `
     <div${getLang() === "es" ? ' lang="es"' : ""} style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;">
@@ -2008,358 +2117,379 @@ async function generatePDF() {
   if (multiChildNote()) body(multiChildNote(), { color: [74, 109, 147] });
   if (selfReflectionNote()) body(selfReflectionNote(), { color: [74, 109, 147] });
 
-  heading(L("What actually helps:", "Lo que de verdad ayuda:"));
-  body(whyThisMattersNote());
+  const pdfWhy = () => {
+    heading(L("Good to know:", "Es bueno saberlo:"));
+    body(whyThisMattersNote());
 
-  heading(L("Your next 3 steps:", "Sus próximos 3 pasos:"));
-  doc.setFontSize(11);
-  stepParts().forEach(([stepTitle, stepRest], i) => {
-    doc.setTextColor(40, 40, 40);
-    const lines = doc.splitTextToSize(stepRest, 165);
-    ensureRoom(Math.max(lines.length * 6 + (stepTitle ? 7 : 0), 10) + 6);
-    const stepTopY = y;
-    doc.setFillColor(16, 27, 51);
-    doc.circle(19, stepTopY - 2, 4, "F");
-    doc.setFontSize(10); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold");
-    doc.text(String(i + 1), 19, stepTopY - 0.5, { align: "center" });
-    if (stepTitle) {
-      doc.setFont(undefined, "bold"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
-      doc.text(stepTitle, 28, y);
-      y += 7;
-    }
-    doc.setFont(undefined, "normal"); doc.setFontSize(11); doc.setTextColor(40, 40, 40);
-    doc.text(lines, 28, y);
-    y += Math.max(lines.length * 6, 10) + 6;
-  });
-
-  const watchFor = preventionWatchForNote();
-  if (watchFor) {
-    heading(L("What to watch for:", "Qué debe observar:"));
-    body(watchFor.intro);
-    watchFor.items.forEach(item => body(`• ${item}`));
-    body(watchFor.outro, { color: [130, 130, 130] });
-  }
-
-  const proNote = professionalSupportNote();
-  if (proNote) { heading(L("Worth considering:", "Vale la pena considerar:")); body(proNote); }
-
-  // Recommended reading comes after the steps now — a natural answer to
-  // "okay, now what do I actually go read," rather than a cold opener.
-  // Two books now, each pointing at a specific chapter for their situation.
-  const sunbeam = sunbeamResource();
-  if (sunbeam) {
-    heading(L("A nightly opportunity", "Una oportunidad cada noche"));
-
-    const introParas = sunbeam.introCaption.split("\n\n");
-    for (let pi = 0; pi < introParas.length; pi++) {
-      if (pi === 0) {
-        // lead paragraph, in the same serif voice as the email
-        doc.setFont("times", "normal"); doc.setFontSize(14); doc.setTextColor(16, 27, 51);
-        const lead = doc.splitTextToSize(introParas[pi], 180);
-        ensureRoom(lead.length * 6.4 + 6);
-        doc.text(lead, 15, y, { lineHeightFactor: 1.35 }); y += lead.length * 6.4 + 6;
-        doc.setFont("helvetica", "normal");
-        continue;
+  };
+  const pdfSteps = () => {
+    heading(L("Your next 3 steps:", "Sus próximos 3 pasos:"));
+    doc.setFontSize(11);
+    stepParts().forEach(([stepTitle, stepRest], i) => {
+      doc.setTextColor(40, 40, 40);
+      const lines = doc.splitTextToSize(stepRest, 165);
+      ensureRoom(Math.max(lines.length * 6 + (stepTitle ? 7 : 0), 10) + 6);
+      const stepTopY = y;
+      doc.setFillColor(16, 27, 51);
+      doc.circle(19, stepTopY - 2, 4, "F");
+      doc.setFontSize(10); doc.setTextColor(255, 255, 255); doc.setFont(undefined, "bold");
+      doc.text(String(i + 1), 19, stepTopY - 0.5, { align: "center" });
+      if (stepTitle) {
+        doc.setFont(undefined, "bold"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
+        doc.text(stepTitle, 28, y);
+        y += 7;
       }
-      if (pi === 2) {
-        // "Every night…": small gold label, larger navy text (matches the plan page)
-        doc.setFont("helvetica", "normal"); doc.setFontSize(12);
-        const lines = doc.splitTextToSize(introParas[pi], 180);
-        ensureRoom(6 + lines.length * 6.1 + 5); // the label always travels with its paragraph
-        doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); doc.setTextColor(168, 124, 42);
-        doc.setCharSpace(0.5); doc.text(L("WHAT HAPPENS AT BEDTIME", "LO QUE PASA A LA HORA DE DORMIR"), 15, y); doc.setCharSpace(0);
-        y += 6;
-        doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
-        doc.text(lines, 15, y, { lineHeightFactor: 1.45 }); y += lines.length * 6.1 + 5;
-        continue;
-      }
-      if (pi === 3) {
-        // "Which means…": the argument, then its last line set apart, centered, as the takeaway
-        const paraBody = introParas[pi], closer = "";   // one flowing paragraph, leading into the book reveal
-        doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
-        const lines = doc.splitTextToSize(paraBody, 180);
-        ensureRoom(lines.length * 6 + 26);
-        doc.text(lines, 15, y, { lineHeightFactor: 1.45 }); y += lines.length * 6.1 + 6;
-        if (closer) {
-          doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.6); doc.line(99, y, 111, y);
-          doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(16, 27, 51);
-          const cl = doc.splitTextToSize(closer, 170);
-          doc.text(cl, 105, y + 8, { align: "center", lineHeightFactor: 1.3 });
-          y += 8 + cl.length * 6.5 + 6;
-        }
-        doc.setFont("helvetica", "normal");
-        continue;
-      }
-      body(introParas[pi], { color: [31, 36, 48] });
-      if (pi === 1) {
-        doc.setFont("helvetica", "bold"); doc.setFontSize(14.5);
-        const quoteLines = doc.splitTextToSize(sunbeam.pullQuote, 162);
-        ensureRoom(quoteLines.length * 7.2 + 12);
-        const qBarTopY = y - 2;
-        doc.setTextColor(16, 27, 51);
-        doc.text(quoteLines, 23, y + 4, { lineHeightFactor: 1.3 });
-        const qBarHeight = quoteLines.length * 7.2 + 4;
-        doc.setFillColor(200, 155, 60);
-        doc.rect(15, qBarTopY, 1.6, qBarHeight, "F");
-        doc.setFont("helvetica", "normal");
-        y = qBarTopY + qBarHeight + 10;
-      }
-    }
-
-    // The reveal: a centered navy band with the book title set as a title lockup.
-    const bandH = 52;
-    // Per Mark: the reveal comes first, then "How it works", then the picture of the pages, kept together
-    // as one block on the same page (moved to a fresh page only when the whole block won't fit).
-    doc.setFontSize(10.5);
-    const blockH = bandH + 8 + (doc.splitTextToSize(sunbeam.closeupCaption, 170).length * 5.6 + 13) + 8 + 6 + 58;
-    ensureRoom(blockH);
-    // Print-friendly reveal (per Mark): navy oval outline with a gold inner line.
-    doc.setDrawColor(16, 27, 51); doc.setLineWidth(0.9);
-    doc.roundedRect(15, y, 180, bandH, 23, 23, "S");
-    doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.35);
-    doc.roundedRect(17.5, y + 2.5, 175, bandH - 5, 20.5, 20.5, "S");
-    doc.setLineWidth(0.6);
-    doc.line(99, y + 7, 111, y + 7);
-    doc.setFont("times", "italic"); doc.setFontSize(12); doc.setTextColor(74, 84, 112);
-    // two short lines so the words stay clear of the oval's curved ends
-    doc.text(L("You'll find these pages waiting in the back of", "Encontrará estas páginas al final de"), 105, y + 14, { align: "center" });
-    doc.text(L("the award-winning children's book", "el libro infantil galardonado"), 105, y + 19.5, { align: "center" });
-    doc.setFont("times", "normal"); doc.setFontSize(13); doc.setTextColor(16, 27, 51);
-    doc.text("The Adventures of the", 105, y + 28.5, { align: "center" });
-    doc.setFont("times", "bold"); doc.setFontSize(24); doc.setTextColor(168, 124, 42);
-    doc.text("True Sunbeam", 105, y + 39, { align: "center" });
-    doc.line(99, y + 45.5, 111, y + 45.5);
-    doc.setFont("helvetica", "normal");
-    y += bandH + 8;
-    doc.setFontSize(10.5);
-    const howItWorksLines = doc.splitTextToSize(sunbeam.closeupCaption, 170);
-    const cardH = howItWorksLines.length * 5.6 + 13;
-    ensureRoom(cardH + 8);
-    doc.setFillColor(255, 251, 243); doc.setDrawColor(234, 223, 198); doc.setLineWidth(0.3);
-    doc.roundedRect(15, y, 180, cardH, 2, 2, "FD");
-    doc.setFontSize(9); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
-    doc.text(L("HOW IT WORKS", "CÓMO FUNCIONA"), 21, y + 9);
-    doc.setFont(undefined, "normal");
-    doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
-    doc.text(howItWorksLines, 21, y + 16);
-    y += cardH + 8;
-
-    ensureRoom(72); // label + spread image travel together, never split across pages
-    doc.setFontSize(9.5); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
-    doc.setCharSpace(0.6);
-    doc.text(L("START COLLECTING YOUR CHILD'S SHINING MOMENTS", "COMIENCE A JUNTAR LOS SHINING MOMENTS DE SU HIJO O HIJA"), 105, y, { align: "center" });
-    doc.setCharSpace(0);
-    doc.setFont(undefined, "normal");
-    y += 6;
-
-    const introSpreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
-    if (introSpreadImg) {
-      try { doc.addImage(introSpreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
-      y += 58;
-    }
-
-    // After the pages picture: coloring book (left), Ray (center), story book
-    // (right) — each with its caption, link and its own button underneath —
-    // then the award badge with "buy both" and the set, the how-to, and the
-    // section ends on the picture of a child writing in the book (per Mark).
-    y += 2;
-    // Real-world proportions: the books are 9in square, Ray is 12in tall.
-    // Bottom-aligned on one baseline so they read as a product lineup.
-    const BOOK_SIZE = 40, RAY_H = 52, RAY_W = 32;
-    ensureRoom(RAY_H + 34);
-    const rowBaseline = y + RAY_H;
-    const [fullColorImg, coloringImg, rayImg] = await Promise.all([
-      fetchImageAsDataUrl(sunbeam.fullColorImg),
-      fetchImageAsDataUrl(sunbeam.coloringImg),
-      fetchImageAsDataUrl(sunbeam.rayImg)
-    ]);
-    const centeredLink = (label, cx, yy, url) => {
-      doc.setFontSize(8.5); doc.setFont(undefined, "normal"); doc.setTextColor(27, 42, 74);
-      const w = doc.getTextWidth(label);
-      doc.textWithLink(label, cx - w / 2, yy, { url });
-      doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.2); doc.line(cx - w / 2, yy + 1, cx + w / 2, yy + 1);
-    };
-    const smallButton = (label, cx, yy, url) => {
-      doc.setFontSize(9); doc.setFont(undefined, "bold");
-      const bw = doc.getTextWidth(label) + 10, bh = 7.5;
-      doc.setFillColor(16, 27, 51); doc.roundedRect(cx - bw / 2, yy, bw, bh, 1.6, 1.6, "F");
-      doc.setTextColor(255, 255, 255); doc.text(label, cx, yy + 5, { align: "center" });
-      doc.link(cx - bw / 2, yy, bw, bh, { url });
-      doc.setFont(undefined, "normal");
-    };
-    const caption = (label, cx) => { doc.setFontSize(9); doc.setFont(undefined, "normal"); doc.setTextColor(90, 100, 120); doc.text(label, cx, rowBaseline + 6, { align: "center" }); };
-    const colX = [45, 105, 165];
-    if (coloringImg) {
-      try { doc.addImage(coloringImg, "JPEG", colX[0] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
-      doc.link(colX[0] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.coloringPagesUrl });
-      caption(L("Coloring book", "Libro para colorear"), colX[0]);
-      centeredLink(sunbeam.coloringHint, colX[0], rowBaseline + 11, sunbeam.coloringPagesUrl);
-      smallButton(L("Buy now", "Comprar ahora"), colX[0], rowBaseline + 15, sunbeam.coloringUrl);
-    }
-    if (rayImg) {
-      try { doc.addImage(rayImg, "JPEG", colX[1] - RAY_W / 2, rowBaseline - RAY_H, RAY_W, RAY_H); } catch (e) {}
-      caption(L("Meet Ray, the Sunbeam plush toy", "Conozca a Ray, el peluche Sunbeam"), colX[1]);
-      smallButton(sunbeam.rayPreorderLabel, colX[1], rowBaseline + 15, sunbeam.rayPreorderUrl);
-      doc.setFontSize(8.5); doc.setTextColor(90, 100, 120); doc.text(sunbeam.rayPreorderNote, colX[1], rowBaseline + 27, { align: "center" });
-    }
-    if (fullColorImg) {
-      try { doc.addImage(fullColorImg, "JPEG", colX[2] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
-      doc.link(colX[2] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.animatedCoverUrl });
-      caption(L("Full-color story book", "Libro de cuentos a todo color"), colX[2]);
-      centeredLink(sunbeam.fullColorHint, colX[2], rowBaseline + 11, sunbeam.animatedCoverUrl);
-      smallButton(L("Buy now", "Comprar ahora"), colX[2], rowBaseline + 15, sunbeam.fullColorUrl);
-    }
-    y = (fullColorImg || coloringImg || rayImg) ? rowBaseline + 34 : y;
-
-    ensureRoom(30); // badge + "buy both" + set link stay together
-    const blY = y;
-    const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);
-    if (bibaImg) { try { doc.addImage(bibaImg, "PNG", 15, blY - 3, 60, 25); } catch (e) {} }
-    [[L("Buy both books", "Comprar los dos libros"), sunbeam.bothBooksUrl, true], [L("Book + Ray plush set (coming soon)", "Paquete de libro + peluche de Ray (próximamente)"), sunbeam.setUrl, false]].forEach(([label, url, strong], i) => {
-      doc.setFontSize(strong ? 11 : 10); doc.setFont(undefined, strong ? "bold" : "normal"); doc.setTextColor(27, 42, 74);
-      const w = doc.getTextWidth(label), ly = blY + 7 + i * 8;
-      doc.textWithLink(label, 195 - w, ly, { url });
-      doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.25); doc.line(195 - w, ly + 1.2, 195, ly + 1.2);
+      doc.setFont(undefined, "normal"); doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+      doc.text(lines, 28, y);
+      y += Math.max(lines.length * 6, 10) + 6;
     });
-    doc.setFont(undefined, "normal");
-    y = blY + 28;
-    {
-      // How-to text on the left, the picture of a child writing in the book on
-      // the right — the section ends on that picture (per Mark), and sharing the
-      // row keeps it on the same page as the books.
-      const heroImg = await fetchImageAsDataUrl(sunbeam.heroImg);
-      const HERO_W = 78, HERO_H = 52;
-      const textRight = heroImg ? 195 - HERO_W - 7 : 195;
-      const parts = sunbeam.text.split(/"(What happened today[^"]*)"/);
-      const words = [];
-      parts.forEach((part, i) => part.split(/\s+/).filter(Boolean).forEach(w => words.push({ w, q: i === 1 })));
-      if (words.length) { const f = words.find(x => x.q); if (f) f.w = "\u201C" + f.w; const l = [...words].reverse().find(x => x.q); if (l) l.w = l.w + "\u201D"; }
-      const fontFor = (q) => { if (q) { doc.setFont("times", "bolditalic"); doc.setFontSize(11.5); doc.setTextColor(138, 100, 32); } else { doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.setTextColor(16, 27, 51); } };
-      const lineH = 5.8;
-      // measure first, so the whole row moves together if it can't fit
-      let lines = 1, mx = 15;
-      words.forEach(({ w, q }) => { fontFor(q); const ww = doc.getTextWidth(w), sp = doc.getTextWidth(" "); if (mx > 15 && mx + ww > textRight) { mx = 15; lines++; } mx += ww + sp; });
-      const rowH = Math.max(lines * lineH, heroImg ? HERO_H : 0);
-      ensureRoom(rowH + 6);
-      const rowTop = y;
-      if (heroImg) { try { doc.addImage(heroImg, "JPEG", 195 - HERO_W, rowTop - 4, HERO_W, HERO_H); } catch (e) {} }
-      let x = 15;
-      words.forEach(({ w, q }) => {
-        fontFor(q);
-        const ww = doc.getTextWidth(w), sp = doc.getTextWidth(" ");
-        if (x > 15 && x + ww > textRight) { x = 15; y += lineH; }
-        doc.text(w, x, y); x += ww + sp;
-      });
-      doc.setFont("helvetica", "normal");
-      y = Math.max(y + lineH, rowTop - 4 + (heroImg ? HERO_H : 0)) + 6;
+
+  };
+  const pdfWatch = () => {
+    const watchFor = preventionWatchForNote();
+    if (watchFor) {
+      heading(L("What to watch for:", "Qué debe observar:"));
+      body(watchFor.intro);
+      watchFor.items.forEach(item => body(`• ${item}`));
+      body(watchFor.outro, { color: [130, 130, 130] });
     }
-    y += 6;
-  }
 
-  heading(L("Recommended reading:", "Lecturas recomendadas:"));
+  };
+  const pdfPro = () => {
+    const proNote = professionalSupportNote();
+    if (proNote) { heading(L("Worth considering:", "Vale la pena considerar:")); body(proNote); }
 
-  body(topicLabel());
+  };
+  const pdfSunbeam = async () => {
+    // Recommended reading comes after the steps now — a natural answer to
+    // "okay, now what do I actually go read," rather than a cold opener.
+    // Two books now, each pointing at a specific chapter for their situation.
+    const sunbeam = sunbeamResource();
+    if (sunbeam) {
+      heading(L("A nightly opportunity", "Una oportunidad cada noche"));
 
-  for (const b of recommendedBooks()) {
-    const coverDataUrl = await fetchImageAsDataUrl(b.coverUrl);
-    if (coverDataUrl) {
-      ensureRoom(48);
-      const by = y;
-      try { doc.addImage(coverDataUrl, "JPEG", 15, by, 30, 43); } catch (err) { console.warn("Could not embed cover image:", err); }
-      doc.setFontSize(11); doc.setTextColor(40, 40, 40);
-      doc.text(doc.splitTextToSize(b.display, 140), 52, by + 8);
-      doc.setFontSize(10); doc.setTextColor(90, 100, 120);
-      const chapterText = b.chapter ? L(`Look for ${b.chapter}.`, `Busque ${b.chapter}.`) : L("Relevant throughout — worth reading in full.", "Es relevante de principio a fin; vale la pena leerlo completo.");
-      doc.text(doc.splitTextToSize(chapterText, 140), 52, by + 20);
-      // Same "Buy now on Amazon" button as the email (links to the book's own page, Associate tag included)
-      doc.setFontSize(9.5); doc.setFont(undefined, "bold");
-      const amazonLabel = L("Buy now on Amazon", "Comprar ahora en Amazon");
-      const bw = doc.getTextWidth(amazonLabel) + 10;   // measured from the words actually shown (Spanish is longer)
-      doc.setFillColor(16, 27, 51); doc.roundedRect(52, by + 32, bw, 8, 1.6, 1.6, "F");
-      doc.setTextColor(255, 255, 255); doc.text(amazonLabel, 57, by + 37.4);
-      doc.link(52, by + 32, bw, 8, { url: b.url });
-      doc.setFont(undefined, "normal");
-      y = by + 50;
-    } else {
-      ensureRoom(20);
-      doc.setFontSize(11); doc.setTextColor(40, 40, 40);
-      doc.text(doc.splitTextToSize(b.display, 180), 15, y); y += 6;
-      doc.setFontSize(10); doc.setTextColor(90, 100, 120);
-      const chapterText = b.chapter ? L(`Look for ${b.chapter}.`, `Busque ${b.chapter}.`) : L("Relevant throughout — worth reading in full.", "Es relevante de principio a fin; vale la pena leerlo completo.");
-      doc.text(doc.splitTextToSize(chapterText, 180), 15, y); y += 6;
-      doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-      doc.textWithLink(L("Buy now on Amazon", "Comprar ahora en Amazon"), 15, y, { url: b.url });
-      y += 10;
-    }
-  }
-
-  if (affiliateDisclosure()) body(affiliateDisclosure(), { color: [140, 140, 140] });
-
-  // The Quick Help Guides: the one paid offer in the plan — hands-on and available today.
-  const qhOffer = quickHelpOffer();
-  if (qhOffer) {
-    const X = 15, W = 180, PAD = 8, inner = W - PAD * 2;
-    doc.setFont(undefined, "normal"); doc.setFontSize(10.5);
-    const leadL = doc.splitTextToSize(qhOffer.lead, inner);
-    const bulletsL = qhOffer.bullets.map(b => doc.splitTextToSize("\u2022  " + b, inner - 4));
-    const noteL = doc.splitTextToSize(qhOffer.note, inner);
-    doc.setFont(undefined, "bold"); doc.setFontSize(10.5);
-    const closerL = doc.splitTextToSize(qhOffer.closer, inner);
-    doc.setFont(undefined, "bold"); doc.setFontSize(12);
-    const guideL = qhOffer.guideTitle ? doc.splitTextToSize(qhOffer.guideTitle, inner - 10) : [];
-    const issueL = (guideL.length && qhOffer.issue) ? doc.splitTextToSize(qhOffer.issue, inner - 10) : [];
-    const issueH = issueL.length ? 6 + issueL.length * 5.6 + 3 : 0;
-    const matchH = guideL.length ? 10 + issueH + guideL.length * 5.6 + 5 : 0;
-    const cardH = 10 + 6 + 9 + leadL.length * 5 + 5 + matchH + (matchH ? 6 : 0)
-      + bulletsL.reduce((h, l) => h + l.length * 5 + 1.5, 0) + 3 + closerL.length * 5.2 + 5 + 12 + 5 + noteL.length * 4.4 + 8;
-    ensureRoom(cardH + 8);
-    const top = y;
-    doc.setFillColor(16, 27, 51); doc.roundedRect(X, top, W, cardH, 3, 3, "F");
-    doc.setFillColor(200, 155, 60); doc.rect(X + 3, top, W - 6, 1.4, "F");
-    let cy = top + 11;
-    doc.setFont(undefined, "bold"); doc.setFontSize(8.5); doc.setTextColor(200, 155, 60);
-    doc.text(qhOffer.kicker.toUpperCase(), X + PAD, cy, { charSpace: 0.5 }); cy += 8;
-    doc.setFontSize(16); doc.setTextColor(255, 255, 255);
-    doc.text(qhOffer.title, X + PAD, cy); cy += 8;
-    doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
-    doc.text(leadL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += leadL.length * 5 + 4;
-    if (guideL.length) {
-      doc.setFillColor(28, 42, 74); doc.setDrawColor(138, 109, 46); doc.setLineWidth(0.4);
-      doc.roundedRect(X + PAD, cy, inner, matchH, 2, 2, "FD");
-      let my = cy + 7;
-      if (issueL.length) {
-        doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
-        doc.text(qhOffer.issueLabel, X + PAD + 5, my);
-        doc.setFontSize(12); doc.setTextColor(255, 255, 255);
-        doc.text(issueL, X + PAD + 5, my + 6.5, { lineHeightFactor: 1.3 });
-        my += issueH;
+      const introParas = sunbeam.introCaption.split("\n\n");
+      for (let pi = 0; pi < introParas.length; pi++) {
+        if (pi === 0) {
+          // lead paragraph, in the same serif voice as the email
+          doc.setFont("times", "normal"); doc.setFontSize(14); doc.setTextColor(16, 27, 51);
+          const lead = doc.splitTextToSize(introParas[pi], 180);
+          ensureRoom(lead.length * 6.4 + 6);
+          doc.text(lead, 15, y, { lineHeightFactor: 1.35 }); y += lead.length * 6.4 + 6;
+          doc.setFont("helvetica", "normal");
+          continue;
+        }
+        if (pi === 2) {
+          // "Every night…": small gold label, larger navy text (matches the plan page)
+          doc.setFont("helvetica", "normal"); doc.setFontSize(12);
+          const lines = doc.splitTextToSize(introParas[pi], 180);
+          ensureRoom(6 + lines.length * 6.1 + 5); // the label always travels with its paragraph
+          doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); doc.setTextColor(168, 124, 42);
+          doc.setCharSpace(0.5); doc.text(L("WHAT HAPPENS AT BEDTIME", "LO QUE PASA A LA HORA DE DORMIR"), 15, y); doc.setCharSpace(0);
+          y += 6;
+          doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
+          doc.text(lines, 15, y, { lineHeightFactor: 1.45 }); y += lines.length * 6.1 + 5;
+          continue;
+        }
+        if (pi === 3) {
+          // "Which means…": the argument, then its last line set apart, centered, as the takeaway
+          const paraBody = introParas[pi], closer = "";   // one flowing paragraph, leading into the book reveal
+          doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(16, 27, 51);
+          const lines = doc.splitTextToSize(paraBody, 180);
+          ensureRoom(lines.length * 6 + 26);
+          doc.text(lines, 15, y, { lineHeightFactor: 1.45 }); y += lines.length * 6.1 + 6;
+          if (closer) {
+            doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.6); doc.line(99, y, 111, y);
+            doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(16, 27, 51);
+            const cl = doc.splitTextToSize(closer, 170);
+            doc.text(cl, 105, y + 8, { align: "center", lineHeightFactor: 1.3 });
+            y += 8 + cl.length * 6.5 + 6;
+          }
+          doc.setFont("helvetica", "normal");
+          continue;
+        }
+        body(introParas[pi], { color: [31, 36, 48] });
+        if (pi === 1) {
+          doc.setFont("helvetica", "bold"); doc.setFontSize(14.5);
+          const quoteLines = doc.splitTextToSize(sunbeam.pullQuote, 162);
+          ensureRoom(quoteLines.length * 7.2 + 12);
+          const qBarTopY = y - 2;
+          doc.setTextColor(16, 27, 51);
+          doc.text(quoteLines, 23, y + 4, { lineHeightFactor: 1.3 });
+          const qBarHeight = quoteLines.length * 7.2 + 4;
+          doc.setFillColor(200, 155, 60);
+          doc.rect(15, qBarTopY, 1.6, qBarHeight, "F");
+          doc.setFont("helvetica", "normal");
+          y = qBarTopY + qBarHeight + 10;
+        }
       }
-      doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
-      doc.text(qhOffer.matchLabel, X + PAD + 5, my);
-      doc.setFontSize(12); doc.setTextColor(255, 255, 255);
-      doc.text(guideL, X + PAD + 5, my + 6.5, { lineHeightFactor: 1.3 });
-      cy += matchH + 6;
+
+      // The reveal: a centered navy band with the book title set as a title lockup.
+      const bandH = 52;
+      // Per Mark: the reveal comes first, then "How it works", then the picture of the pages, kept together
+      // as one block on the same page (moved to a fresh page only when the whole block won't fit).
+      doc.setFontSize(10.5);
+      const blockH = bandH + 8 + (doc.splitTextToSize(sunbeam.closeupCaption, 170).length * 5.6 + 13) + 8 + 6 + 58;
+      ensureRoom(blockH);
+      // Print-friendly reveal (per Mark): navy oval outline with a gold inner line.
+      doc.setDrawColor(16, 27, 51); doc.setLineWidth(0.9);
+      doc.roundedRect(15, y, 180, bandH, 23, 23, "S");
+      doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.35);
+      doc.roundedRect(17.5, y + 2.5, 175, bandH - 5, 20.5, 20.5, "S");
+      doc.setLineWidth(0.6);
+      doc.line(99, y + 7, 111, y + 7);
+      doc.setFont("times", "italic"); doc.setFontSize(12); doc.setTextColor(74, 84, 112);
+      // two short lines so the words stay clear of the oval's curved ends
+      doc.text(L("You'll find these pages waiting in the back of", "Encontrará estas páginas al final de"), 105, y + 14, { align: "center" });
+      doc.text(L("the award-winning children's book", "el libro infantil galardonado"), 105, y + 19.5, { align: "center" });
+      doc.setFont("times", "normal"); doc.setFontSize(13); doc.setTextColor(16, 27, 51);
+      doc.text("The Adventures of the", 105, y + 28.5, { align: "center" });
+      doc.setFont("times", "bold"); doc.setFontSize(24); doc.setTextColor(168, 124, 42);
+      doc.text("True Sunbeam", 105, y + 39, { align: "center" });
+      doc.line(99, y + 45.5, 111, y + 45.5);
+      doc.setFont("helvetica", "normal");
+      y += bandH + 8;
+      doc.setFontSize(10.5);
+      const howItWorksLines = doc.splitTextToSize(sunbeam.closeupCaption, 170);
+      const cardH = howItWorksLines.length * 5.6 + 13;
+      ensureRoom(cardH + 8);
+      doc.setFillColor(255, 251, 243); doc.setDrawColor(234, 223, 198); doc.setLineWidth(0.3);
+      doc.roundedRect(15, y, 180, cardH, 2, 2, "FD");
+      doc.setFontSize(9); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
+      doc.text(L("HOW IT WORKS", "CÓMO FUNCIONA"), 21, y + 9);
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(10.5); doc.setTextColor(16, 27, 51);
+      doc.text(howItWorksLines, 21, y + 16);
+      y += cardH + 8;
+
+      ensureRoom(72); // label + spread image travel together, never split across pages
+      doc.setFontSize(9.5); doc.setTextColor(168, 124, 42); doc.setFont(undefined, "bold");
+      doc.setCharSpace(0.6);
+      doc.text(L("START COLLECTING YOUR CHILD'S SHINING MOMENTS", "COMIENCE A JUNTAR LOS SHINING MOMENTS DE SU HIJO O HIJA"), 105, y, { align: "center" });
+      doc.setCharSpace(0);
+      doc.setFont(undefined, "normal");
+      y += 6;
+
+      const introSpreadImg = await fetchImageAsDataUrl(sunbeam.shiningMomentsSpreadImg);
+      if (introSpreadImg) {
+        try { doc.addImage(introSpreadImg, "JPEG", 15, y, 180, 54.3); } catch (e) {}
+        y += 58;
+      }
+
+      // After the pages picture: coloring book (left), Ray (center), story book
+      // (right) — each with its caption, link and its own button underneath —
+      // then the award badge with "buy both" and the set, the how-to, and the
+      // section ends on the picture of a child writing in the book (per Mark).
+      y += 2;
+      // Real-world proportions: the books are 9in square, Ray is 12in tall.
+      // Bottom-aligned on one baseline so they read as a product lineup.
+      const BOOK_SIZE = 40, RAY_H = 52, RAY_W = 32;
+      ensureRoom(RAY_H + 34);
+      const rowBaseline = y + RAY_H;
+      const [fullColorImg, coloringImg, rayImg] = await Promise.all([
+        fetchImageAsDataUrl(sunbeam.fullColorImg),
+        fetchImageAsDataUrl(sunbeam.coloringImg),
+        fetchImageAsDataUrl(sunbeam.rayImg)
+      ]);
+      const centeredLink = (label, cx, yy, url) => {
+        doc.setFontSize(8.5); doc.setFont(undefined, "normal"); doc.setTextColor(27, 42, 74);
+        const w = doc.getTextWidth(label);
+        doc.textWithLink(label, cx - w / 2, yy, { url });
+        doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.2); doc.line(cx - w / 2, yy + 1, cx + w / 2, yy + 1);
+      };
+      const smallButton = (label, cx, yy, url) => {
+        doc.setFontSize(9); doc.setFont(undefined, "bold");
+        const bw = doc.getTextWidth(label) + 10, bh = 7.5;
+        doc.setFillColor(16, 27, 51); doc.roundedRect(cx - bw / 2, yy, bw, bh, 1.6, 1.6, "F");
+        doc.setTextColor(255, 255, 255); doc.text(label, cx, yy + 5, { align: "center" });
+        doc.link(cx - bw / 2, yy, bw, bh, { url });
+        doc.setFont(undefined, "normal");
+      };
+      const caption = (label, cx) => { doc.setFontSize(9); doc.setFont(undefined, "normal"); doc.setTextColor(90, 100, 120); doc.text(label, cx, rowBaseline + 6, { align: "center" }); };
+      const colX = [45, 105, 165];
+      if (coloringImg) {
+        try { doc.addImage(coloringImg, "JPEG", colX[0] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
+        doc.link(colX[0] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.coloringPagesUrl });
+        caption(L("Coloring book", "Libro para colorear"), colX[0]);
+        centeredLink(sunbeam.coloringHint, colX[0], rowBaseline + 11, sunbeam.coloringPagesUrl);
+        smallButton(L("Buy now", "Comprar ahora"), colX[0], rowBaseline + 15, sunbeam.coloringUrl);
+      }
+      if (rayImg) {
+        try { doc.addImage(rayImg, "JPEG", colX[1] - RAY_W / 2, rowBaseline - RAY_H, RAY_W, RAY_H); } catch (e) {}
+        caption(L("Meet Ray, the Sunbeam plush toy", "Conozca a Ray, el peluche Sunbeam"), colX[1]);
+        smallButton(sunbeam.rayPreorderLabel, colX[1], rowBaseline + 15, sunbeam.rayPreorderUrl);
+        doc.setFontSize(8.5); doc.setTextColor(90, 100, 120); doc.text(sunbeam.rayPreorderNote, colX[1], rowBaseline + 27, { align: "center" });
+      }
+      if (fullColorImg) {
+        try { doc.addImage(fullColorImg, "JPEG", colX[2] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE); } catch (e) {}
+        doc.link(colX[2] - BOOK_SIZE / 2, rowBaseline - BOOK_SIZE, BOOK_SIZE, BOOK_SIZE, { url: sunbeam.animatedCoverUrl });
+        caption(L("Full-color story book", "Libro de cuentos a todo color"), colX[2]);
+        centeredLink(sunbeam.fullColorHint, colX[2], rowBaseline + 11, sunbeam.animatedCoverUrl);
+        smallButton(L("Buy now", "Comprar ahora"), colX[2], rowBaseline + 15, sunbeam.fullColorUrl);
+      }
+      y = (fullColorImg || coloringImg || rayImg) ? rowBaseline + 34 : y;
+
+      ensureRoom(30); // badge + "buy both" + set link stay together
+      const blY = y;
+      const bibaImg = await fetchImageAsDataUrl(sunbeam.bibaBadgeImg);
+      if (bibaImg) { try { doc.addImage(bibaImg, "PNG", 15, blY - 3, 60, 25); } catch (e) {} }
+      [[L("Buy both books", "Comprar los dos libros"), sunbeam.bothBooksUrl, true], [L("Book + Ray plush set (coming soon)", "Paquete de libro + peluche de Ray (próximamente)"), sunbeam.setUrl, false]].forEach(([label, url, strong], i) => {
+        doc.setFontSize(strong ? 11 : 10); doc.setFont(undefined, strong ? "bold" : "normal"); doc.setTextColor(27, 42, 74);
+        const w = doc.getTextWidth(label), ly = blY + 7 + i * 8;
+        doc.textWithLink(label, 195 - w, ly, { url });
+        doc.setDrawColor(27, 42, 74); doc.setLineWidth(0.25); doc.line(195 - w, ly + 1.2, 195, ly + 1.2);
+      });
+      doc.setFont(undefined, "normal");
+      y = blY + 28;
+      {
+        // How-to text on the left, the picture of a child writing in the book on
+        // the right — the section ends on that picture (per Mark), and sharing the
+        // row keeps it on the same page as the books.
+        const heroImg = await fetchImageAsDataUrl(sunbeam.heroImg);
+        const HERO_W = 78, HERO_H = 52;
+        const textRight = heroImg ? 195 - HERO_W - 7 : 195;
+        const parts = sunbeam.text.split(/"(What happened today[^"]*)"/);
+        const words = [];
+        parts.forEach((part, i) => part.split(/\s+/).filter(Boolean).forEach(w => words.push({ w, q: i === 1 })));
+        if (words.length) { const f = words.find(x => x.q); if (f) f.w = "\u201C" + f.w; const l = [...words].reverse().find(x => x.q); if (l) l.w = l.w + "\u201D"; }
+        const fontFor = (q) => { if (q) { doc.setFont("times", "bolditalic"); doc.setFontSize(11.5); doc.setTextColor(138, 100, 32); } else { doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.setTextColor(16, 27, 51); } };
+        const lineH = 5.8;
+        // measure first, so the whole row moves together if it can't fit
+        let lines = 1, mx = 15;
+        words.forEach(({ w, q }) => { fontFor(q); const ww = doc.getTextWidth(w), sp = doc.getTextWidth(" "); if (mx > 15 && mx + ww > textRight) { mx = 15; lines++; } mx += ww + sp; });
+        const rowH = Math.max(lines * lineH, heroImg ? HERO_H : 0);
+        ensureRoom(rowH + 6);
+        const rowTop = y;
+        if (heroImg) { try { doc.addImage(heroImg, "JPEG", 195 - HERO_W, rowTop - 4, HERO_W, HERO_H); } catch (e) {} }
+        let x = 15;
+        words.forEach(({ w, q }) => {
+          fontFor(q);
+          const ww = doc.getTextWidth(w), sp = doc.getTextWidth(" ");
+          if (x > 15 && x + ww > textRight) { x = 15; y += lineH; }
+          doc.text(w, x, y); x += ww + sp;
+        });
+        doc.setFont("helvetica", "normal");
+        y = Math.max(y + lineH, rowTop - 4 + (heroImg ? HERO_H : 0)) + 6;
+      }
+      y += 6;
     }
-    doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
-    bulletsL.forEach(l => { doc.text(l, X + PAD + 1, cy, { lineHeightFactor: 1.35 }); cy += l.length * 5 + 1.5; });
-    cy += 3;
-    doc.setFont(undefined, "bold"); doc.setFontSize(10.5); doc.setTextColor(241, 228, 195);
-    doc.text(closerL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += closerL.length * 5.2 + 3;
-    if (qhOffer.url) {
-      doc.setFont(undefined, "bold"); doc.setFontSize(11.5);
-      const bw = doc.getTextWidth(qhOffer.button) + 14;
-      doc.setFillColor(200, 155, 60); doc.roundedRect(X + PAD, cy, bw, 11, 2, 2, "F");
-      doc.setTextColor(16, 27, 51); doc.text(qhOffer.button, X + PAD + 7, cy + 7.3);
-      doc.link(X + PAD, cy, bw, 11, { url: qhOffer.url });
-    } else {
-      doc.setFont(undefined, "bold"); doc.setFontSize(11.5); doc.setTextColor(200, 155, 60);
-      doc.text(qhOffer.soon, X + PAD, cy + 7.3);
+
+  };
+  const pdfReading = async () => {
+    heading(L("Recommended reading:", "Lecturas recomendadas:"));
+
+    body(topicLabel());
+
+    for (const b of recommendedBooks()) {
+      const coverDataUrl = await fetchImageAsDataUrl(b.coverUrl);
+      if (coverDataUrl) {
+        ensureRoom(48);
+        const by = y;
+        try { doc.addImage(coverDataUrl, "JPEG", 15, by, 30, 43); } catch (err) { console.warn("Could not embed cover image:", err); }
+        doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+        doc.text(doc.splitTextToSize(b.display, 140), 52, by + 8);
+        doc.setFontSize(10); doc.setTextColor(90, 100, 120);
+        const chapterText = b.chapter ? L(`Look for ${b.chapter}.`, `Busque ${b.chapter}.`) : L("Relevant throughout — worth reading in full.", "Es relevante de principio a fin; vale la pena leerlo completo.");
+        doc.text(doc.splitTextToSize(chapterText, 140), 52, by + 20);
+        // Same "Buy now on Amazon" button as the email (links to the book's own page, Associate tag included)
+        doc.setFontSize(9.5); doc.setFont(undefined, "bold");
+        const amazonLabel = L("Buy now on Amazon", "Comprar ahora en Amazon");
+        const bw = doc.getTextWidth(amazonLabel) + 10;   // measured from the words actually shown (Spanish is longer)
+        doc.setFillColor(16, 27, 51); doc.roundedRect(52, by + 32, bw, 8, 1.6, 1.6, "F");
+        doc.setTextColor(255, 255, 255); doc.text(amazonLabel, 57, by + 37.4);
+        doc.link(52, by + 32, bw, 8, { url: b.url });
+        doc.setFont(undefined, "normal");
+        y = by + 50;
+      } else {
+        ensureRoom(20);
+        doc.setFontSize(11); doc.setTextColor(40, 40, 40);
+        doc.text(doc.splitTextToSize(b.display, 180), 15, y); y += 6;
+        doc.setFontSize(10); doc.setTextColor(90, 100, 120);
+        const chapterText = b.chapter ? L(`Look for ${b.chapter}.`, `Busque ${b.chapter}.`) : L("Relevant throughout — worth reading in full.", "Es relevante de principio a fin; vale la pena leerlo completo.");
+        doc.text(doc.splitTextToSize(chapterText, 180), 15, y); y += 6;
+        doc.setFontSize(11); doc.setTextColor(66, 153, 225);
+        doc.textWithLink(L("Buy now on Amazon", "Comprar ahora en Amazon"), 15, y, { url: b.url });
+        y += 10;
+      }
     }
-    cy += 16;
-    doc.setFont(undefined, "normal"); doc.setFontSize(9); doc.setTextColor(174, 182, 200);
-    doc.text(noteL, X + PAD, cy, { lineHeightFactor: 1.3 });
-    y = top + cardH + 10;
+
+    if (affiliateDisclosure()) body(affiliateDisclosure(), { color: [140, 140, 140] });
+
+  };
+  const pdfGuides = () => {
+    // The Quick Help Guides: the one paid offer in the plan — hands-on and available today.
+    const qhOffer = quickHelpOffer();
+    if (qhOffer) {
+      const X = 15, W = 180, PAD = 8, inner = W - PAD * 2;
+      doc.setFont(undefined, "normal"); doc.setFontSize(10.5);
+      const leadL = doc.splitTextToSize(qhOffer.lead, inner);
+      const bulletsL = qhOffer.bullets.map(b => doc.splitTextToSize("\u2022  " + b, inner - 4));
+      const noteL = doc.splitTextToSize(qhOffer.note, inner);
+      doc.setFont(undefined, "bold"); doc.setFontSize(10.5);
+      const closerL = doc.splitTextToSize(qhOffer.closer, inner);
+      doc.setFont(undefined, "bold"); doc.setFontSize(12);
+      const guideL = qhOffer.guideTitle ? doc.splitTextToSize(qhOffer.guideTitle, inner - 10) : [];
+      const issueL = (guideL.length && qhOffer.issue) ? doc.splitTextToSize(qhOffer.issue, inner - 10) : [];
+      const issueH = issueL.length ? 6 + issueL.length * 5.6 + 3 : 0;
+      const matchH = guideL.length ? 10 + issueH + guideL.length * 5.6 + 5 : 0;
+      const cardH = 10 + 6 + 9 + leadL.length * 5 + 5 + matchH + (matchH ? 6 : 0)
+        + bulletsL.reduce((h, l) => h + l.length * 5 + 1.5, 0) + 3 + closerL.length * 5.2 + 5 + 12 + 5 + noteL.length * 4.4 + 8;
+      ensureRoom(cardH + 8);
+      const top = y;
+      doc.setFillColor(16, 27, 51); doc.roundedRect(X, top, W, cardH, 3, 3, "F");
+      doc.setFillColor(200, 155, 60); doc.rect(X + 3, top, W - 6, 1.4, "F");
+      let cy = top + 11;
+      doc.setFont(undefined, "bold"); doc.setFontSize(8.5); doc.setTextColor(200, 155, 60);
+      doc.text(qhOffer.kicker.toUpperCase(), X + PAD, cy, { charSpace: 0.5 }); cy += 8;
+      doc.setFontSize(16); doc.setTextColor(255, 255, 255);
+      doc.text(qhOffer.title, X + PAD, cy); cy += 8;
+      doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
+      doc.text(leadL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += leadL.length * 5 + 4;
+      if (guideL.length) {
+        doc.setFillColor(28, 42, 74); doc.setDrawColor(138, 109, 46); doc.setLineWidth(0.4);
+        doc.roundedRect(X + PAD, cy, inner, matchH, 2, 2, "FD");
+        let my = cy + 7;
+        if (issueL.length) {
+          doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
+          doc.text(qhOffer.issueLabel, X + PAD + 5, my);
+          doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+          doc.text(issueL, X + PAD + 5, my + 6.5, { lineHeightFactor: 1.3 });
+          my += issueH;
+        }
+        doc.setFont(undefined, "bold"); doc.setFontSize(9.5); doc.setTextColor(200, 155, 60);
+        doc.text(qhOffer.matchLabel, X + PAD + 5, my);
+        doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+        doc.text(guideL, X + PAD + 5, my + 6.5, { lineHeightFactor: 1.3 });
+        cy += matchH + 6;
+      }
+      doc.setFont(undefined, "normal"); doc.setFontSize(10.5); doc.setTextColor(213, 218, 230);
+      bulletsL.forEach(l => { doc.text(l, X + PAD + 1, cy, { lineHeightFactor: 1.35 }); cy += l.length * 5 + 1.5; });
+      cy += 3;
+      doc.setFont(undefined, "bold"); doc.setFontSize(10.5); doc.setTextColor(241, 228, 195);
+      doc.text(closerL, X + PAD, cy, { lineHeightFactor: 1.35 }); cy += closerL.length * 5.2 + 3;
+      if (qhOffer.url) {
+        doc.setFont(undefined, "bold"); doc.setFontSize(11.5);
+        const bw = doc.getTextWidth(qhOffer.button) + 14;
+        doc.setFillColor(200, 155, 60); doc.roundedRect(X + PAD, cy, bw, 11, 2, 2, "F");
+        doc.setTextColor(16, 27, 51); doc.text(qhOffer.button, X + PAD + 7, cy + 7.3);
+        doc.link(X + PAD, cy, bw, 11, { url: qhOffer.url });
+      } else {
+        doc.setFont(undefined, "bold"); doc.setFontSize(11.5); doc.setTextColor(200, 155, 60);
+        doc.text(qhOffer.soon, X + PAD, cy + 7.3);
+      }
+      cy += 16;
+      doc.setFont(undefined, "normal"); doc.setFontSize(9); doc.setTextColor(174, 182, 200);
+      doc.text(noteL, X + PAD, cy, { lineHeightFactor: 1.3 });
+      y = top + cardH + 10;
+    }
+  };
+  // Same order as the on-screen plan and the email: what helps right now first.
+  if (isPreventive()) {
+    pdfSteps(); pdfWatch(); pdfPro(); await pdfSunbeam(); pdfGuides(); pdfWhy(); await pdfReading();
+  } else {
+    pdfSteps(); pdfWatch(); pdfPro(); pdfGuides(); pdfWhy(); await pdfSunbeam(); await pdfReading();
   }
+
   heading(FREE_SUPPORT_TITLE());
   body(FREE_SUPPORT_INTRO());
   ensureRoom(14 + MEMBERSHIP_BENEFITS().length * 6);
@@ -2469,4 +2599,10 @@ try {
   const m = window.location.pathname.match(/^\/plan\/([A-Za-z0-9_-]{24})\/?$/);
   if (m) { state.screen = "plan"; state.planId = m[1]; }
 } catch (e) { /* not a plan page */ }
+// Came back after tapping away, or the phone reloaded the page: pick up right where they were.
+if (state.screen === "landing" && restoreProgress()) {
+  track("progress_restored");
+  if (state.screen === "plan") state.restoredPlan = true;
+  state.replaceHistory = true;
+}
 render();

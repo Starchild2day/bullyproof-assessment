@@ -76,7 +76,7 @@ const badNot = mustNot.filter((t) => flagsFor(t).length > 0);
 check(`ordinary Spanish worries do NOT trigger crisis resources (${mustNot.length})`, badNot.length === 0, badNot.join(" | "));
 check("English crisis phrases still caught after the change", flagsFor("I want to kill myself").includes("selfHarmOrSuicide") && flagsFor("Learn how to keep from killing someone").includes("violenceRisk") && flagsFor("She is sad and quiet").length === 0);
 const emailFlag = email({ q1: "8–10", q2: opt("q2", "treated badly"), q12: "Aprender cómo evitar matar a alguien" });
-check("Spanish crisis plan leads with Spanish crisis resources (988: oprima 2)", emailFlag.indexOf("Por favor, comuníquese primero") > -1 && emailFlag.indexOf("Por favor, comuníquese primero") < emailFlag.indexOf("Lo que de verdad ayuda") && /oprima 2/.test(emailFlag) && /AYUDA/.test(emailFlag));
+check("Spanish crisis plan leads with Spanish crisis resources (988: oprima 2)", emailFlag.indexOf("Por favor, comuníquese primero") > -1 && emailFlag.indexOf("Por favor, comuníquese primero") < emailFlag.indexOf("Sus próximos 3 pasos") && /oprima 2/.test(emailFlag) && /AYUDA/.test(emailFlag));
 
 // ---------- 5. other Spanish detectors ----------
 const asked = (t) => run(`state.answers = { q12: ${JSON.stringify(t)} }; askedForWords()`);

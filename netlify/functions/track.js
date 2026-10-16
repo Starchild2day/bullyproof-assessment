@@ -10,7 +10,9 @@ const { openStore } = require("../lib/records.js");
 const EVENTS = new Set(["assessment_started", "question_answered_view", "question_answered", "safety_escalation_triggered",
   "assessment_completed", "plan_email_sent", "pdf_downloaded", "playbook_invite_optin", "plan_shown_on_screen", "song_played", "progress_restored",
   "share_opened", "share_link_copied", "referred_visit", "plan_page_viewed"]);
-const DEFAULT_ORIGINS = ["https://assessment.bullyproof.guide", "https://bullyproof-support-clarity-check.netlify.app", "https://shimmering-pegasus-4a4a21.netlify.app"];
+// bullyproof.support hosts the class song page and Parents' Corner, which send "song_played" counts here.
+const DEFAULT_ORIGINS = ["https://assessment.bullyproof.guide", "https://bullyproof-support-clarity-check.netlify.app", "https://shimmering-pegasus-4a4a21.netlify.app",
+  "https://www.bullyproof.support", "https://bullyproof.support"];
 const hits = new Map();
 const ok = { statusCode: 204, headers: { "Cache-Control": "no-store" }, body: "" };
 
@@ -33,10 +35,13 @@ exports.handler = async function (event) {
 
   // Light flood protection so counts can't be inflated (kept in memory, per running instance).
   const ip = h["x-nf-client-connection-ip"] || (h["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
+  // Song plays get their own, higher limit: a whole school shares one internet address.
+  const song = p.e === "song_played";
+  const bucket = ip + (song ? "|song" : "");
   const now = Date.now();
-  const recent = (hits.get(ip) || []).filter((t) => now - t < 60 * 60 * 1000);
-  if (recent.length >= 300) return ok;
-  recent.push(now); hits.set(ip, recent);
+  const recent = (hits.get(bucket) || []).filter((t) => now - t < 60 * 60 * 1000);
+  if (recent.length >= (song ? 3000 : 300)) return ok;
+  recent.push(now); hits.set(bucket, recent);
   if (hits.size > 5000) hits.clear();
 
   const store = openStore(event, "counts");

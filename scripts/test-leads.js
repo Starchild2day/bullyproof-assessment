@@ -117,6 +117,25 @@ const leads = () => [...(stores.leads || new Map()).values()];
   r = await admin.handler({ queryStringParameters: { key: process.env.ADMIN_KEY, list: "counts" } });
   check("counts: daily totals download as a spreadsheet", r.statusCode === 200 && /assessment_started","2"/.test(r.body) && /question_answered:q3","1"/.test(r.body));
 
+  // 6b. Song plays from the class song page and Parents' Corner (bullyproof.support).
+  stores.counts.clear(); track.__test.hits.clear();
+  const sup = { origin: "https://www.bullyproof.support", "content-type": "text/plain" };
+  r = await track.handler(tev({ e: "song_played", d: "W01_G46_S1_c" }, sup));
+  await track.handler(tev({ e: "song_played", d: "W01_G46_S1_c" }, sup));
+  await track.handler(tev({ e: "song_played", d: "W01_G46_S1_l" }, sup));
+  await track.handler(tev({ e: "song_played", d: "draw_the_line_p" }, sup));
+  await track.handler(tev({ e: "song_played" }));
+  check("song plays: bullyproof.support pages can add play counts", r.statusCode === 204 && stores.counts.size === 5);
+  const plays = require("../netlify/functions/song-plays.js");
+  r = await plays.handler({ httpMethod: "GET", queryStringParameters: {} });
+  const pj = JSON.parse(r.body); const find = (s, w) => (pj.songs.find((x) => x.song === s && x.where === w) || {}).plays;
+  check("song plays: totals per song and per page", r.statusCode === 200 && pj.total === 5 && find("W01_G46_S1", "class") === 2 && find("W01_G46_S1", "listen") === 1 && find("draw_the_line", "parents") === 1 && find("draw_the_line", "clarity_check") === 1);
+  check("song plays: totals page shows counts only, nothing personal", !/10\.9\.9\.9|ip/i.test(r.body.replace(/"songs"|clarity_check/g, "")));
+  r = await plays.handler({ httpMethod: "GET", queryStringParameters: { since: "2999-01-01" } });
+  check("song plays: 'since' date filter works", JSON.parse(r.body).total === 0);
+  for (let i = 0; i < 400; i++) await track.handler(tev({ e: "song_played", d: "W01_G78_S2_c" }, sup));
+  check("song plays: a whole school on one internet address isn't cut off at 300", [...stores.counts.keys()].filter((k) => k.includes("W01_G78_S2_c")).length === 400);
+
   // 7. SwipeOne unreachable -> outbox -> hourly retry, safety-flagged plans first.
   reset(); hookStatus = 503;
   r = await sendPlan.handler(ev({ to: "calm@example.com", answers: calm }));

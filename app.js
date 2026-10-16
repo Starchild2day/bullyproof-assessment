@@ -748,8 +748,9 @@ async function renderPlanView() {
       </div>
     </div>
     <div class="card plan-sheet">${buildEmailHtml()}</div>
+    ${state.safetyFlags.length ? "" : songCardHtml()}
     ${state.safetyFlags.length ? "" : shareSectionHtml()}`;
-  if (!state.safetyFlags.length) wireShareSection();
+  if (!state.safetyFlags.length) { wireShareSection(); wireSongCard(); }
   const noteEl = appEl.querySelector(".plan-sent-note");
   if (noteEl) { noteEl.textContent = sentNote; noteEl.style.color = js && js.ok ? "#276749" : "#9C4221"; }   // textContent: it contains their email address
   // Links in the plan open in a new tab, so the plan stays right here when the parent comes back.
@@ -760,6 +761,90 @@ async function renderPlanView() {
     try { await generatePDF(); track("pdf_downloaded"); setPlanStatus(L(`Your printable copy is saving to your device.`, `Su copia para imprimir se está guardando en su dispositivo.`), "success"); }
     catch (e) { setPlanStatus(L(`We couldn't create the PDF just now. Please try again in a moment.`, `No pudimos crear el PDF en este momento. Inténtelo de nuevo en un momento.`), "error"); }
     btn.disabled = false;
+  });
+}
+
+// ============================================================
+// "DRAW THE LINE" — a song for the parent, at the very end of the on-screen Action Plan, after
+// the help-now parts (Mark, Oct 2026). Never on a safety-flagged plan (that plan stays focused on
+// getting help). Plays once, only when tapped; Repeat is the parent's choice. Screen only — not in
+// the email or the PDF. Audio is Mark's own MP3, served by netlify/functions/song-audio.mts.
+// ============================================================
+const DRAW_THE_LINE_ID = "1d3c6140-b32a-4689-92fe-50fa1efd8479";
+const DRAW_THE_LINE_LYRICS = [
+  ["Verse 1", ["A little one on the way to school with worries on her mind", "A feeling she can't put to words is stirrin' deep inside", "Somewhere there's a grown up who sees her struggling through", "Who never found her voice back when but now knows just what to do"]],
+  ["Chorus", ["We're bein' called out to draw the line,", "for a brighter new tomorrow", "To let our courage guide the choice to end recycled pain", "We're bein' called out to draw the line,", "to heal persistent sorrow", "And to let our voice of courage finally break this stubborn chain"]],
+  ["Verse 2", ["It didn' start with us and we didn' make the rules", "Jus' picked up what was handed down and used our only tools", "But knowin' where it came from is the first step to the light", "But knowin' where it came from is the first step to the light", "And now our next step to take is to help build the Bullyproof Guide"]],
+  ["Chorus", ["We're bein' called out to draw the line,", "for a brighter new tomorrow", "To let our courage guide the choice to end recycled pain", "We're bein' called out to draw the line, to heal persistent sorrow", "And to let our voice of courage finally break this stubborn chain"]],
+  ["Bridge", ["Every child deserves to know how much they matter", "Every grown up has a shining part to play", "Together we can finally write a brighter story.", "And today's the day"]],
+  ["Verse 3", ["There's a teacher and a parent, and a neighbor down the block", "Who've all been feelin' somethin' like the tickin' of a clock", "We've all been waitin on someone else,", "to finally say,", "“Enough!”", "Turns out that some one was us"]],
+  ["Final chorus", ["(We've been called) out to draw the line,", "for a brighter new tomorrow", "(To let our courage) guide the choice", "to end recycled pain.", "(We've been called) out to draw the line,", "to heal persistent sorrow", "And to let our voice of courage finally", "break that stubborn", "chain"]]
+];
+
+function songCardHtml() {
+  const words = DRAW_THE_LINE_LYRICS.map(([sec, lines]) =>
+    `<p class="song-sec">${sec}</p>` + lines.map(l => `<p>${escapeHtml(l)}</p>`).join("")).join("");
+  return `
+    <div class="card song-card">
+      <div class="card-body">
+        <p class="plan-kicker">${L(`One more thing`, `Una cosa más`)}</p>
+        <h2 class="song-title">${L(`A song for you`, `Una canción para usted`)}</h2>
+        <p class="sub" style="margin:0 0 14px;">${L(`“Draw the Line,” by Bullyproof founder Mark Olmstead, is about the grown-ups in a child's life choosing to end the hurt that gets handed down. Whenever you're ready, press play.`, `“Draw the Line” (en inglés), de Mark Olmstead, fundador de Bullyproof, habla de los adultos en la vida de un niño que deciden poner fin al dolor que se hereda. Cuando esté listo, presione reproducir.`)}</p>
+        <div class="song-player">
+          <button type="button" class="song-play" id="songPlay" aria-label="${L(`Play Draw the Line`, `Reproducir Draw the Line`)}"><span class="i-play"></span></button>
+          <div class="song-mid">
+            <input type="range" id="songBar" min="0" max="1000" value="0" aria-label="${L(`Song position`, `Posición de la canción`)}">
+            <div class="song-time" id="songTime">0:00</div>
+          </div>
+        </div>
+        <div class="song-tools">
+          <button type="button" class="song-btn" id="songWords" aria-expanded="false">${L(`Show the words`, `Ver la letra`)}</button>
+          <button type="button" class="song-btn" id="songRepeat" aria-pressed="false">${L(`Repeat: off`, `Repetir: no`)}</button>
+        </div>
+        <div class="song-lyrics" id="songLyrics" hidden>${words}</div>
+      </div>
+    </div>`;
+}
+
+function wireSongCard() {
+  const play = document.getElementById("songPlay");
+  if (!play) return;
+  const bar = document.getElementById("songBar"), time = document.getElementById("songTime");
+  const rep = document.getElementById("songRepeat"), wbtn = document.getElementById("songWords"), lyr = document.getElementById("songLyrics");
+  const a = new Audio();
+  a.preload = "none";
+  a.src = `/audio/${DRAW_THE_LINE_ID}.mp3`;
+  // Until the MP3 is on the site, use Suno's own player for this song instead.
+  fetch(a.src, { method: "HEAD" }).then(r => { if (!r.ok) throw 0; }).catch(() => {
+    const f = document.createElement("iframe");
+    f.src = `https://suno.com/embed/${DRAW_THE_LINE_ID}`; f.title = "Draw the Line"; f.allow = "autoplay; encrypted-media";
+    f.style.cssText = "width:100%;height:150px;border:0;border-radius:14px;display:block;background:#1B2A4A;";
+    const box = play.closest(".song-player"); if (box) box.replaceWith(f);
+    rep.remove();
+  });
+  const fmt = s => isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "0:00";
+  const icon = () => {
+    play.innerHTML = a.paused ? '<span class="i-play"></span>' : '<span class="i-pause"></span>';
+    play.setAttribute("aria-label", a.paused ? L(`Play Draw the Line`, `Reproducir Draw the Line`) : L(`Pause Draw the Line`, `Pausar Draw the Line`));
+  };
+  play.addEventListener("click", () => {
+    if (a.paused) { a.play().then(() => track("song_played")).catch(() => { time.textContent = L(`The song couldn't load. Please try again.`, `La canción no pudo cargar. Inténtelo de nuevo.`); }); }
+    else a.pause();
+  });
+  a.addEventListener("play", icon); a.addEventListener("pause", icon);
+  a.addEventListener("ended", () => { a.currentTime = 0; icon(); });
+  a.addEventListener("loadedmetadata", () => { time.textContent = `0:00 / ${fmt(a.duration)}`; });
+  a.addEventListener("timeupdate", () => { if (a.duration) { bar.value = String(Math.round(a.currentTime / a.duration * 1000)); time.textContent = `${fmt(a.currentTime)} / ${fmt(a.duration)}`; } });
+  bar.addEventListener("input", () => { if (a.duration) a.currentTime = bar.value / 1000 * a.duration; });
+  rep.addEventListener("click", () => {
+    a.loop = !a.loop;
+    rep.textContent = a.loop ? L(`Repeat: on`, `Repetir: sí`) : L(`Repeat: off`, `Repetir: no`);
+    rep.setAttribute("aria-pressed", String(a.loop)); rep.classList.toggle("on", a.loop);
+  });
+  wbtn.addEventListener("click", () => {
+    lyr.hidden = !lyr.hidden;
+    wbtn.textContent = lyr.hidden ? L(`Show the words`, `Ver la letra`) : L(`Hide the words`, `Ocultar la letra`);
+    wbtn.setAttribute("aria-expanded", String(!lyr.hidden));
   });
 }
 

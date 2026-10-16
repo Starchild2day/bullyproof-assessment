@@ -33,3 +33,10 @@
     X-Robots-Tag = "noindex, nofollow"
     Referrer-Policy = "no-referrer"
     Cache-Control = "no-store"
+
+# Song MP3s for the class-song page (on bullyproof.support) and the Action Plan's song card.
+[[headers]]
+  for = "/audio/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=86400"

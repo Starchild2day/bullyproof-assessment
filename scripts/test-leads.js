@@ -133,6 +133,12 @@ const leads = () => [...(stores.leads || new Map()).values()];
   check("song plays: totals page shows counts only, nothing personal", !/10\.9\.9\.9|ip/i.test(r.body.replace(/"songs"|clarity_check/g, "")));
   r = await plays.handler({ httpMethod: "GET", queryStringParameters: { since: "2999-01-01" } });
   check("song plays: 'since' date filter works", JSON.parse(r.body).total === 0);
+  await track.handler(tev({ e: "song_played", d: "W01_G78_S1_c_pue" }, sup));
+  await track.handler(tev({ e: "song_played", d: "W01_G78_S1_c_cen" }, sup));
+  await track.handler(tev({ e: "song_played", d: "W01_G78_S1_c_cen" }, sup));
+  r = await plays.handler({ httpMethod: "GET", queryStringParameters: {} });
+  const ps = JSON.parse(r.body).songs; const bySchool = (n) => (ps.find((x) => x.song === "W01_G78_S1" && x.school === n) || {}).plays;
+  check("song plays: class plays are split by school", bySchool("Pueblo") === 1 && bySchool("Centennial") === 2 && ps.find((x) => x.song === "W01_G78_S1").where === "class");
   for (let i = 0; i < 400; i++) await track.handler(tev({ e: "song_played", d: "W01_G78_S2_c" }, sup));
   check("song plays: a whole school on one internet address isn't cut off at 300", [...stores.counts.keys()].filter((k) => k.includes("W01_G78_S2_c")).length === 400);
 

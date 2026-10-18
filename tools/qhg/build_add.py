@@ -264,6 +264,59 @@ for g in ADD:
     bundle["es"]["PAGES"][g["slug"]] = ES["shell"](f"{g['es_title']} · {ES['PRODUCT']}", page, g["es_line"]).replace("__V__", VER_ES)
     bundle["es"]["TEASERS"][g["slug"]] = {"title": g["es_title"], "section": SECTION_ES, "line": g["es_line"]}
 
+# ---------------------------------------------------------------------------
+# Rewritten originals: a newer version of one of the first 25 replaces the old page (same slug, title,
+# section and one-line question). The runtime prefers this bundle's page over the original's.
+# Sources: $QHG_ADD_SRC/guide-NN.md and es/guide-NN.md, in the original guides' format.
+# ---------------------------------------------------------------------------
+REPLACE = [24]
+EN_IDX = {e["slug"]: e for e in en_idx}
+ES_IDX = {e["slug"]: e for e in es_idx}
+EN_SLUGS = borrow(os.path.join(ROOT, "build.py"), [("SLUGS = {", "FREE = {")])["SLUGS"]
+
+
+def link_numbers(h, lang):
+    word, base, idx = ("Guide", "/guides/", EN_IDX) if lang == "en" else ("Guía", "/guides/es/", ES_IDX)
+    def rep(m):
+        slug = SLUGS_ALL.get(int(m.group(1)))
+        if not slug or slug not in idx:
+            return m.group(0)
+        return f'<a class="xref" href="{base}{slug}/">{html.escape(idx[slug]["title"])}</a>'
+    h = re.sub(word + r" (\d+)\s*\((?:<em>)?[^()<]*(?:</em>)?\)", rep, h)
+    return re.sub(word + r" (\d+)(?![\d\w])", rep, h)
+
+
+def render_original(md, lang):
+    body = "\n".join(md.strip().splitlines()[1:])
+    body = re.sub(r"^>?\s*(One parenting question|Una pregunta de crianza):.*$", "", body, count=1, flags=re.M)
+    parts = re.split(r"^## (.+)$", body, flags=re.M)
+    clean = lambda s: re.sub(r"^\s*(\*\*\*|---)\s*$", "", s, flags=re.M)
+    out = [md_html(clean(parts[0]))] if clean(parts[0]).strip() else []
+    for i in range(1, len(parts), 2):
+        h, txt = parts[i].strip(), clean(parts[i + 1])
+        if h.startswith("⚡"):
+            lab = ("Quick Help", "The 45-second version") if lang == "en" else ("Ayuda rápida", "La versión de 45 segundos")
+            out.append(f'<section class="quick"><h2><span class="pill">{lab[0]}</span> {lab[1]}</h2>' + md_html(txt) + "</section>")
+        elif h.startswith("📖"):
+            s = ("<span>Learn more</span> The deeper layer: why it works, longer next steps, and related guides" if lang == "en"
+                 else "<span>Para saber más</span> La capa más profunda: por qué funciona, pasos más detallados y guías relacionadas")
+            out.append(f'<details class="learn"><summary>{s}</summary><div class="learn-body">' + md_html(txt) + "</div></details>")
+        else:
+            out.append("<section><h2>" + html.escape(h) + "</h2>" + md_html(txt) + "</section>")
+    return link_numbers("\n".join(out), lang)
+
+
+SLUGS_ALL = dict(EN_SLUGS)
+SLUGS_ALL.update(SLUG_OF)
+for n in REPLACE:
+    slug = SLUGS_ALL[n]
+    for lang, idx, mod, ver in (("en", EN_IDX, EN, VER), ("es", ES_IDX, ES, VER_ES)):
+        e = idx[slug]
+        src = read(f"guide-{n}.md" if lang == "en" else f"es/guide-{n}.md")
+        page = head_html(e["title"], e["section"], e["line"], lang) + render_original(src, lang) + "</article>" + mod["SHARE_HTML"] + "</main>"
+        bundle[lang]["PAGES"][slug] = mod["shell"](f"{e['title']} · {mod['PRODUCT']}", page, e["line"]).replace("__V__", ver)
+        bundle[lang]["TEASERS"][slug] = {"title": e["title"], "section": e["section"], "line": e["line"]}
+
 tmp = os.path.join(ROOT, ".plain-add.json")
 open(tmp, "wb").write(json.dumps(bundle, ensure_ascii=False).encode("utf-8"))
 if os.environ.get("QHG_ADD_DUMP"):                       # local preview only

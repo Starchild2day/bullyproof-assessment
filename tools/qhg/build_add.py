@@ -317,6 +317,30 @@ for n in REPLACE:
         bundle[lang]["PAGES"][slug] = mod["shell"](f"{e['title']} · {mod['PRODUCT']}", page, e["line"]).replace("__V__", ver)
         bundle[lang]["TEASERS"][slug] = {"title": e["title"], "section": e["section"], "line": e["line"]}
 
+# ---------------------------------------------------------------------------
+# Wording repairs to the original 25 (found in Mark's review), applied at runtime to the decrypted pages:
+# exact [old, new] replacements per slug, from $QHG_ADD_SRC/patches.json (private). Plus one "don't wait"
+# safety line added to the end of every guide's Quick Help.
+# ---------------------------------------------------------------------------
+PATCH_FILE = os.path.join(SRC, "patches.json")
+if os.path.exists(PATCH_FILE):
+    patches = json.load(open(PATCH_FILE, encoding="utf-8"))
+    for lang in ("en", "es"):
+        bundle[lang]["PATCHES"] = patches.get(lang, {})
+DONT_WAIT = {
+    "en": ('<p class="dont-wait"><strong>Don\'t wait if…</strong> there are threats, injuries, sexual images, or any talk of not '
+           'wanting to be alive or to be here anymore. Act tonight: call 911 if anyone is in danger, call or text 988 for a '
+           'mental-health crisis, and read <a href="/guides/my-child-doesnt-want-to-be-here-anymore/">My Child Doesn\'t Want '
+           'to Be Here Anymore</a>, free for every parent.</p>'),
+    "es": ('<p class="dont-wait"><strong>No espere si…</strong> hay amenazas, lesiones, imágenes sexuales o cualquier comentario '
+           'sobre no querer vivir o no querer estar aquí. Actúe esta noche: llame al 911 si alguien está en peligro, llame o '
+           'envíe un mensaje de texto al 988 si es una crisis de salud mental (hay atención en español), y lea '
+           '<a href="/guides/es/my-child-doesnt-want-to-be-here-anymore/">Mi hijo o hija ya no quiere estar aquí</a>, gratis '
+           'para todos los padres.</p>'),
+}
+for lang in ("en", "es"):
+    bundle[lang]["DONT_WAIT"] = DONT_WAIT[lang]
+
 tmp = os.path.join(ROOT, ".plain-add.json")
 open(tmp, "wb").write(json.dumps(bundle, ensure_ascii=False).encode("utf-8"))
 if os.environ.get("QHG_ADD_DUMP"):                       # local preview only

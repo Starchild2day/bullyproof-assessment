@@ -21,7 +21,32 @@ export function contentAdd() {
 }
 
 // One library: the first 25 plus the added guides.
+// Wording repairs (exact replacements per guide) and the "don't wait" safety line at the end of every
+// Quick Help travel inside the encrypted bundle, so they cost nothing if the key is missing.
+const DW_CSS = '<style>.dont-wait{margin:18px 0 4px;padding:12px 14px;border-left:4px solid #c0392b;background:#fdf1ef;border-radius:8px}</style>';
+
+export function repaired(page, slug, add) {
+  if (typeof page !== "string") return page;
+  let out = page;
+  for (const [a, b] of (add.PATCHES || {})[slug] || []) {
+    if (out.includes(a)) out = out.split(a).join(b);
+    else console.log("guide repair not applied:", slug, a.slice(0, 60));
+  }
+  if (add.DONT_WAIT && !out.includes('class="dont-wait"')) {
+    const q = out.indexOf('<section class="quick"');
+    const end = q > -1 ? out.indexOf("</section>", q) : -1;
+    if (end > -1) {
+      out = out.slice(0, end) + add.DONT_WAIT + out.slice(end);
+      out = out.replace("</head>", DW_CSS + "</head>");
+    }
+  }
+  return out;
+}
+
 export function merged(base, lang) {
   const add = contentAdd()[lang] || { PAGES: {}, TEASERS: {} };
-  return { ...base, PAGES: { ...base.PAGES, ...add.PAGES }, TEASERS: { ...base.TEASERS, ...add.TEASERS } };
+  const all = { ...base.PAGES, ...add.PAGES };
+  const PAGES = {};
+  for (const [slug, page] of Object.entries(all)) PAGES[slug] = repaired(page, slug, add);
+  return { ...base, PAGES, TEASERS: { ...base.TEASERS, ...add.TEASERS } };
 }

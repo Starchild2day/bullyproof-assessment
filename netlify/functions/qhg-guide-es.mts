@@ -5,6 +5,7 @@ import type { Config, Context } from "@netlify/functions";
 import { contentEs } from "../lib/qhg-content-es.mjs";
 import { isValid, html } from "../lib/qhg-access.mjs";
 import { priceLabel } from "../lib/qhg-price.mjs";
+import { withSong, previewSong } from "../lib/qhg-songs.mjs";
 
 const esc = (s: string) =>
   String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" } as any)[c]);
@@ -15,7 +16,7 @@ export default async (req: Request, context: Context) => {
   const page = (PAGES as Record<string, string>)[slug];
   const t = (TEASERS as Record<string, any>)[slug];
   if (!page || !t) return Response.redirect(new URL("/guides/es/", req.url).toString(), 302);
-  if (await isValid(context.cookies.get("qhg_access"))) return html(page);
+  if (await isValid(context.cookies.get("qhg_access"))) return html(withSong(page, slug, "es"));
 
   const body = `<main class="wrap page"><nav class="crumb"><a href="/guides/es/">Todas las guías</a><span>›</span><span>${esc(t.section)}</span></nav>
 <article class="guide"><header class="g-head"><p class="kicker">${esc(t.section)}</p><h1>${esc(t.title)}</h1>
@@ -27,7 +28,7 @@ ${t.line ? `<p class="g-q">“${esc(t.line)}”</p>` : ""}</header>
 <p class="small">¿Ya compró las guías? <a href="/guides/es/restore/">Ábralas de nuevo aquí</a>.</p>
 </div>
 <p class="small" style="margin-top:18px">Si le preocupa que su hijo ya no quiera estar aquí, la guía para eso es gratis para todos los padres: <a href="/guides/es/my-child-doesnt-want-to-be-here-anymore/">Mi hijo o hija ya no quiere estar aquí</a>.</p>
-</div></article></main>`;
+</div>${previewSong(slug, "es")}</article></main>`;
   return html(
     SHELL.replace("__TITLE__", esc(t.title) + " · Las Guías de Ayuda Rápida de Bullyproof")
       .replace("__DESC__", esc(t.line || ""))

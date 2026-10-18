@@ -28,7 +28,14 @@ const DW_CSS = '<style>.dont-wait{margin:18px 0 4px;padding:12px 14px;border-lef
 export function repaired(page, slug, add) {
   if (typeof page !== "string") return page;
   let out = page;
-  for (const [a, b] of (add.PATCHES || {})[slug] || []) {
+  for (const [a, b, c] of (add.PATCHES || {})[slug] || []) {
+    if (a === "@@CUT") {
+      // remove everything from marker b up to (not including) marker c
+      const i = out.indexOf(b), j = i > -1 ? out.indexOf(c, i) : -1;
+      if (j > -1) out = out.slice(0, i) + out.slice(j);
+      else console.log("guide cut not applied:", slug);
+      continue;
+    }
     if (out.includes(a)) out = out.split(a).join(b);
     else console.log("guide repair not applied:", slug, a.slice(0, 60));
   }

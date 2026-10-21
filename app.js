@@ -2062,13 +2062,13 @@ function stepParts() {
 
 // "Stand with, never alone" — the prevention step on helping another child. It must agree with the We Belong 365
 // three-claps program (three quick claps = "I need help, or someone else does"; anyone who hears it joins in until it
-// stops or an adult arrives), so it never tells kids to stay quiet. For 15–18 the signal is left out (the songs are
-// written for K–8), and the step leans on bringing friends and an adult.
+// stops or an adult arrives), so it never tells kids to stay quiet. Every age gets the signal; teens get "student"/"adult" wording.
 function standWithStep() {
   const age = state.answers.q1 || "";
   const older = age === "15–18";
+  // Three quick claps is for every age (Mark: songs are coming for all ages, and the 7–8 songs may suit teens too).
   const signal = older
-    ? L("grab a friend and go stand near that student, or get an adult right away", "buscar a un amigo e ir juntos a pararse cerca de ese estudiante, o buscar a un adulto de inmediato")
+    ? L("get an adult, go stand near that student with a friend, or use three quick claps, the help signal that means \"someone needs help.\" Anyone who hears it joins in until it stops or an adult arrives", "buscar a un adulto, ir a pararse cerca de ese estudiante con un amigo, o usar tres aplausos rápidos, la señal de ayuda que quiere decir \"alguien necesita ayuda\". Todo el que la oye se une hasta que se detenga o llegue un adulto")
     : L("get a grown-up, go stand near that child with a friend, or use three quick claps, the help signal that means \"someone needs help.\" Anyone who hears it joins in until it stops or a grown-up arrives", "buscar a un adulto, ir a pararse cerca de ese niño con un amigo, o usar tres aplausos rápidos, la señal de ayuda que quiere decir \"alguien necesita ayuda\". Todo el que la oye se une hasta que se detenga o llegue un adulto");
   return L(
     `Teach "stand with, never alone." When your child sees someone being picked on, they don't have to stay quiet, and they never have to face the bully by themselves. The best moves bring help and company, not a showdown: ${signal}. Then comes the part kids remember most: being on that child's side afterward. A 2024 study that followed teens day by day found that on days they were picked on, kids who had someone stand up for them felt less down and blamed themselves less. Give your child two easy lines: "Want to sit with us?" and, privately later, "That wasn't okay. Are you alright?" Kids who make a habit of this build courage and real friendships — and they'll know what kindness looks like if it's ever them.`,

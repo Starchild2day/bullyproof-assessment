@@ -1529,8 +1529,11 @@ function openingValidation() {
 // time. Acknowledge that out loud instead of silently treating it as one.
 function mentionsMultipleChildren() {
   const t = `${state.answers.q4 || ""} ${state.answers.q12 || ""}`.toLowerCase();
-  if (/\bmis\s+(dos|tres|2|3)\s+(hij[oa]s|ninos|ninas|chicos|chicas)\b|\bmis\s+(hij[oa]s|ninos|ninas)\b|\b(gemel[oa]s|hermanos|hermanas)\b|\b(ambos|ambas)\b(?!\s+padres)|\b(los|las)\s+(dos|tres)\b/.test(foldText(t))) return true;
-  return /\b(both|two|three|all)\s+(of\s+)?(my\s+|our\s+)?(kids|children|boys|girls|sons|daughters)\b|\bboth\s+of\s+(them|my)\b|\bmy\s+(two|three|2|3)\s+(kids|children|boys|girls)\b|\b(twins|siblings)\b|\bmy\s+(kids|children)\b/.test(t);
+  // Only count children the parent claims as their own ("my two kids", "both of my
+  // kids", "mis hijos"). "Two kids on the bus" or "los dos" usually describe the
+  // other children involved, not the parent's own.
+  if (/\b(mis|nuestr[oa]s)\s+((dos|tres|2|3)\s+)?(hij[oa]s|ninos|ninas|chicos|chicas|gemel[oa]s)\b|\b(ambos|ambas|los\s+dos|las\s+dos)\s+(de\s+)?(mis|nuestr[oa]s)\s+(hij[oa]s|ninos|ninas)\b/.test(foldText(t))) return true;
+  return /\b(both|all)\s+(of\s+)?(my|our)\s+(kids|children|boys|girls|sons|daughters)\b|\b(my|our)\s+(two|three|2|3)\s+(kids|children|boys|girls|sons|daughters)\b|\b(my|our)\s+(kids|children|twins|sons|daughters)\b|\bboth\s+of\s+my\b/.test(t);
 }
 function multiChildNote() {
   if (!mentionsMultipleChildren()) return null;

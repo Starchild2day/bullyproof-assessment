@@ -315,6 +315,39 @@
     body.safety-mini .crisis-line{padding:5px 12px;font-size:12.5px;}
   }
 
+
+  /* Read aloud: a "Listen" button on each question and on the Action Plan, a floating player while
+     the plan is being read, and a soft highlight on the part being read. */
+  .tts-q{float:right;position:relative;z-index:2;margin:0 0 6px 12px;display:inline-flex;align-items:center;gap:6px;border:1.5px solid rgba(27,42,74,0.22);background:#fff;color:var(--navy);border-radius:999px;padding:6px 13px 6px 10px;font:600 13.5px/1 'DM Sans',sans-serif;cursor:pointer;min-height:34px;transition:background .15s ease,border-color .15s ease;}
+  .tts-q:hover{border-color:var(--navy);}
+  .tts-q.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .tts-q.on svg{color:var(--gold);}
+  .tts-q:focus-visible,.tts-main:focus-visible,.tts-bar button:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
+  .tts-plan{margin:0 0 16px;padding:16px;border-radius:14px;background:linear-gradient(135deg,#FFF8E8 0%,#FFFFFF 100%);border:1px solid #EADFC6;}
+  .tts-main{display:inline-flex;align-items:center;gap:10px;background:var(--gold);color:var(--navy-deep);border:0;border-radius:999px;padding:13px 22px 13px 18px;font:700 16px/1.1 'DM Sans',sans-serif;cursor:pointer;min-height:48px;box-shadow:0 3px 10px rgba(200,155,60,0.35);transition:transform .15s ease,box-shadow .15s ease;}
+  .tts-main:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(200,155,60,0.42);}
+  .tts-main svg{width:20px;height:20px;}
+  .tts-main.on{background:var(--navy);color:#fff;box-shadow:none;}
+  .tts-hint{margin:10px 0 0;font-size:14px;line-height:1.45;color:var(--text-muted);}
+  .tts-plan.invite{border-color:var(--gold);box-shadow:0 0 0 4px rgba(200,155,60,0.18);}
+  .tts-plan.invite .tts-main{animation:ttsPulse 1.6s ease-in-out 4;}
+  @keyframes ttsPulse{0%,100%{box-shadow:0 3px 10px rgba(200,155,60,0.35),0 0 0 0 rgba(200,155,60,0.5);}50%{box-shadow:0 3px 10px rgba(200,155,60,0.35),0 0 0 12px rgba(200,155,60,0);}}
+  .tts-now{background:#FFF1CC !important;box-shadow:0 0 0 6px #FFF1CC;border-radius:4px;transition:background .25s ease;}
+  .option-btn.tts-now{box-shadow:0 0 0 3px var(--gold);border-radius:11px;}
+  .tts-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:60;width:min(560px,calc(100% - 24px));display:flex;align-items:center;gap:12px;background:var(--navy-deep);color:#fff;border-radius:999px;padding:8px 10px 8px 8px;box-shadow:0 10px 30px rgba(16,27,51,0.35);border:1px solid rgba(200,155,60,0.45);}
+  .tts-bar[hidden]{display:none;}
+  .tts-bar button{border:0;cursor:pointer;font-family:inherit;min-height:0;}
+  .tts-bar-play{flex:0 0 auto;width:46px;height:46px;border-radius:50%;background:var(--gold);color:var(--navy-deep);display:flex;align-items:center;justify-content:center;padding:0;}
+  .tts-bar-play svg{width:20px;height:20px;}
+  .tts-bar-label{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;line-height:1.25;}
+  .tts-bar-label strong{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .tts-bar-label span{font-size:12.5px;color:#C9D0DE;}
+  .tts-bar-rate{flex:0 0 auto;background:rgba(255,255,255,0.1);color:#fff;border-radius:999px;padding:9px 12px;font:700 14px/1 'DM Sans',sans-serif;min-width:52px;}
+  .tts-bar-stop{flex:0 0 auto;width:40px;height:40px;border-radius:50%;background:transparent;color:#C9D0DE;display:flex;align-items:center;justify-content:center;padding:0;}
+  .tts-bar-stop:hover{color:#fff;background:rgba(255,255,255,0.08);}
+  body.tts-active .wrap{padding-bottom:120px;}
+  @media (prefers-reduced-motion: reduce){ .tts-plan.invite .tts-main{animation:none;} }
+
   /* "Draw the Line" song card at the end of the Action Plan */
   .song-card .song-title{font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:26px;color:var(--navy);margin:4px 0 8px;}
   .song-player{display:flex;align-items:center;gap:14px;background:var(--navy);border-radius:14px;padding:12px 14px;}
@@ -358,7 +391,7 @@
 <script src="/i18n.js?v=20261016a"></script>
 <script src="/assessment-data.js?v=20261016a"></script>
 <script src="/assessment-data.es.js?v=20261016a"></script>
-<script src="/app.js?v=20261016c"></script>
+<script src="/app.js?v=20261029a"></script>
 </body>
 </html>
 <!-- redeploy trigger 2026-09-18T19:23:58Z -->

@@ -159,8 +159,14 @@ function render() {
   window.scrollTo(0, 0);
   syncHistory();
   saveProgress();
+  tts.onState = null; ttsStop(); ttsHideBar();   // a new screen always starts quiet
   if (state.screen === "landing") return renderLanding();
-  if (state.screen === "question") return renderQuestion();
+  if (state.screen === "question") {
+    renderQuestion();
+    // Parent turned on "Listen": each new question is read to them automatically.
+    if (state.ttsAuto && state.screen === "question") setTimeout(() => { if (state.ttsAuto && state.screen === "question") ttsReadQuestion(); }, 450);
+    return;
+  }
   if (state.screen === "results") return renderResults();
   if (state.screen === "invite") return renderInvite();
   if (state.screen === "plan") return renderPlanView();
@@ -248,6 +254,7 @@ function renderQuestion() {
       ${crisisLine}
       <div class="card-body">
       <div class="card-fixed">
+        ${ttsQuestionButtonHtml()}
         <h2 class="question">${qTitle(q)}</h2>
         ${qSub(q) ? `<p class="sub">${qSub(q)}</p>` : ""}
       </div>
@@ -263,6 +270,7 @@ function renderQuestion() {
     </div>
   `;
   wireQuestionEvents(q);
+  wireQuestionTts();
   wireSafetyBanner();
   track("question_answered_view", { question: q.id });
 }
@@ -395,6 +403,7 @@ function questionIconUrl(qid) {
 
 // After a tap on an answer: redraw the question in place, keeping the page exactly where the parent had it.
 function rerenderCurrentQuestion() {
+  ttsStop();   // they've answered: stop reading the choices
   const savedWindowScroll = window.scrollY;
   renderQuestion();
   const card = appEl.querySelector(".card");
@@ -743,6 +752,7 @@ async function renderPlanView() {
         ${js ? `<p class="plan-kicker">${L(`Your Action Plan is ready`, `Su Plan de Acción está listo`)}</p>
         <p class="sub plan-sent-note" style="margin:4px 0 14px;"></p>` : `<p class="plan-kicker">${L(`Your private plan page`, `La página privada de su plan`)}</p>`}
         ${js ? "" : `<p class="sub" style="margin:4px 0 14px;">${L(`Bookmark this page to come back any time. Want a copy to print or keep?`, `Guarde esta página en favoritos para volver cuando quiera. ¿Quiere una copia para imprimir o guardar?`)}</p>`}
+        ${ttsPlanControlsHtml()}
         <button class="${js ? "share-secondary" : "primary"}" id="planPdfBtn">${L(`Save a printable copy (PDF)`, `Guardar una copia para imprimir (PDF)`)}</button>
         <p id="planStatus" role="status" aria-live="polite" style="display:none;margin:12px 0 0;font-size:14.5px;line-height:1.5;"></p>
       </div>
@@ -751,6 +761,7 @@ async function renderPlanView() {
     ${state.safetyFlags.length ? "" : songCardHtml()}
     ${state.safetyFlags.length ? "" : shareSectionHtml()}`;
   if (!state.safetyFlags.length) { wireShareSection(); wireSongCard(); }
+  wirePlanTts();
   const noteEl = appEl.querySelector(".plan-sent-note");
   if (noteEl) { noteEl.textContent = sentNote; noteEl.style.color = js && js.ok ? "#276749" : "#9C4221"; }   // textContent: it contains their email address
   // Links in the plan open in a new tab, so the plan stays right here when the parent comes back.
@@ -812,6 +823,7 @@ function wireSongCard() {
   const bar = document.getElementById("songBar"), time = document.getElementById("songTime");
   const rep = document.getElementById("songRepeat"), wbtn = document.getElementById("songWords"), lyr = document.getElementById("songLyrics");
   const a = new Audio();
+  state.songAudio = a;   // so reading aloud and the song never talk over each other
   a.preload = "none";
   a.src = `/audio/${DRAW_THE_LINE_ID}.mp3`;
   // Until the MP3 is on the site, use Suno's own player for this song instead.
@@ -828,7 +840,7 @@ function wireSongCard() {
     play.setAttribute("aria-label", a.paused ? L(`Play Draw the Line`, `Reproducir Draw the Line`) : L(`Pause Draw the Line`, `Pausar Draw the Line`));
   };
   play.addEventListener("click", () => {
-    if (a.paused) { a.play().then(() => track("song_played")).catch(() => { time.textContent = L(`The song couldn't load. Please try again.`, `La canción no pudo cargar. Inténtelo de nuevo.`); }); }
+    if (a.paused) { if (tts.playing) ttsPause(); a.play().then(() => track("song_played")).catch(() => { time.textContent = L(`The song couldn't load. Please try again.`, `La canción no pudo cargar. Inténtelo de nuevo.`); }); }
     else a.pause();
   });
   a.addEventListener("play", icon); a.addEventListener("pause", icon);
@@ -2194,6 +2206,37 @@ async function generatePDF() {
     y += 6;
   }
 
+  // "Prefer to listen?" — a QR code and link that open this plan online, ready to be read aloud.
+  const listenUrl = planListenUrl();
+  if (listenUrl) {
+    const qr = await qrMatrix(listenUrl);
+    const boxTop = y - 6, boxH = 34, qrSize = 26;
+    doc.setFillColor(255, 248, 232); doc.setDrawColor(234, 223, 198); doc.setLineWidth(0.4);
+    doc.roundedRect(15, boxTop, 180, boxH, 4, 4, "FD");
+    // little speaker icon
+    const ix = 22, iy = boxTop + 10;
+    doc.setFillColor(200, 155, 60);
+    doc.rect(ix, iy + 2, 3, 4, "F");
+    doc.triangle(ix + 2.5, iy + 4, ix + 7, iy, ix + 7, iy + 8, "F");
+    doc.setDrawColor(200, 155, 60); doc.setLineWidth(0.7);
+    doc.line(ix + 9, iy + 2, ix + 9.8, iy + 4); doc.line(ix + 9.8, iy + 4, ix + 9, iy + 6);
+    doc.setFontSize(13); doc.setFont(undefined, "bold"); doc.setTextColor(16, 27, 51);
+    doc.text(L("Prefer to listen?", "¿Prefiere escucharlo?"), 35, boxTop + 13);
+    doc.setFontSize(10.5); doc.setFont(undefined, "normal"); doc.setTextColor(60, 66, 80);
+    const textW = qr ? 120 : 150;
+    const lines = doc.splitTextToSize(L("Scan this code with your phone's camera, or tap here, to open your plan online and hear it read aloud.", "Escanee este código con la cámara de su teléfono, o toque aquí, para abrir su plan en línea y escucharlo en voz alta."), textW);
+    doc.text(lines, 35, boxTop + 20);
+    doc.link(15, boxTop, qr ? 150 : 180, boxH, { url: listenUrl });
+    if (qr) {
+      const n = qr.length, cell = qrSize / n, qx = 195 - 4 - qrSize, qy = boxTop + (boxH - qrSize) / 2;
+      doc.setFillColor(255, 255, 255); doc.rect(qx - 1, qy - 1, qrSize + 2, qrSize + 2, "F");
+      doc.setFillColor(16, 27, 51);
+      for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr[r][c]) doc.rect(qx + c * cell, qy + r * cell, cell + 0.02, cell + 0.02, "F");
+      doc.link(qx, qy, qrSize, qrSize, { url: listenUrl });
+    }
+    y = boxTop + boxH + 12;
+  }
+
   if (state.answers.q4) {
     heading(L("You told us:", "Usted nos dijo:"));
     body(`"${state.answers.q4}"`, { italic: true });
@@ -2639,6 +2682,310 @@ async function generatePDF() {
   doc.textWithLink(L("Privacy policy: ", "Política de privacidad: ") + privacyUrl().replace(/^https?:\/\//, ""), 15, y, { url: privacyUrl() });
 
   doc.save(getLang() === "es" ? "plan-de-accion-bullyproof.pdf" : "bullyproof-action-plan.pdf");
+}
+
+// ============================================================
+// READ ALOUD (Mark, Oct 2026): busy parents can LISTEN to each question and to their whole
+// Action Plan instead of reading it. Uses the voice already built into the parent's phone or
+// computer (free, no new service, works in English and Spanish, nothing leaves the device).
+// Long text is spoken a sentence or two at a time, because some browsers stop a long reading
+// part-way through; the part being read is softly highlighted so parents can follow along.
+// ============================================================
+const SPEAKER_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z" fill="currentColor" stroke="none"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>`;
+const PAUSE_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>`;
+const PLAY_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>`;
+const STOP_SVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>`;
+const TTS_RATES = [1, 1.25, 1.5, 0.85];
+const tts = { items: [], i: 0, playing: false, paused: false, token: 0, kind: "", rate: 1, el: null, onState: null };
+try { const r = parseFloat(localStorage.getItem("bp_tts_rate")); if (TTS_RATES.includes(r)) tts.rate = r; } catch (e) { /* default speed */ }
+
+function ttsSupported() {
+  try { return typeof window.speechSynthesis !== "undefined" && typeof SpeechSynthesisUtterance !== "undefined"; } catch (e) { return false; }
+}
+// The most natural voice the device offers for the parent's language.
+function ttsVoice() {
+  try {
+    const want = getLang() === "es" ? "es" : "en";
+    const voices = window.speechSynthesis.getVoices().filter(v => (v.lang || "").toLowerCase().replace("_", "-").startsWith(want));
+    if (!voices.length) return null;
+    const score = (v) => {
+      const n = (v.name || "").toLowerCase(), lang = (v.lang || "").toLowerCase().replace("_", "-");
+      let s = 0;
+      if (/natural|neural|premium|enhanced|online/.test(n)) s += 6;
+      if (/google/.test(n)) s += 3;
+      if (/samantha|ava|allison|susan|zoe|evan|nathan|aria|jenny|guy|paulina|m[oó]nica|sabina|helena|dalia|elvira|marisol/.test(n)) s += 2;
+      if (want === "en" && lang === "en-us") s += 2;
+      if (want === "es" && /es-(us|mx|419)/.test(lang)) s += 2;
+      if (/compact|espeak|novelty|whisper|bad news|bells|boing|bubbles|cellos|jester|organ|trinoids|zarvox|albert|fred|junior|ralph|superstar|grandma|grandpa|rocko|shelley|flo|eddy|reed|sandy/.test(n)) s -= 10;
+      if (v.default) s += 1;
+      return s;
+    };
+    return voices.slice().sort((a, b) => score(b) - score(a))[0];
+  } catch (e) { return null; }
+}
+try { if (ttsSupported()) { window.speechSynthesis.getVoices(); window.speechSynthesis.addEventListener && window.speechSynthesis.addEventListener("voiceschanged", () => {}); } } catch (e) { /* voices load later */ }
+
+// Breaks text into short, natural pieces (whole sentences, about two at a time).
+function ttsSentences(clean) {
+  // Split after . ! ? only when a new sentence clearly begins, so "U.S." or "Bullyproof.Support" stay whole.
+  const out = []; let start = 0;
+  const abbrev = /(?:^|[\s.])(?:[A-Za-z]|Dr|Mr|Mrs|Ms|St|Jr|Sr|vs|etc|e\.g|i\.e|Sra|Sr|Dra)$/;
+  for (let i = 0; i < clean.length; i++) {
+    const ch = clean[i];
+    if (ch !== "." && ch !== "!" && ch !== "?" && ch !== "…") continue;
+    let j = i + 1;
+    while (j < clean.length && /["'’”)\]]/.test(clean[j])) j++;
+    if (j >= clean.length || clean[j] !== " ") continue;
+    const nextCh = clean[j + 1] || "";
+    if (!/[A-Z0-9"“'‘(¿¡ÁÉÍÓÚÑ$]/.test(nextCh)) continue;
+    if (ch === "." && abbrev.test(clean.slice(Math.max(0, start), i))) continue;
+    out.push(clean.slice(start, j).trim()); start = j + 1;
+  }
+  if (start < clean.length) out.push(clean.slice(start).trim());
+  return out.filter(Boolean);
+}
+// Breaks text into short, natural pieces (whole sentences, about two at a time).
+function ttsPieces(text) {
+  const clean = String(text || "").replace(/[“”]/g, '"').replace(/[→←•]/g, " ").replace(/\s+/g, " ").trim();
+  if (!clean) return [];
+  const out = []; let cur = "";
+  ttsSentences(clean).forEach(s => {
+    if (cur && (cur + " " + s).length > 220) { out.push(cur); cur = s; } else cur = cur ? cur + " " + s : s;
+    while (cur.length > 260) {   // one very long sentence: break it at a comma or space
+      let cut = cur.lastIndexOf(", ", 230); if (cut < 80) cut = cur.lastIndexOf(" ", 230); if (cut < 80) cut = 230;
+      out.push(cur.slice(0, cut + 1).trim()); cur = cur.slice(cut + 1).trim();
+    }
+  });
+  if (cur) out.push(cur);
+  return out;
+}
+
+function ttsMark(el) {
+  if (tts.el && tts.el !== el) tts.el.classList.remove("tts-now");
+  tts.el = el || null;
+  if (!el || !el.isConnected) return;
+  el.classList.add("tts-now");
+  if (tts.kind === "plan") {
+    const r = el.getBoundingClientRect(), vh = window.innerHeight || 800;
+    if (r.top < 70 || r.bottom > vh - 110) { try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (e) { el.scrollIntoView(); } }
+  }
+}
+
+function ttsEmit() { if (typeof tts.onState === "function") { try { tts.onState(); } catch (e) {} } }
+
+function ttsSpeakNext(token) {
+  if (token !== tts.token || !tts.playing) return;
+  if (tts.i >= tts.items.length) { const done = tts.onDone; ttsStop(); if (typeof done === "function") done(); return; }
+  const item = tts.items[tts.i];
+  ttsMark(item.el);
+  const u = new SpeechSynthesisUtterance(item.text);
+  const v = ttsVoice();
+  if (v) u.voice = v;
+  u.lang = v ? v.lang : (getLang() === "es" ? "es-US" : "en-US");
+  u.rate = tts.rate;
+  let moved = false;
+  const next = () => { if (moved) return; moved = true; if (token !== tts.token) return; tts.i++; setTimeout(() => ttsSpeakNext(token), item.gap || 120); };
+  u.onend = next;
+  u.onerror = (ev) => { if (ev && (ev.error === "interrupted" || ev.error === "canceled")) return; next(); };
+  window.speechSynthesis.speak(u);
+}
+
+// items: [{ text, el, gap }]. Starts at item `from`.
+function ttsPlay(items, kind, from) {
+  if (!ttsSupported()) return;
+  try { window.speechSynthesis.cancel(); } catch (e) {}
+  try { if (state.songAudio && !state.songAudio.paused) state.songAudio.pause(); } catch (e) {}
+  tts.token++;
+  if (items) { tts.items = items; tts.kind = kind || ""; }
+  tts.i = Math.max(0, Math.min(from || 0, tts.items.length - 1));
+  tts.playing = true; tts.paused = false;
+  ttsEmit();
+  const token = tts.token;
+  // A brief pause after cancel() — some phones drop a reading that starts in the same instant.
+  setTimeout(() => ttsSpeakNext(token), 60);
+}
+// Pause = stop the voice but remember the place (more reliable on phones than the browser's own pause).
+function ttsPause() {
+  if (!tts.playing) return;
+  tts.token++; tts.playing = false; tts.paused = true;
+  try { window.speechSynthesis.cancel(); } catch (e) {}
+  ttsEmit();
+}
+function ttsResume() { if (tts.paused && tts.items.length) ttsPlay(null, null, tts.i); }
+function ttsStop() {
+  const wasActive = tts.playing || tts.paused;
+  tts.token++; tts.playing = false; tts.paused = false; tts.onDone = null;
+  try { if (ttsSupported()) window.speechSynthesis.cancel(); } catch (e) {}
+  if (tts.el) { tts.el.classList.remove("tts-now"); tts.el = null; }
+  if (wasActive) ttsEmit();
+}
+function ttsCycleRate() {
+  tts.rate = TTS_RATES[(TTS_RATES.indexOf(tts.rate) + 1) % TTS_RATES.length];
+  try { localStorage.setItem("bp_tts_rate", String(tts.rate)); } catch (e) {}
+  if (tts.playing) ttsPlay(null, null, tts.i); else ttsEmit();
+}
+function ttsRateLabel() { return (tts.rate === 1 ? "1" : String(tts.rate)) + "×"; }
+
+// Turns a part of the page into reading pieces, each tied to the element it came from.
+function ttsItemsFrom(el, gap) {
+  // ALL-CAPS labels are only styled that way; read their real words, or some voices spell them out.
+  let raw = el.innerText || el.textContent || "";
+  try { if (window.getComputedStyle(el).textTransform === "uppercase") raw = el.textContent || raw; } catch (e) {}
+  return ttsPieces(raw).map(text => ({ text, el, gap }));
+}
+
+// ---------- On each question ----------
+function ttsQuestionButtonHtml() {
+  if (!ttsSupported()) return "";
+  const on = !!state.ttsAuto;
+  return `<button type="button" class="tts-q${on ? " on" : ""}" id="ttsQBtn" aria-pressed="${on}" title="${on ? L("Stop reading the questions aloud", "Dejar de leer las preguntas en voz alta") : L("Read this question aloud", "Leer esta pregunta en voz alta")}">${SPEAKER_SVG}<span>${on ? L("Listening", "Escuchando") : L("Listen", "Escuchar")}</span></button>`;
+}
+function ttsReadQuestion() {
+  if (!ttsSupported() || state.screen !== "question") return;
+  const card = appEl.querySelector(".card-body");
+  if (!card) return;
+  const items = [];
+  const h = card.querySelector("h2.question"); if (h) items.push(...ttsItemsFrom(h, 350));
+  const sub = card.querySelector("p.sub"); if (sub) items.push(...ttsItemsFrom(sub, 400));
+  const opts = card.querySelectorAll(".option-btn");
+  if (opts.length) {
+    const multi = !!card.querySelector(".multi-opt");
+    const subSaysHow = sub && /apply|choose|select|check|pick|elija|marque|seleccione|correspond/i.test(sub.textContent || "");
+    if (!subSaysHow) items.push({ text: multi ? L("Choose all that apply.", "Elija todas las que correspondan.") : L("Choose one.", "Elija una."), el: null, gap: 300 });
+    opts.forEach(o => items.push({ text: (o.innerText || o.textContent || "").trim().replace(/[.!?]*$/, "."), el: o, gap: 260 }));
+  } else if (card.querySelector("#textInput")) {
+    items.push({ text: L("You can type your answer in the box, or skip it and tap Next.", "Puede escribir su respuesta en el cuadro, o dejarlo en blanco y tocar Siguiente."), el: null });
+  }
+  ttsPlay(items, "question", 0);
+}
+function wireQuestionTts() {
+  const b = document.getElementById("ttsQBtn");
+  if (!b) return;
+  b.addEventListener("click", () => {
+    if (state.ttsAuto) { state.ttsAuto = false; ttsStop(); track("listen_questions_off"); }
+    else { state.ttsAuto = true; ttsReadQuestion(); track("listen_questions_on"); }
+    const on = !!state.ttsAuto;
+    b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on));
+    b.querySelector("span").textContent = on ? L("Listening", "Escuchando") : L("Listen", "Escuchar");
+    b.title = on ? L("Stop reading the questions aloud", "Dejar de leer las preguntas en voz alta") : L("Read this question aloud", "Leer esta pregunta en voz alta");
+  });
+}
+
+// ---------- On the Action Plan ----------
+// The plan is read in order, top to bottom: section titles, paragraphs, list items and quotes.
+// Fine print (legal footer, affiliate note) and button labels are skipped.
+function ttsPlanItems() {
+  const sheet = appEl.querySelector(".plan-sheet");
+  if (!sheet) return [];
+  const els = Array.from(sheet.querySelectorAll("p, li, td > span"));
+  const items = [];
+  els.forEach(el => {
+    if (el.closest("[data-noread]")) return;
+    if (el.parentElement && el.parentElement.closest("p, li")) return;   // already read as part of its parent
+    const cs = window.getComputedStyle(el);
+    if (cs.display === "none" || cs.visibility === "hidden") return;
+    if (parseFloat(cs.fontSize) < 12.5) return;   // fine print
+    const isHeader = el.tagName === "SPAN";
+    items.push(...ttsItemsFrom(el, isHeader ? 450 : 220));
+  });
+  return items.filter((it, k) => k === 0 || it.text !== items[k - 1].text);   // never the same line twice in a row
+}
+function ttsPlanControlsHtml() {
+  if (!ttsSupported()) return "";
+  return `
+    <div class="tts-plan" id="ttsPlan">
+      <button type="button" class="tts-main" id="ttsPlanBtn">${SPEAKER_SVG}<span>${L("Listen to your plan", "Escuchar su plan")}</span></button>
+      <p class="tts-hint">${L("Short on time? Tap to hear your whole plan read aloud while you do other things.", "¿Tiene poco tiempo? Toque para escuchar todo su plan en voz alta mientras hace otras cosas.")}</p>
+    </div>`;
+}
+function ttsBarHtml() {
+  return `<div class="tts-bar" id="ttsBar" role="region" aria-label="${L("Read aloud controls", "Controles de lectura en voz alta")}" hidden>
+    <button type="button" class="tts-bar-play" id="ttsBarPlay"></button>
+    <div class="tts-bar-label"><strong>${L("Your Action Plan", "Su Plan de Acción")}</strong><span id="ttsBarStatus"></span></div>
+    <button type="button" class="tts-bar-rate" id="ttsBarRate" title="${L("Reading speed", "Velocidad de lectura")}"></button>
+    <button type="button" class="tts-bar-stop" id="ttsBarStop" aria-label="${L("Stop reading", "Dejar de leer")}">${STOP_SVG}</button>
+  </div>`;
+}
+function wirePlanTts() {
+  const btn = document.getElementById("ttsPlanBtn");
+  if (!btn) return;
+  let bar = document.getElementById("ttsBar");
+  if (bar) bar.remove();
+  document.body.insertAdjacentHTML("beforeend", ttsBarHtml());
+  bar = document.getElementById("ttsBar");
+  const play = document.getElementById("ttsBarPlay"), rate = document.getElementById("ttsBarRate"), status = document.getElementById("ttsBarStatus");
+  const start = () => {
+    // Start from the part on screen if the parent has scrolled down; otherwise from the top.
+    const items = ttsPlanItems();
+    if (!items.length) return;
+    let from = 0;
+    if (window.scrollY > 300) { const k = items.findIndex(it => it.el && it.el.getBoundingClientRect().top > 60); if (k > 0) from = k; }
+    tts.onDone = null;
+    ttsPlay(items, "plan", from);
+    track("listen_plan_started");
+  };
+  tts.onState = () => {
+    if (state.screen !== "plan" || !bar.isConnected) return;
+    const active = tts.kind === "plan" && (tts.playing || tts.paused);
+    bar.hidden = !active;
+    document.body.classList.toggle("tts-active", active);
+    btn.classList.toggle("on", active);
+    btn.querySelector("span").textContent = active
+      ? (tts.playing ? L("Pause reading", "Pausar la lectura") : L("Keep listening", "Seguir escuchando"))
+      : L("Listen to your plan", "Escuchar su plan");
+    btn.innerHTML = (active && tts.playing ? PAUSE_SVG : SPEAKER_SVG) + btn.querySelector("span").outerHTML;
+    play.innerHTML = tts.playing ? PAUSE_SVG : PLAY_SVG;
+    play.setAttribute("aria-label", tts.playing ? L("Pause", "Pausar") : L("Keep listening", "Seguir escuchando"));
+    rate.textContent = ttsRateLabel();
+    status.textContent = tts.playing ? L("Reading aloud…", "Leyendo en voz alta…") : L("Paused", "En pausa");
+  };
+  btn.addEventListener("click", () => {
+    if (tts.kind === "plan" && tts.playing) return ttsPause();
+    if (tts.kind === "plan" && tts.paused) return ttsResume();
+    start();
+  });
+  play.addEventListener("click", () => { if (tts.playing) ttsPause(); else ttsResume(); });
+  rate.addEventListener("click", ttsCycleRate);
+  document.getElementById("ttsBarStop").addEventListener("click", ttsStop);
+  // Tapping any paragraph while listening jumps the reading to that spot.
+  appEl.querySelector(".plan-sheet").addEventListener("click", (e) => {
+    if (!(tts.kind === "plan" && (tts.playing || tts.paused))) return;
+    if (e.target.closest("a, button, input, label")) return;
+    const el = e.target.closest("p, li, td > span"); if (!el) return;
+    const k = tts.items.findIndex(it => it.el === el || (it.el && it.el.contains(el)));
+    if (k >= 0) ttsPlay(null, null, k);
+  });
+  // Arrived from "Listen to your plan" in the email or the PDF (?listen=1): browsers only allow
+  // speaking after a tap, so bring the Listen button front and center for that one tap.
+  try {
+    if (new URLSearchParams(window.location.search).get("listen") === "1" && !state.listenInvited) {
+      state.listenInvited = true;
+      document.getElementById("ttsPlan").classList.add("invite");
+      track("listen_link_opened");
+    }
+  } catch (e) { /* no URL params */ }
+}
+function ttsHideBar() {
+  const bar = document.getElementById("ttsBar"); if (bar) bar.hidden = true;
+  document.body.classList.remove("tts-active");
+}
+
+// The plan's own page, opened ready to listen — used by the email and the printable copy.
+function planListenUrl() {
+  if (!state.planId) return "";
+  return `${window.location.origin}/plan/${state.planId}?listen=1`;
+}
+// QR code for the printable copy (small open-source library, loaded only when a PDF is made).
+async function qrMatrix(text) {
+  try {
+    if (typeof window.qrcode !== "function") {
+      await new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    }
+    const qr = window.qrcode(0, "M"); qr.addData(text); qr.make();
+    const n = qr.getModuleCount(), rows = [];
+    for (let r = 0; r < n; r++) { const row = []; for (let c = 0; c < n; c++) row.push(qr.isDark(r, c)); rows.push(row); }
+    return rows;
+  } catch (e) { return null; }
 }
 
 // ============================================================

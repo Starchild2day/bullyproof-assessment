@@ -194,6 +194,7 @@ exports.handler = async function (event) {
       tags,
       tags_text: tags.join(", "),
       plan_link: planUrl,
+      listen_link: `${planUrl}?listen=1`,   // same plan page, opened with the "Listen to your plan" button front and center
       language: lang,
       ...profile,
       playbook_interest: marketingConsent ? "yes" : "no",

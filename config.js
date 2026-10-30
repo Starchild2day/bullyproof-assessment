@@ -10,7 +10,7 @@
 const CONFIG = {
 
   // --- 1. LEADS: no longer Formspree. Every plan request is saved by the send-plan function to
-  // Netlify Blobs, and safety alerts are emailed straight to you through Resend. Download leads
+  // Netlify Blobs, and SwipeOne sends the parent emails and the safety alerts (via webhook). Download leads
   // with the leads-admin function (see netlify/functions/leads-admin.js). ---
 
   // --- 3. VISIT COUNTS: kept privately in Netlify storage by the "track" function (no Plausible,

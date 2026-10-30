@@ -82,7 +82,10 @@ check("Spanish crisis plan leads with Spanish crisis resources (988: oprima 2)",
 const asked = (t) => run(`state.answers = { q12: ${JSON.stringify(t)} }; askedForWords()`);
 check("Spanish 'what should I say' requests are recognized", ["¿Qué le puedo decir a mi hijo?", "Qué le digo para animarlo", "Necesito las palabras correctas", "Cómo hablarle a mi hija"].every(asked));
 check("Spanish non-requests are not mistaken for 'what should I say'", !asked("Cómo sé si le hacen bullying") && !asked("Quiero que esté segura en la escuela"));
-check("Spanish 'both kids' is recognized", ["Mis dos hijos están mal", "Ambos niños sufren", "los dos están tristes", "mis hijas"].every((t) => run(`state.answers = { q4: ${JSON.stringify(t)} }; mentionsMultipleChildren()`)));
+const multi = (t) => run(`state.answers = { q4: ${JSON.stringify(t)} }; mentionsMultipleChildren()`);
+// Only the parent's OWN children count (Mark, Oct 2026): "los dos" / "ambos niños" usually means the other kids involved.
+check("Spanish 'my kids' is recognized", ["Mis dos hijos están mal", "mis hijas", "Ambos de mis hijos sufren", "nuestros gemelos"].every(multi));
+check("Spanish 'the two of them' (other kids) is not mistaken for the parent's own children", !multi("los dos están tristes") && !multi("Ambos niños la molestan"));
 check("Spanish self-blame is recognized", run(`state.answers = { q4: "Siento que es mi culpa, algo que hice" }; selfReflectionNote()`) !== null);
 const g = (t) => run(`state.answers = { q4: ${JSON.stringify(t)} }; detectChildGender()`);
 check("child's gender is picked up from Spanish wording", g("Mi hijo no quiere ir") === "boy" && g("Mi hija llora mucho") === "girl" && g("Ella está callada") === "girl" && g("Él no habla") === "boy" && g("Está muy callado") === "unknown");

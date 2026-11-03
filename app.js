@@ -1336,10 +1336,9 @@ function buildEmailHtml() {
 
   S.support.push(`
     ${sectionHeader(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"))}
-    <p style="color:${text};font-size:15px;margin:0;">
-      ${L(`That's always an option too.`, `Esa también es siempre una opción.`)} <a href="${NETWORK_MATCH_URL}" style="color:${navy};">${L(`Search the Bullyproof Support network`, `Busque en la red de Bullyproof Support`)}</a> ${L(`to get matched with a professional near you — just enter your location, no cost to look.`, `para encontrar a un profesional cerca de usted: solo escriba su ubicación; buscar no cuesta nada.`)}<br>
-      ${L(`If your area doesn't have a strong match yet,`, `Si en su zona todavía no hay una buena coincidencia,`)} <a href="${FIND_SUPPORT_URL}" style="color:${navy};">${L(`Psychology Today's broader directory`, `el directorio más amplio de Psychology Today`)}</a> ${L(`is a good backup.`, `es una buena alternativa.`)}
-    </p>
+    <p style="color:${text};font-size:15px;margin:0 0 14px;">${L(`That's always an option too. Tell us where you are and what kind of help you need, and professionals near you can reach out. It's free, with no obligation.`, `Esa también es siempre una opción. Díganos dónde está y qué tipo de ayuda necesita, y los profesionales cerca de usted pueden comunicarse con usted. Es gratis y sin compromiso.`)}</p>
+    <a href="${NETWORK_MATCH_URL}" style="display:inline-block;background:${navy};color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:13px 22px;border-radius:8px;">${L(`Get matched with a professional near me →`, `Encontrar un profesional cerca de mí →`)}</a>
+    <p style="color:${muted};font-size:13px;margin:14px 0 0;">${L(`If your area doesn't have a strong match yet,`, `Si en su zona todavía no hay una buena coincidencia,`)} <a href="${FIND_SUPPORT_URL}" style="color:${navy};">${L(`Psychology Today's broader directory`, `el directorio más amplio de Psychology Today`)}</a> ${L(`is a good backup.`, `es una buena alternativa.`)}</p>
   `);
   S.foot.push(`
     <p style="color:#8896B8;font-size:12px;margin-top:28px;border-top:1px solid #E1E4EA;padding-top:14px;">
@@ -2660,11 +2659,18 @@ async function generatePDF() {
   y += 12;
 
   heading(L("Prefer to talk to a licensed professional?", "¿Prefiere hablar con un profesional con licencia?"));
-  body(L("That's always an option too. Search the Bullyproof Support network to get matched with a professional near you — just enter your location, no cost to look:", "Esa también es siempre una opción. Busque en la red de Bullyproof Support para encontrar a un profesional cerca de usted: solo escriba su ubicación; buscar no cuesta nada:"));
-  ensureRoom(8);
-  doc.setFontSize(11); doc.setTextColor(66, 153, 225);
-  doc.textWithLink("bullyproof.support/getmatched", 15, y, { url: NETWORK_MATCH_URL });
-  y += 12;
+  body(L("That's always an option too. Tell us where you are and what kind of help you need, and professionals near you can reach out. It's free, with no obligation.", "Esa también es siempre una opción. Díganos dónde está y qué tipo de ayuda necesita, y los profesionales cerca de usted pueden comunicarse con usted. Es gratis y sin compromiso."));
+  ensureRoom(16);
+  {
+    const label = L("Get matched with a professional near me  >", "Encontrar un profesional cerca de mí  >");
+    doc.setFontSize(11); doc.setFont(undefined, "bold");
+    const bw = doc.getTextWidth(label) + 14, bh = 10;
+    doc.setFillColor(27, 42, 74); doc.roundedRect(15, y - 5, bw, bh, 2, 2, "F");
+    doc.setTextColor(255, 255, 255); doc.text(label, 22, y + 1.6);
+    doc.link(15, y - 5, bw, bh, { url: NETWORK_MATCH_URL });
+    doc.setFont(undefined, "normal");
+    y += bh + 3;
+  }
   body(L("If your area doesn't have a strong match yet, Psychology Today's broader directory is a good backup:", "Si en su zona todavía no hay una buena coincidencia, el directorio más amplio de Psychology Today es una buena alternativa:"));
   ensureRoom(8);
   doc.setFontSize(11); doc.setTextColor(66, 153, 225);

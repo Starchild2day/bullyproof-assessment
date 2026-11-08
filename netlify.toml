@@ -40,3 +40,10 @@
   [headers.values]
     Access-Control-Allow-Origin = "*"
     Cache-Control = "public, max-age=86400"
+
+# Song cover pictures for the class-song page (our own copies, so a cover changed in Suno shows up once re-copied here).
+[[headers]]
+  for = "/covers/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=3600"
